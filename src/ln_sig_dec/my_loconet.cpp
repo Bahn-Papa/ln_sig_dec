@@ -7,6 +7,14 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	2		from: 19.09.2022
+//#
+//#	Implementation:
+//#		-	add version number into EEPROM
+//#			changes in function 'notifyLNCVwrite()'
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	1		from: 17.09.2022
 //#
 //#	Implementation:
@@ -476,6 +484,8 @@ int8_t notifyLNCVread( uint16_t ArtNr, uint16_t Address, uint16_t, uint16_t &Val
 //**********************************************************************
 //	notifyLNCVwrite
 //----------------------------------------------------------------------
+//	write the 'Value' into EEPROM, but only if the 'Address' is
+//	NOT the article number address and NOT the version address
 //
 int8_t notifyLNCVwrite( uint16_t ArtNr, uint16_t Address, uint16_t Value )
 {
@@ -485,7 +495,8 @@ int8_t notifyLNCVwrite( uint16_t ArtNr, uint16_t Address, uint16_t Value )
 	{
 		if( g_clLncvStorage.IsValidLNCVAddress( Address ) )
 		{
-			if( LNCV_ADR_ARTIKEL_NUMMER != Address )
+			if(		(LNCV_ADR_VERSION != Address)
+				&&	(LNCV_ADR_ARTIKEL_NUMMER != Address) )
 			{
 				g_clLncvStorage.WriteLNCV( Address, Value );
 			}

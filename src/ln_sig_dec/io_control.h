@@ -10,6 +10,20 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	2		from: 19.09.2022
+//#
+//#	Implementation:
+//#		-	initialize the signal with Hp0
+//#		-	implement signal aspects: Hp0, Hp1 and Hp2
+//#			add definitions for signal aspects
+//#			add variables	'm_uiLedsOn'
+//#							'm_usSignalAspectMain'
+//#							'm_usSignalAspectApproach'
+//#							'm_uiFadeActive'
+//#			add function	'IsFadeFinished( void )'
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	1		from: 17.09.2022
 //#
 //#	Implementation:
@@ -52,6 +66,10 @@
 #define	LED_BLUE			15
 #define LED_GREEN			14
 
+#define SIGNAL_ASPECT_HP0	0
+#define SIGNAL_ASPECT_HP1	1
+#define SIGNAL_ASPECT_HP2	2
+	
 
 //==========================================================================
 //
@@ -82,6 +100,7 @@ class IO_ControlClass
 
 		void SwitchLed( uint8_t usLedNo, bool bOn );
 
+		bool IsFadeFinished( void );
 		bool IsFadeFinished( uint8_t usLedNo );
 
 
@@ -89,9 +108,13 @@ class IO_ControlClass
 		uint32_t	m_ulLastCycleStartTime;
 		uint32_t	m_ulCycleTime;
 		uint32_t	m_ulCycleStepTime;
+		uint16_t	m_uiLedsOn;
 		uint16_t	m_uiFadeTimeUp;
 		uint16_t	m_uiFadeTimeDown;
+		uint16_t	m_uiFadeActive;
 		uint8_t		m_usSignalType;
+		uint8_t		m_usSignalAspectMain;
+		uint8_t		m_usSignalAspectApproach;
 		bool		m_bNightLight;
 
 		void GetFadeTimes( void );

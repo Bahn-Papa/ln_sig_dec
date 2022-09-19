@@ -10,6 +10,13 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	2		from: 19.09.2022
+//#
+//#	Implementation:
+//#		-	add version number into EEPROM
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	1		from: 17.09.2022
 //#
 //#	Implementation:
@@ -48,12 +55,13 @@
 //
 #define LNCV_ADR_MODULE_ADDRESS				0
 #define LNCV_ADR_ARTIKEL_NUMMER				1
-#define LNCV_ADR_SIGNAL_TYPE				2
-#define LNCV_ADR_TRACK_CONTACT				3
-#define LNCV_ADR_NIGHTLIGHT					4
-#define LNCV_ADR_SIGNAL_VALID_WAIT_TIME		5
+#define LNCV_ADR_VERSION					2
+#define LNCV_ADR_SIGNAL_TYPE				3
+#define LNCV_ADR_TRACK_CONTACT				4
+#define LNCV_ADR_NIGHTLIGHT					5
+#define LNCV_ADR_SIGNAL_VALID_WAIT_TIME		6
 
-#define LNCV_ADR_SPARE						6
+#define LNCV_ADR_SPARE						7
 
 
 //----------------------------------------------------------------------
@@ -174,7 +182,7 @@ class LncvStorageClass
 		}
 
 
-		void CheckEEPROM( void );
+		void CheckEEPROM( uint16_t uiVersionNumber );
 		void Init( void );
 
 		uint16_t GetFadeTimeUp(   uint8_t idx );

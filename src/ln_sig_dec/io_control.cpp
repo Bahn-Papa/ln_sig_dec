@@ -28,6 +28,19 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	2		from: 19.09.2022
+//#
+//#	Implementation:
+//#		-	initialize the signal with Hp0
+//#		-	implement signal aspects: Hp0, Hp1 and Hp2
+//#			add variables	'm_uiLedsOn'
+//#							'm_usSignalAspectMain'
+//#							'm_usSignalAspectApproach'
+//#							'm_uiFadeActive'
+//#			add function	'IsFadeFinished( void )'
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	1		from: 17.09.2022
 //#
 //#	Implementation:
@@ -171,11 +184,15 @@ IO_ControlClass::IO_ControlClass()
 //
 void IO_ControlClass::Init( void )
 {
-	m_ulLastCycleStartTime	= 0L;
-	m_ulCycleTime			= 0L;
-	m_ulCycleStepTime		= 0L;
-	m_usSignalType			= g_clLncvStorage.GetSignalType();
-	m_bNightLight			= false;
+	m_ulLastCycleStartTime		= 0L;
+	m_ulCycleTime				= 0L;
+	m_ulCycleStepTime			= 0L;
+	m_uiLedsOn					= 0x0000;
+	m_uiFadeActive				= 0x0000;
+	m_usSignalType				= g_clLncvStorage.GetSignalType();
+	m_usSignalAspectMain		= SIGNAL_ASPECT_HP0;
+	m_usSignalAspectApproach	= SIGNAL_ASPECT_HP0;
+	m_bNightLight				= false;
 
 	GetFadeTimes();
 
@@ -186,8 +203,13 @@ void IO_ControlClass::Init( void )
 		g_arChannel[ idx ].m_fTarget = 0.0;
 		g_arChannel[ idx ].m_fActual = 0.0;
 	}
-	
+
 	CalculateFadeRates();
+
+	delay( 100 );
+
+	SwitchLed( LED_C, true );
+	SwitchLed( LED_D, true );
 }
 
 
@@ -202,6 +224,7 @@ void IO_ControlClass::FadeUpdate( void )
 	PWMChannel_t*	pChannel;
 	uint8_t			idx;
 	uint32_t		ulNewValue;
+	uint16_t		uiMask			= 0x0001;
 	uint32_t		ulActualTime	= micros();
 
 	
@@ -284,7 +307,8 @@ void IO_ControlClass::FadeUpdate( void )
 				
 				if( pChannel->m_fActual >= pChannel->m_fTarget )
 				{
-					ulNewValue = pChannel->m_fTarget;
+					ulNewValue		= pChannel->m_fTarget;
+					m_uiFadeActive &= ~uiMask;
 				}
 
 				pChannel->m_fActual = ulNewValue;
@@ -296,11 +320,14 @@ void IO_ControlClass::FadeUpdate( void )
 
 				if( pChannel->m_fActual <= pChannel->m_fTarget )
 				{
-					ulNewValue = pChannel->m_fTarget;
+					ulNewValue		= pChannel->m_fTarget;
+					m_uiFadeActive &= ~uiMask;
 				}
 
 				pChannel->m_fActual = ulNewValue;
 			}
+
+			uiMask <<= 1;
 		}
 	}
 }
@@ -349,20 +376,32 @@ void IO_ControlClass::HandleLed( uint8_t usLedNo, bool bOn )
 
 	if( bOn )
 	{
+		SetWordBit( m_uiLedsOn, usLedNo );
+
 		pChannel->m_fTarget = (float)PWM_STEP_TIME * usBrightness;
 
 		if( 0 == m_uiFadeTimeUp )
 		{
 			pChannel->m_fActual = pChannel->m_fTarget;
 		}
+		else
+		{
+			SetWordBit( m_uiFadeActive, usLedNo );
+		}
 	}
 	else
 	{
+		ClearWordBit( m_uiLedsOn, usLedNo );
+
 		pChannel->m_fTarget = 0.0;
 
 		if( 0 == m_uiFadeTimeDown )
 		{
 			pChannel->m_fActual = 0.0;
+		}
+		else
+		{
+			SetWordBit( m_uiFadeActive, usLedNo );
 		}
 	}
 }
@@ -413,11 +452,15 @@ void IO_ControlClass::SwitchLed( uint8_t usLedNo, bool bOn )
 			{
 				pChannel->m_fTarget = (float)PWM_STEP_TIME * usBrightness;
 				pChannel->m_fActual = pChannel->m_fTarget;
+
+				SetWordBit( m_uiLedsOn, usLedNo );
 			}
 			else
 			{
 				pChannel->m_fTarget = 0.0;
 				pChannel->m_fActual = 0.0;
+
+				ClearWordBit( m_uiLedsOn, usLedNo );
 			}
 		}
 		else
@@ -439,11 +482,26 @@ void IO_ControlClass::SwitchLed( uint8_t usLedNo, bool bOn )
 //	IsFadeFinished
 //------------------------------------------------------------------
 //
+bool IO_ControlClass::IsFadeFinished( void )
+{
+	if( 0 == m_uiFadeActive )
+	{
+		return( true );
+	}
+	
+	return( false );
+}
+
+
+//******************************************************************
+//	IsFadeFinished
+//------------------------------------------------------------------
+//
 bool IO_ControlClass::IsFadeFinished( uint8_t usLedNo )
 {
 	if( SIGNAL_LEDS > usLedNo )
 	{
-		if( g_arChannel[ usLedNo ].m_fActual == g_arChannel[ usLedNo ].m_fTarget )
+		if( 0 == (m_uiFadeActive & (1 << usLedNo)) )
 		{
 			return( true );
 		}
@@ -462,7 +520,6 @@ void IO_ControlClass::GetFadeTimes( void )
 	switch( m_usSignalType )
 	{
 		case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
-		case SIGNAL_TYPE_59:
 		case SIGNAL_TYPE_60:
 		case SIGNAL_TYPE_COMPACT:
 		case SIGNAL_TYPE_KS:
@@ -477,6 +534,7 @@ void IO_ControlClass::GetFadeTimes( void )
 			break;
 			
 		case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
+		case SIGNAL_TYPE_59:
 			m_uiFadeTimeUp		= g_clLncvStorage.GetFadeTimeUp(   IDX_FADE_TIME_MIDDLE );
 			m_uiFadeTimeDown	= g_clLncvStorage.GetFadeTimeDown( IDX_FADE_TIME_MIDDLE );
 			break;

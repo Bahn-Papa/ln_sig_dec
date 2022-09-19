@@ -11,6 +11,14 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	2		from: 19.09.2022
+//#
+//#	Implementation:
+//#		-	add version number into EEPROM
+//#		-	add define to write test values into EEPROM
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	1		from: 17.09.2022
 //#
 //#	Implementation:
@@ -28,6 +36,15 @@
 #include <Arduino.h>
 
 #include "lncv_storage.h"
+
+
+//==========================================================================
+//
+//		D E F I N I T I O N S
+//
+//==========================================================================
+
+//#define WRITE_TEST_VALUES		1
 
 
 //==========================================================================
@@ -59,29 +76,34 @@ LncvStorageClass::LncvStorageClass()
 //	If so, then the EEPROM will be filled with default config infos
 //	and all addresses will be set to zero.
 //
-void LncvStorageClass::CheckEEPROM( void )
+void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 {
 	uint8_t		idx;
 	uint16_t	uiCheckValue = eeprom_read_word( (uint16_t *)0 );
+	uint16_t	uiVersion;
 
-#ifdef DEBUGGING_PRINTOUT
-	g_clDebugging.PrintStorageCheck( byte0, byte1 );
+
+#ifdef WRITE_TEST_VALUES
+	if( true )
+#else
+	if( (0xFFFF == uiCheckValue) || (0x0000 == uiCheckValue) )
 #endif
-
-//	if( (0xFFFF == uiCheckValue) || (0x0000 == uiCheckValue) )
 	{
 		//----------------------------------------------------------
 		//	the EEPROM is empty, so write default config info ...
 		//
-
-#ifdef DEBUGGING_PRINTOUT
-		g_clDebugging.PrintStorageDefault();
-#endif
-
-		WriteLNCV( LNCV_ADR_MODULE_ADDRESS,	100 );
 		WriteLNCV( LNCV_ADR_ARTIKEL_NUMMER,	ARTIKEL_NUMMER );
+		WriteLNCV( LNCV_ADR_VERSION, uiVersionNumber );
+
+#ifdef WRITE_TEST_VALUES
+		WriteLNCV( LNCV_ADR_MODULE_ADDRESS,	100 );
 		WriteLNCV( LNCV_ADR_SIGNAL_TYPE, SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE );
 		WriteLNCV( LNCV_ADR_SIGNAL_VALID_WAIT_TIME, 5000 );
+#else
+		WriteLNCV( LNCV_ADR_MODULE_ADDRESS,	1 );
+		WriteLNCV( LNCV_ADR_SIGNAL_TYPE, SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE );
+		WriteLNCV( LNCV_ADR_SIGNAL_VALID_WAIT_TIME, 100 );
+#endif
 
 		//----------------------------------------------------------
 		//	... default fade times ...
@@ -97,13 +119,23 @@ void LncvStorageClass::CheckEEPROM( void )
 		//	... and default light intensities
 		//		and address values into EEPROM
 		//
-		WriteLNCV( LNCV_ADR_TRACK_CONTACT,	0 );
+#ifdef WRITE_TEST_VALUES
+		WriteLNCV( LNCV_ADR_TRACK_CONTACT,	116 );
 		WriteLNCV( LNCV_ADR_NIGHTLIGHT,		115 );
+#else
+		WriteLNCV( LNCV_ADR_TRACK_CONTACT,	0 );
+		WriteLNCV( LNCV_ADR_NIGHTLIGHT,		0 );
+#endif
 
 		for( idx = 0 ; idx < NUMBER_LIGHTS ; idx++ )
 		{
+#ifdef WRITE_TEST_VALUES
 			WriteLNCV( LNCV_ADR_LIGHT_INTENSITY_LED_A + idx, 0xFF7F );
 			WriteLNCV( LNCV_ADR_LIGHT_A + idx, 101 + idx );
+#else
+			WriteLNCV( LNCV_ADR_LIGHT_INTENSITY_LED_A + idx, 0xFF7F );
+			WriteLNCV( LNCV_ADR_LIGHT_A + idx, 0 );
+#endif
 		}
 
 		//----------------------------------------------------------
@@ -114,8 +146,16 @@ void LncvStorageClass::CheckEEPROM( void )
 			WriteLNCV( idx, 0 );
 		}
 	}
-
-	delay( 1000 );
+	else
+	{
+		uiVersion = ReadLNCV( LNCV_ADR_VERSION );
+		
+		if( uiVersion != uiVersionNumber )
+		{
+			WriteLNCV( LNCV_ADR_VERSION, uiVersionNumber );
+		}
+	}
+	delay( 500 );
 }
 
 //**********************************************************************
