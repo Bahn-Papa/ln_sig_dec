@@ -1,0 +1,201 @@
+
+#pragma once
+
+//##########################################################################
+//#
+//#		LncvStorageClass
+//#
+//#	This class manages the LNCVs (L oco N et C onfiguration V ariables)
+//#	These variables will be saved in the EEPROM.
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File version:	1		from: 17.09.2022
+//#
+//#	Implementation:
+//#		-	first version
+//#
+//##########################################################################
+
+
+//==========================================================================
+//
+//		D E F I N I T I O N S
+//
+//==========================================================================
+
+
+//----------------------------------------------------------------------
+//	my artikle number
+#define ARTIKEL_NUMMER	1515
+
+
+//----------------------------------------------------------------------
+//	definitions for signal types
+//
+#define SIGNAL_TYPE_DIRECT_CONTROL_HARD		0
+#define SIGNAL_TYPE_DIRECT_CONTROL_FAST		1
+#define SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE	2
+#define SIGNAL_TYPE_DIRECT_CONTROL_SLOW		3
+#define SIGNAL_TYPE_59						4
+#define SIGNAL_TYPE_60						5
+#define SIGNAL_TYPE_COMPACT					6
+#define SIGNAL_TYPE_KS						7
+
+
+//----------------------------------------------------------------------
+//	address definitions for config informations
+//
+#define LNCV_ADR_MODULE_ADDRESS				0
+#define LNCV_ADR_ARTIKEL_NUMMER				1
+#define LNCV_ADR_SIGNAL_TYPE				2
+#define LNCV_ADR_TRACK_CONTACT				3
+#define LNCV_ADR_NIGHTLIGHT					4
+#define LNCV_ADR_SIGNAL_VALID_WAIT_TIME		5
+
+#define LNCV_ADR_SPARE						6
+
+
+//----------------------------------------------------------------------
+//	light intensity values
+//
+//	low byte	= night intensity
+//	high byte	= day intensity
+//
+#define LNCV_ADR_LIGHT_INTENSITY_LED_A		11
+#define LNCV_ADR_LIGHT_INTENSITY_LED_B		12
+#define LNCV_ADR_LIGHT_INTENSITY_LED_C		13
+#define LNCV_ADR_LIGHT_INTENSITY_LED_D		14
+#define LNCV_ADR_LIGHT_INTENSITY_LED_E		15
+#define LNCV_ADR_LIGHT_INTENSITY_LED_F		16
+#define LNCV_ADR_LIGHT_INTENSITY_LED_G		17
+#define LNCV_ADR_LIGHT_INTENSITY_LED_H		18
+#define LNCV_ADR_LIGHT_INTENSITY_LED_I		19
+#define LNCV_ADR_LIGHT_INTENSITY_LED_J		20
+#define LNCV_ADR_LIGHT_INTENSITY_LED_K		21
+#define LNCV_ADR_LIGHT_INTENSITY_LED_L		22
+#define LNCV_ADR_LIGHT_INTENSITY_LED_M		23
+#define LNCV_ADR_LIGHT_INTENSITY_LED_N		24
+
+#define MASK_INTENSITIY_NIGHT				0x00FF
+#define MASK_INTENSITIY_DAY					0xFF00
+
+#define BRIGHTNESS_MAX						255
+#define BRIGHTNESS_MIN						0
+
+
+//----------------------------------------------------------------------
+//	fade times
+//
+#define LNCV_ADR_FADE_TIME_UP_FAST			25
+#define LNCV_ADR_FADE_TIME_UP_MIDDLE		26
+#define LNCV_ADR_FADE_TIME_UP_SLOW			27
+#define LNCV_ADR_FADE_TIME_DOWN_FAST		28
+#define LNCV_ADR_FADE_TIME_DOWN_MIDDLE		29
+#define LNCV_ADR_FADE_TIME_DOWN_SLOW		30
+
+#define IDX_FADE_TIME_IMMEDIATE				0
+#define IDX_FADE_TIME_FAST					1
+#define IDX_FADE_TIME_MIDDLE				2
+#define IDX_FADE_TIME_SLOW					3
+
+#define FADE_TIME_COUNT						4
+
+
+//----------------------------------------------------------------------
+//	address definitions to switch each light separately
+//
+#define LNCV_ADR_LIGHT_A					31
+#define LNCV_ADR_LIGHT_B					32
+#define LNCV_ADR_LIGHT_C					33
+#define LNCV_ADR_LIGHT_D					34
+#define LNCV_ADR_LIGHT_E					35
+#define LNCV_ADR_LIGHT_F					36
+#define LNCV_ADR_LIGHT_G					37
+#define LNCV_ADR_LIGHT_H					38
+#define LNCV_ADR_LIGHT_I					39
+#define LNCV_ADR_LIGHT_J					40
+#define LNCV_ADR_LIGHT_K					41
+#define LNCV_ADR_LIGHT_L					42
+#define LNCV_ADR_LIGHT_M					43
+#define LNCV_ADR_LIGHT_N					44
+
+
+//----------------------------------------------------------------------
+//	number of device addresses
+//
+//	14 lights to control	=>		14 addresses
+//	track contact			=>		 1 address
+//	select nightlight		=>		 1 address
+//						TOTAL OF	16 addresses
+//
+#define NUMBER_LIGHTS			14
+#define	DEVICE_COUNT			(NUMBER_LIGHTS + 2)
+
+
+//----------------------------------------------------------------------
+//	index for signal aspects
+//
+#define IDX_SIGNAL_MAIN_BIT_0			0
+#define IDX_SIGNAL_MAIN_BIT_1			1
+#define IDX_SIGNAL_MAIN_BIT_2			2
+#define IDX_SIGNAL_MAIN_BIT_3			3
+
+#define IDX_SIGNAL_APPROACH_BIT_0		7
+#define IDX_SIGNAL_APPROACH_BIT_1		8
+#define IDX_SIGNAL_APPROACH_BIT_2		9
+#define IDX_SIGNAL_APPROACH_BIT_3		10
+
+
+//----------------------------------------------------------------------
+//	index into IN address array
+//	to use when call function GetInAddress()
+//
+#define IDX_TRACK_CONTACT			(NUMBER_LIGHTS)
+#define IDX_NIGHTLIGHT				(NUMBER_LIGHTS + 1)
+
+
+////////////////////////////////////////////////////////////////////////
+//	CLASS:	LncvStorageClass
+//
+class LncvStorageClass
+{
+	public:
+		//----------------------------------------------------------
+		//	Constructor
+		//
+		LncvStorageClass();
+
+		//----------------------------------------------------------
+		//
+		inline uint8_t GetSignalType( void )
+		{
+			return( m_usSignalType );
+		}
+
+
+		void CheckEEPROM( void );
+		void Init( void );
+
+		uint16_t GetFadeTimeUp(   uint8_t idx );
+		uint16_t GetFadeTimeDown( uint8_t idx );
+		uint8_t  GetLightIntensityDay(	uint8_t usLedNo );
+		uint8_t  GetLightIntensityNight( uint8_t usLedNo );
+
+		bool IsValidLNCVAddress( uint16_t uiAddress );
+		uint16_t ReadLNCV(  uint16_t uiAddress );
+		void	 WriteLNCV( uint16_t uiAddress, uint16_t uiValue );
+
+
+	private:
+		uint8_t	m_usSignalType;
+};
+
+
+//==========================================================================
+//
+//		E X T E R N   G L O B A L   V A R I A B L E S
+//
+//==========================================================================
+
+extern LncvStorageClass		g_clLncvStorage;
