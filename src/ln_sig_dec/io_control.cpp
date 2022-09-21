@@ -28,16 +28,32 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	2		from: 19.09.2022
+//#	File Version:	2		from: 21.09.2022
 //#
 //#	Implementation:
 //#		-	initialize the signal with Hp0
 //#		-	implement signal aspects: Hp0, Hp1 and Hp2
-//#			add variables	'm_uiLedsOn'
-//#							'm_usSignalAspectMain'
-//#							'm_usSignalAspectApproach'
-//#							'm_uiFadeActive'
-//#			add function	'IsFadeFinished( void )'
+//#			add variables
+//#				m_uiLedsOn
+//#				m_usSignalAspectMain
+//#				m_usSignalAspectMainBuffer
+//#				m_usSignalAspectApproach
+//#				m_usSignalAspectApproachBuffer
+//#				m_uiFadeActive
+//#				m_bTransitionActive
+//#				m_puiSequenceMatrixMain
+//#				m_puiSequenceMatrixApproach
+//#				m_puiStepMain
+//#				m_puiStepApproach
+//#			add functions
+//#				Loop()
+//#				IsFadeFinished()
+//#				SetSignalType()
+//#				ProcessTransition()
+//#			rename functions:
+//#				from				to
+//#				GetFadeTimes()		SetSignalType()
+//#				FadeUpdate()		ProcessBrightnessAndFade()
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -60,6 +76,7 @@
 #include "io_control.h"
 #include "lncv_storage.h"
 #include "macros.h"
+#include "sequencer_tables.h"
 
 
 //==========================================================================
@@ -68,14 +85,14 @@
 //
 //==========================================================================
 
+#define SIGNAL_MAIN_LEDS		0x21FF
+
+
 //----------------------------------------------------------------------
 //	Cycle time in µs
 //
 #define PWM_CYCLE_TIME			20400
 #define PWM_STEP_TIME			(PWM_CYCLE_TIME / 255)
-
-#define FADE_TIME_UP_INIT		1000
-#define FADE_TIME_DOWN_INIT		2000
 
 #define	LEDS_PORTB				0x30
 #define LEDS_PORTC				0x3F
@@ -184,16 +201,25 @@ IO_ControlClass::IO_ControlClass()
 //
 void IO_ControlClass::Init( void )
 {
-	m_ulLastCycleStartTime		= 0L;
-	m_ulCycleTime				= 0L;
-	m_ulCycleStepTime			= 0L;
-	m_uiLedsOn					= 0x0000;
-	m_uiFadeActive				= 0x0000;
-	m_usSignalType				= g_clLncvStorage.GetSignalType();
-	m_usSignalAspectMain		= SIGNAL_ASPECT_HP0;
-	m_usSignalAspectApproach	= SIGNAL_ASPECT_HP0;
-	m_bNightLight				= false;
+	m_puiSequenceMatrixMain			= 0x0000;
+	m_puiSequenceMatrixApproach		= 0x0000;
+	m_puiStepMain					= 0x0000;
+	m_puiStepApproach				= 0x0000;
+	m_ulLastCycleStartTime			= 0L;
+	m_ulCycleTime					= 0L;
+	m_ulCycleStepTime				= 0L;
+	m_uiLedsOn						= 0x0000;
+	m_uiFadeActive					= 0x0000;
+	m_uiFadeTimeUp					= 0;
+	m_uiFadeTimeDown				= 0;
+	m_usSignalAspectMain			= SIGNAL_ASPECT_HP0;
+	m_usSignalAspectMainBuffer		= SIGNAL_ASPECT_HP0;
+	m_usSignalAspectApproach		= SIGNAL_ASPECT_HP0;
+	m_usSignalAspectApproachBuffer	= SIGNAL_ASPECT_HP0;
+	m_bNightLight					= false;
+	m_bTransitionActive				= false;
 
+	SetSignalType();
 	GetFadeTimes();
 
 	for( uint8_t idx = 0 ; idx < SIGNAL_LEDS ; idx++ )
@@ -214,12 +240,369 @@ void IO_ControlClass::Init( void )
 
 
 //******************************************************************
-//	FadeUpdate
+//	Loop
+//------------------------------------------------------------------
+//
+void IO_ControlClass::Loop( void )
+{
+	//----------------------------------------------------------
+	//	process signal aspect transition
+	//
+	if( m_bTransitionActive )
+	{
+		ProcessTransition();
+	}
+
+	//----------------------------------------------------------
+	//	process fading
+	//
+	ProcessBrightnessAndFade();
+}
+
+
+//******************************************************************
+//	SetNightLight
+//------------------------------------------------------------------
+//
+void IO_ControlClass::SetNightLight( bool bOn )
+{
+	if( m_bNightLight != bOn )
+	{
+		m_bNightLight = bOn;
+		
+		CalculateFadeRates();
+		
+		for( uint8_t idx = 0 ; SIGNAL_LEDS > idx ; idx++ )
+		{
+			if( 0.0 != g_arChannel[ idx ].m_fTarget )
+			{
+				HandleLed( idx, true );
+			}
+		}
+	}
+}
+
+
+//******************************************************************
+//	HandleLed
+//------------------------------------------------------------------
+//
+void IO_ControlClass::HandleLed( uint8_t usLedNo, bool bOn )
+{
+	PWMChannel_t*	pChannel		= &(g_arChannel[ usLedNo ]);
+	uint8_t			usBrightness;
+
+	if( m_bNightLight )
+	{
+		usBrightness = pChannel->m_usBrightnessNight;
+	}
+	else
+	{
+		usBrightness = pChannel->m_usBrightnessDay;
+	}
+
+	if( bOn )
+	{
+		SetWordBit( m_uiLedsOn, usLedNo );
+
+		pChannel->m_fTarget = (float)PWM_STEP_TIME * usBrightness;
+
+		if( 0 == m_uiFadeTimeUp )
+		{
+			pChannel->m_fActual = pChannel->m_fTarget;
+		}
+		else
+		{
+			SetWordBit( m_uiFadeActive, usLedNo );
+		}
+	}
+	else
+	{
+		ClearWordBit( m_uiLedsOn, usLedNo );
+
+		pChannel->m_fTarget = 0.0;
+
+		if( 0 == m_uiFadeTimeDown )
+		{
+			pChannel->m_fActual = 0.0;
+		}
+		else
+		{
+			SetWordBit( m_uiFadeActive, usLedNo );
+		}
+	}
+}
+
+
+//******************************************************************
+//	HandleSignalAspectMain
+//------------------------------------------------------------------
+//
+void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect )
+{
+	//----------------------------------------------------------
+	//	store new signal aspect in a buffer just in case
+	//	a signal aspect transition is active
+	//
+	if( m_usSignalAspectMainBuffer != usSignalAspect )
+	{
+		m_usSignalAspectMainBuffer = usSignalAspect;
+	}
+	
+	//----------------------------------------------------------
+	//	if no signal aspect transition is active then
+	//		start the transition
+	//		store new signal aspect
+	//
+	if(		!m_bTransitionActive
+		&&	(m_usSignalAspectMain != usSignalAspect) )
+	{
+		m_bTransitionActive		= true;
+		m_puiStepMain			=		m_puiSequenceMatrixMain
+									+	((SIGNAL_ASPECTS * m_usSignalAspectMain) + usSignalAspect);
+		m_usSignalAspectMain	= usSignalAspect;
+	}
+}
+
+
+//******************************************************************
+//	HandleSignalAspectApproach
+//------------------------------------------------------------------
+//
+void IO_ControlClass::HandleSignalAspectApproach( uint8_t usSignalAspect )
+{
+}
+
+
+//******************************************************************
+//	SwitchLed
+//------------------------------------------------------------------
+//
+void IO_ControlClass::SwitchLed( uint8_t usLedNo, bool bOn )
+{
+	PWMChannel_t*	pChannel		= &(g_arChannel[ usLedNo ]);
+	uint8_t			usBrightness;
+
+
+	if( TOTAL_LEDS > usLedNo )
+	{
+		if( SIGNAL_LEDS > usLedNo )
+		{
+			if( m_bNightLight )
+			{
+				usBrightness = pChannel->m_usBrightnessNight;
+			}
+			else
+			{
+				usBrightness = pChannel->m_usBrightnessDay;
+			}
+
+			if( bOn )
+			{
+				pChannel->m_fTarget = (float)PWM_STEP_TIME * usBrightness;
+				pChannel->m_fActual = pChannel->m_fTarget;
+
+				SetWordBit( m_uiLedsOn, usLedNo );
+			}
+			else
+			{
+				pChannel->m_fTarget = 0.0;
+				pChannel->m_fActual = 0.0;
+
+				ClearWordBit( m_uiLedsOn, usLedNo );
+			}
+		}
+		else
+		{
+			if( bOn )
+			{
+				sbi( *g_arPorts[ usLedNo ], g_arPortPins[ usLedNo ] );
+			}
+			else
+			{
+				cbi( *g_arPorts[ usLedNo ], g_arPortPins[ usLedNo ] );
+			}
+		}
+	}
+}
+
+
+//******************************************************************
+//	IsFadeFinished
+//------------------------------------------------------------------
+//
+bool IO_ControlClass::IsFadeFinished( void )
+{
+	if( 0 == m_uiFadeActive )
+	{
+		return( true );
+	}
+	
+	return( false );
+}
+
+
+//******************************************************************
+//	IsFadeFinished
+//------------------------------------------------------------------
+//
+bool IO_ControlClass::IsFadeFinished( uint8_t usLedNo )
+{
+	if( SIGNAL_LEDS > usLedNo )
+	{
+		if( 0 == (m_uiFadeActive & (1 << usLedNo)) )
+		{
+			return( true );
+		}
+	}
+
+	return( false );
+}
+
+
+//******************************************************************
+//	SetSignalType
+//------------------------------------------------------------------
+//
+void IO_ControlClass::SetSignalType( void )
+{
+	m_usSignalType	= g_clLncvStorage.GetSignalType();
+
+	switch( m_usSignalType )
+	{
+		case SIGNAL_TYPE_59:
+			m_uiFadeTimeUp				= g_clLncvStorage.GetFadeTimeUp(   IDX_FADE_TIME_MIDDLE );
+			m_uiFadeTimeDown			= g_clLncvStorage.GetFadeTimeDown( IDX_FADE_TIME_MIDDLE );
+			m_puiSequenceMatrixMain		= &g_arS59Main[ 0 ][ 0 ];
+			m_puiSequenceMatrixApproach	= 0x0000;
+			break;
+			
+		case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
+			m_uiFadeTimeUp		= g_clLncvStorage.GetFadeTimeUp(   IDX_FADE_TIME_FAST );
+			m_uiFadeTimeDown	= g_clLncvStorage.GetFadeTimeDown( IDX_FADE_TIME_FAST );
+			break;
+			
+		case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
+			m_uiFadeTimeUp		= g_clLncvStorage.GetFadeTimeUp(   IDX_FADE_TIME_MIDDLE );
+			m_uiFadeTimeDown	= g_clLncvStorage.GetFadeTimeDown( IDX_FADE_TIME_MIDDLE );
+			break;
+			
+		case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
+			m_uiFadeTimeUp		= g_clLncvStorage.GetFadeTimeUp(   IDX_FADE_TIME_SLOW );
+			m_uiFadeTimeDown	= g_clLncvStorage.GetFadeTimeDown( IDX_FADE_TIME_SLOW );
+			break;
+
+		case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
+		case SIGNAL_TYPE_60:
+		case SIGNAL_TYPE_COMPACT:
+		case SIGNAL_TYPE_KS:
+		default:
+			break;
+	}
+}
+
+
+//******************************************************************
+//	CalculateFadeRates
+//------------------------------------------------------------------
+//	This function will calulate the delta values for the fade.
+//
+void IO_ControlClass::CalculateFadeRates( void )
+{
+	PWMChannel_t*	pChannel;
+	float			fHelper;
+	uint8_t			usBrightness;
+
+	for( uint8_t idx = 0 ; SIGNAL_LEDS > idx ; idx++ )
+	{
+		pChannel = &(g_arChannel[ idx ]);
+
+		pChannel->m_fFadeRateUp		= 0.0;
+		pChannel->m_fFadeRateDwon	= 0.0;
+
+		if( m_bNightLight )
+		{
+			usBrightness = pChannel->m_usBrightnessNight;
+		}
+		else
+		{
+			usBrightness = pChannel->m_usBrightnessDay;
+		}
+
+		fHelper = usBrightness * PWM_STEP_TIME;
+
+		if( 0 < m_uiFadeTimeUp )
+		{
+			pChannel->m_fFadeRateUp = fHelper / m_uiFadeTimeUp / 1000 * PWM_STEP_TIME;
+		}
+		
+		if( 0 < m_uiFadeTimeDown )
+		{
+			pChannel->m_fFadeRateDwon = fHelper / m_uiFadeTimeDown / 1000 * PWM_STEP_TIME;
+		}
+	}
+}
+
+
+//******************************************************************
+//	ProcessTransition
+//------------------------------------------------------------------
+//	This function will process the steps of
+//	a signal aspect transition
+//
+void IO_ControlClass::ProcessTransition( void )
+{
+	uint16_t	uiAspect;
+	uint16_t	uiDiff;
+	uint16_t	uiMask	= 0x0001;
+
+	if( IsFadeFinished() )
+	{
+		uiAspect = pgm_read_word( m_puiStepMain );
+
+		if( uiAspect )
+		{
+			//--------------------------------------------------
+			//	check wich LEDs of the main signal
+			//	should go OFF and wich should go ON
+			//
+			uiDiff  = m_uiLedsOn & SIGNAL_MAIN_LEDS;
+			uiDiff ^= uiAspect;
+
+			for( uint8_t idx = 0 ; SIGNAL_LEDS > idx ; idx++ )
+			{
+				if( uiDiff & uiMask )
+				{
+					if( uiAspect & uiMask )
+					{
+						HandleLed( idx, true );
+					}
+					else
+					{
+						HandleLed( idx, false );
+					}
+				}
+
+				mask <<= 1;
+			}
+
+			m_puiStepMain++;
+		}
+		else
+		{
+			m_bTransitionActive = false;
+		}
+	}
+}
+
+
+//******************************************************************
+//	ProcessBrightnessAndFade
 //------------------------------------------------------------------
 //	This function will do the main work if a LED should be fade up
 //	or down.
 //
-void IO_ControlClass::FadeUpdate( void )
+void IO_ControlClass::ProcessBrightnessAndFade( void )
 {
 	PWMChannel_t*	pChannel;
 	uint8_t			idx;
@@ -328,262 +711,6 @@ void IO_ControlClass::FadeUpdate( void )
 			}
 
 			uiMask <<= 1;
-		}
-	}
-}
-
-
-//******************************************************************
-//	SetNightLight
-//------------------------------------------------------------------
-//
-void IO_ControlClass::SetNightLight( bool bOn )
-{
-	if( m_bNightLight != bOn )
-	{
-		m_bNightLight = bOn;
-		
-		CalculateFadeRates();
-		
-		for( uint8_t idx = 0 ; SIGNAL_LEDS > idx ; idx++ )
-		{
-			if( 0.0 != g_arChannel[ idx ].m_fTarget )
-			{
-				HandleLed( idx, true );
-			}
-		}
-	}
-}
-
-
-//******************************************************************
-//	HandleLed
-//------------------------------------------------------------------
-//
-void IO_ControlClass::HandleLed( uint8_t usLedNo, bool bOn )
-{
-	PWMChannel_t*	pChannel		= &(g_arChannel[ usLedNo ]);
-	uint8_t			usBrightness;
-
-	if( m_bNightLight )
-	{
-		usBrightness = pChannel->m_usBrightnessNight;
-	}
-	else
-	{
-		usBrightness = pChannel->m_usBrightnessDay;
-	}
-
-	if( bOn )
-	{
-		SetWordBit( m_uiLedsOn, usLedNo );
-
-		pChannel->m_fTarget = (float)PWM_STEP_TIME * usBrightness;
-
-		if( 0 == m_uiFadeTimeUp )
-		{
-			pChannel->m_fActual = pChannel->m_fTarget;
-		}
-		else
-		{
-			SetWordBit( m_uiFadeActive, usLedNo );
-		}
-	}
-	else
-	{
-		ClearWordBit( m_uiLedsOn, usLedNo );
-
-		pChannel->m_fTarget = 0.0;
-
-		if( 0 == m_uiFadeTimeDown )
-		{
-			pChannel->m_fActual = 0.0;
-		}
-		else
-		{
-			SetWordBit( m_uiFadeActive, usLedNo );
-		}
-	}
-}
-
-
-//******************************************************************
-//	HandleSignalAspectMain
-//------------------------------------------------------------------
-//
-void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect )
-{
-}
-
-
-//******************************************************************
-//	HandleSignalAspectApproach
-//------------------------------------------------------------------
-//
-void IO_ControlClass::HandleSignalAspectApproach( uint8_t usSignalAspect )
-{
-}
-
-
-//******************************************************************
-//	SwitchLed
-//------------------------------------------------------------------
-//
-void IO_ControlClass::SwitchLed( uint8_t usLedNo, bool bOn )
-{
-	PWMChannel_t*	pChannel		= &(g_arChannel[ usLedNo ]);
-	uint8_t			usBrightness;
-
-
-	if( TOTAL_LEDS > usLedNo )
-	{
-		if( SIGNAL_LEDS > usLedNo )
-		{
-			if( m_bNightLight )
-			{
-				usBrightness = pChannel->m_usBrightnessNight;
-			}
-			else
-			{
-				usBrightness = pChannel->m_usBrightnessDay;
-			}
-
-			if( bOn )
-			{
-				pChannel->m_fTarget = (float)PWM_STEP_TIME * usBrightness;
-				pChannel->m_fActual = pChannel->m_fTarget;
-
-				SetWordBit( m_uiLedsOn, usLedNo );
-			}
-			else
-			{
-				pChannel->m_fTarget = 0.0;
-				pChannel->m_fActual = 0.0;
-
-				ClearWordBit( m_uiLedsOn, usLedNo );
-			}
-		}
-		else
-		{
-			if( bOn )
-			{
-				sbi( *g_arPorts[ usLedNo ], g_arPortPins[ usLedNo ] );
-			}
-			else
-			{
-				cbi( *g_arPorts[ usLedNo ], g_arPortPins[ usLedNo ] );
-			}
-		}
-	}
-}
-
-
-//******************************************************************
-//	IsFadeFinished
-//------------------------------------------------------------------
-//
-bool IO_ControlClass::IsFadeFinished( void )
-{
-	if( 0 == m_uiFadeActive )
-	{
-		return( true );
-	}
-	
-	return( false );
-}
-
-
-//******************************************************************
-//	IsFadeFinished
-//------------------------------------------------------------------
-//
-bool IO_ControlClass::IsFadeFinished( uint8_t usLedNo )
-{
-	if( SIGNAL_LEDS > usLedNo )
-	{
-		if( 0 == (m_uiFadeActive & (1 << usLedNo)) )
-		{
-			return( true );
-		}
-	}
-
-	return( false );
-}
-
-
-//******************************************************************
-//	GetFadeTimes
-//------------------------------------------------------------------
-//
-void IO_ControlClass::GetFadeTimes( void )
-{
-	switch( m_usSignalType )
-	{
-		case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
-		case SIGNAL_TYPE_60:
-		case SIGNAL_TYPE_COMPACT:
-		case SIGNAL_TYPE_KS:
-		default:
-			m_uiFadeTimeUp		= 0;
-			m_uiFadeTimeDown	= 0;
-			break;
-			
-		case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
-			m_uiFadeTimeUp		= g_clLncvStorage.GetFadeTimeUp(   IDX_FADE_TIME_FAST );
-			m_uiFadeTimeDown	= g_clLncvStorage.GetFadeTimeDown( IDX_FADE_TIME_FAST );
-			break;
-			
-		case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
-		case SIGNAL_TYPE_59:
-			m_uiFadeTimeUp		= g_clLncvStorage.GetFadeTimeUp(   IDX_FADE_TIME_MIDDLE );
-			m_uiFadeTimeDown	= g_clLncvStorage.GetFadeTimeDown( IDX_FADE_TIME_MIDDLE );
-			break;
-			
-		case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
-			m_uiFadeTimeUp		= g_clLncvStorage.GetFadeTimeUp(   IDX_FADE_TIME_SLOW );
-			m_uiFadeTimeDown	= g_clLncvStorage.GetFadeTimeDown( IDX_FADE_TIME_SLOW );
-			break;
-	}
-}
-
-
-//******************************************************************
-//	CalculateFadeRates
-//------------------------------------------------------------------
-//	This function will calulate the delta values for the fade.
-//
-void IO_ControlClass::CalculateFadeRates( void )
-{
-	PWMChannel_t*	pChannel;
-	float			fHelper;
-	uint8_t			usBrightness;
-
-	for( uint8_t idx = 0 ; SIGNAL_LEDS > idx ; idx++ )
-	{
-		pChannel = &(g_arChannel[ idx ]);
-
-		pChannel->m_fFadeRateUp		= 0.0;
-		pChannel->m_fFadeRateDwon	= 0.0;
-
-		if( m_bNightLight )
-		{
-			usBrightness = pChannel->m_usBrightnessNight;
-		}
-		else
-		{
-			usBrightness = pChannel->m_usBrightnessDay;
-		}
-
-		fHelper = usBrightness * PWM_STEP_TIME;
-
-		if( 0 < m_uiFadeTimeUp )
-		{
-			pChannel->m_fFadeRateUp = fHelper / m_uiFadeTimeUp / 1000 * PWM_STEP_TIME;
-		}
-		
-		if( 0 < m_uiFadeTimeDown )
-		{
-			pChannel->m_fFadeRateDwon = fHelper / m_uiFadeTimeDown / 1000 * PWM_STEP_TIME;
 		}
 	}
 }

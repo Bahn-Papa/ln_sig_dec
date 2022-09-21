@@ -10,17 +10,33 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	2		from: 19.09.2022
+//#	File Version:	2		from: 21.09.2022
 //#
 //#	Implementation:
 //#		-	initialize the signal with Hp0
 //#		-	implement signal aspects: Hp0, Hp1 and Hp2
 //#			add definitions for signal aspects
-//#			add variables	'm_uiLedsOn'
-//#							'm_usSignalAspectMain'
-//#							'm_usSignalAspectApproach'
-//#							'm_uiFadeActive'
-//#			add function	'IsFadeFinished( void )'
+//#			add variables
+//#				m_uiLedsOn
+//#				m_usSignalAspectMain
+//#				m_usSignalAspectMainBuffer
+//#				m_usSignalAspectApproach
+//#				m_usSignalAspectApproachBuffer
+//#				m_uiFadeActive
+//#				m_bTransitionActive
+//#				m_puiSequenceMatrixMain
+//#				m_puiSequenceMatrixApproach
+//#				m_puiStepMain
+//#				m_puiStepApproach
+//#			add functions
+//#				Loop()
+//#				IsFadeFinished()
+//#				SetSignalType()
+//#				ProcessTransition()
+//#			rename functions:
+//#				from				to
+//#				GetFadeTimes()		SetSignalType()
+//#				FadeUpdate()		ProcessBrightnessAndFade()
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -90,7 +106,7 @@ class IO_ControlClass
 		IO_ControlClass();
 
 		void Init( void );
-		void FadeUpdate( void );
+		void Loop( void );
 
 		void SetNightLight( bool bNightLightOn );
 
@@ -105,6 +121,11 @@ class IO_ControlClass
 
 
 	private:
+		const uint16_t*	m_puiSequenceMatrixMain;
+		const uint16_t*	m_puiSequenceMatrixApproach;
+		const uint16_t* m_puiStepMain;
+		const uint16_t* m_puiStepApproach;
+
 		uint32_t	m_ulLastCycleStartTime;
 		uint32_t	m_ulCycleTime;
 		uint32_t	m_ulCycleStepTime;
@@ -114,11 +135,16 @@ class IO_ControlClass
 		uint16_t	m_uiFadeActive;
 		uint8_t		m_usSignalType;
 		uint8_t		m_usSignalAspectMain;
+		uint8_t		m_usSignalAspectMainBuffer;
 		uint8_t		m_usSignalAspectApproach;
+		uint8_t		m_usSignalAspectApproachBuffer;
 		bool		m_bNightLight;
+		bool		m_bTransitionActive;
 
-		void GetFadeTimes( void );
+		void SetSignalType( void );
 		void CalculateFadeRates( void );
+		void ProcessTransition( void );
+		void ProcessBrightnessAndFade( void );
 };
 
 

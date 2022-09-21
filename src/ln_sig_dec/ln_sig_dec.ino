@@ -27,7 +27,7 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	Version:	x.01.01		from: 19.09.2022
+//#	Version:	x.01.01		from: 21.09.2022
 //#
 //#	Implementation:
 //#		-	add version number into EEPROM
@@ -130,9 +130,9 @@ void loop()
 	g_clMyLoconet.CheckForMessageAndProcess();
 
 	//--------------------------------------------------------------
-	//	process fade
+	//	process I/Os
 	//
-	g_clControl.FadeUpdate();
+	g_clControl.Loop();
 	
 	//--------------------------------------------------------------
 	//	in prog mode green LED should blink
