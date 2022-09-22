@@ -24,6 +24,22 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	Signal Aspects
+//#	 0	Hp0
+//#	 1	Hp1
+//#	 2	Hp2
+//#	 3	Sh1
+//#	 4	Hp1 mit 1 Zusatzanzeiger
+//#	 5	Hp2 mit 1 Zusatzanzeiger
+//#	 6	Kennlicht
+//#	 7	Ersatzsignal
+//#	 8	Hp1 mit 2 Zusatzanzeiger	(not implemented yet)
+//#	 9	Hp1 mit 3 Zusatzanzeiger	(not implemented yet)
+//#	10	Hp2 mit 2 Zusatzanzeiger	(not implemented yet)
+//#	11	Hp2 mit 3 Zusatzanzeiger	(not implemented yet)
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	1		from: 21.09.2022
 //#
 //#	Implementation:
@@ -47,7 +63,10 @@
 //
 //==========================================================================
 
-#define SIGNAL_ASPECTS		3
+#define SIGNAL_ASPECTS_MAIN			8
+#define SIGNAL_ASPECTS_APPROACH		0
+
+#define SEQUENCE_END				0xFFFF
 
 
 //==========================================================================
@@ -59,7 +78,7 @@
 //**********************************************************************
 //	The no operation (NOP) sequence
 //
-const uint16_t sNOP PROGMEM = { 0x0000 };
+const uint16_t sNOP[] PROGMEM = { SEQUENCE_END };
 
 
 //**********************************************************************
@@ -69,37 +88,128 @@ const uint16_t sNOP PROGMEM = { 0x0000 };
 //------------------------------------------------------------------
 //	Main: from Hp0 to Hp1
 //
-const uint16_t s59_Hp0_Hp1 PROGMEM =
+const uint16_t s59_Hp0_Hp1[] PROGMEM =
 {
+	0b0000000000000000,
 	0b0000000000000010,
-	0b0000000000000000
+	SEQUENCE_END
 };
 
 //------------------------------------------------------------------
-//	Main: from Hp0 to Hp1
+//	Main: from Hp0 to Hp2
 //
-const uint16_t s59_Hp0_Hp2 PROGMEM =
+const uint16_t s59_Hp0_Hp2[] PROGMEM =
 {
-	0b0000000001000000,
-	0b0000000000000000
+	0b0000000000000000,
+	0b0000000001000010,
+	SEQUENCE_END
 };
 
 //------------------------------------------------------------------
-//	Main: from Hp1/Hp2 to Hp0
+//	Main: from Hp0 to Sh1
 //
-const uint16_t s59_Hp1_2_Hp0 PROGMEM =
+const uint16_t s59_Hp0_Sh1[] PROGMEM =
 {
+	0b0000000000000100,
+	0b0000000000100100,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	Main: from Hp0 to Hp1 including 1 Zusatzanzeiger
+//
+const uint16_t s59_Hp0_Hp1_ZS3[] PROGMEM =
+{
+	0b0000000000001101,
+	0b0000000000000001,
+	0b0000000000000011,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	Main: from Hp0 to Hp2 including 1 Zusatzanzeiger
+//
+const uint16_t s59_Hp0_Hp2_ZS3[] PROGMEM =
+{
+	0b0000000000001101,
+	0b0000000000000001,
+	0b0000000001000011,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	Main: from Hp0 to Kennlicht
+//
+const uint16_t s59_Hp0_KL[] PROGMEM =
+{
+	0b0000000000000000,
+	0b0000000000010000,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	Main: from Hp0 to Ersatzsignal
+//
+const uint16_t s59_Hp0_ZS1[] PROGMEM =
+{
+	0b0000000000000100,
+	0b0000000010000100,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	Main: from xxx to Hp0
+//
+const uint16_t s59_to_Hp0[] PROGMEM =
+{
+	0b0000000000000000,
 	0b0000000000001100,
-	0b0000000000000000
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	Main: from 1 Zusatzanzeiger to Hp0
+//
+const uint16_t s59_ZS3_Hp0[] PROGMEM =
+{
+	0b0000000000000001,
+	0b0000000000001101,
+	0b0000000000001100,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	Main: from Sh1 to Hp0
+//
+const uint16_t s59_Sh1_Hp0[] PROGMEM =
+{
+	0b0000000000000100,
+	0b0000000000001100,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	Main: from Hp0 to Ersatzsignal
+//
+const uint16_t s59_ZS1_Hp0[] PROGMEM =
+{
+	0b0000000000000100,
+	0b0000000000001100,
+	SEQUENCE_END
 };
 
 
 //**********************************************************************
 //	Signal Type '59': the sequence matrix
 //
-const uint16_t* const g_arS59Main[ SIGNAL_ASPECTS ][ SIGNAL_ASPECTS ] PROGMEM =
+const uint16_t* const g_arS59Main[ SIGNAL_ASPECTS_MAIN ][ SIGNAL_ASPECTS_MAIN ] PROGMEM =
 {
-	{ sNOP,				s59_Hp0_Hp1,	s59_Hp0_Hp2	},
-	{ s59_Hp1_2_Hp0,	sNOP,			sNOP		},
-	{ s59_Hp1_2_Hp0,	sNOP,			sNOP		}
+	{ sNOP,			s59_Hp0_Hp1,	s59_Hp0_Hp2,	s59_Hp0_Sh1,	s59_Hp0_Hp1_ZS3,	s59_Hp0_Hp2_ZS3,	s59_Hp0_KL,	s59_Hp0_ZS1	},
+	{ s59_to_Hp0,	sNOP,			sNOP,			sNOP,			sNOP,				sNOP,				sNOP,		sNOP		},
+	{ s59_to_Hp0,	sNOP,			sNOP,			sNOP,			sNOP,				sNOP,				sNOP,		sNOP		},
+	{ s59_Sh1_Hp0,	sNOP,			sNOP,			sNOP,			sNOP,				sNOP,				sNOP,		sNOP		},
+	{ s59_ZS3_Hp0,	sNOP,			sNOP,			sNOP,			sNOP,				sNOP,				sNOP,		sNOP		},
+	{ s59_ZS3_Hp0,	sNOP,			sNOP,			sNOP,			sNOP,				sNOP,				sNOP,		sNOP		},
+	{ s59_to_Hp0,	sNOP,			sNOP,			sNOP,			sNOP,				sNOP,				sNOP,		sNOP		},
+	{ s59_ZS1_Hp0,	sNOP,			sNOP,			sNOP,			sNOP,				sNOP,				sNOP,		sNOP		},
 };

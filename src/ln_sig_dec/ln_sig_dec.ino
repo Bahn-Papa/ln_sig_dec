@@ -153,6 +153,8 @@ void loop()
 
 				g_ulBlinkTimer = millis() + BLINK_TIME_ON;
 			}
+
+			g_bLedOn = !g_bLedOn;
 		}
 	}
 

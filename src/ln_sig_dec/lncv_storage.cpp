@@ -11,6 +11,13 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	3		from: 21.09.2022
+//#
+//#	Bug Fix:
+//#		-	correct default addresses for test case
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	2		from: 19.09.2022
 //#
 //#	Implementation:
@@ -79,13 +86,15 @@ LncvStorageClass::LncvStorageClass()
 void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 {
 	uint8_t		idx;
-	uint16_t	uiCheckValue = eeprom_read_word( (uint16_t *)0 );
 	uint16_t	uiVersion;
 
 
 #ifdef WRITE_TEST_VALUES
 	if( true )
 #else
+	uint16_t	uiCheckValue = eeprom_read_word( (uint16_t *)0 );
+
+
 	if( (0xFFFF == uiCheckValue) || (0x0000 == uiCheckValue) )
 #endif
 	{
@@ -96,8 +105,8 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		WriteLNCV( LNCV_ADR_VERSION, uiVersionNumber );
 
 #ifdef WRITE_TEST_VALUES
-		WriteLNCV( LNCV_ADR_MODULE_ADDRESS,	100 );
-		WriteLNCV( LNCV_ADR_SIGNAL_TYPE, SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE );
+		WriteLNCV( LNCV_ADR_MODULE_ADDRESS,	1000 );
+		WriteLNCV( LNCV_ADR_SIGNAL_TYPE, SIGNAL_TYPE_59 );
 		WriteLNCV( LNCV_ADR_SIGNAL_VALID_WAIT_TIME, 5000 );
 #else
 		WriteLNCV( LNCV_ADR_MODULE_ADDRESS,	1 );
@@ -120,8 +129,8 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		//		and address values into EEPROM
 		//
 #ifdef WRITE_TEST_VALUES
-		WriteLNCV( LNCV_ADR_TRACK_CONTACT,	116 );
-		WriteLNCV( LNCV_ADR_NIGHTLIGHT,		115 );
+		WriteLNCV( LNCV_ADR_TRACK_CONTACT,	1160 );
+		WriteLNCV( LNCV_ADR_NIGHTLIGHT,		1150 );
 #else
 		WriteLNCV( LNCV_ADR_TRACK_CONTACT,	0 );
 		WriteLNCV( LNCV_ADR_NIGHTLIGHT,		0 );
@@ -131,7 +140,7 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		{
 #ifdef WRITE_TEST_VALUES
 			WriteLNCV( LNCV_ADR_LIGHT_INTENSITY_LED_A + idx, 0xFF7F );
-			WriteLNCV( LNCV_ADR_LIGHT_A + idx, 101 + idx );
+			WriteLNCV( LNCV_ADR_LIGHT_A + idx, 1010 + (10 * idx) );
 #else
 			WriteLNCV( LNCV_ADR_LIGHT_INTENSITY_LED_A + idx, 0xFF7F );
 			WriteLNCV( LNCV_ADR_LIGHT_A + idx, 0 );
@@ -167,14 +176,6 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 //
 void LncvStorageClass::Init( void )
 {
-	uint16_t	helper;
-	uint8_t		idx;
-
-
-#ifdef DEBUGGING_PRINTOUT
-	g_clDebugging.PrintStorageRead();
-#endif
-
 	//--------------------------------------------------------------
 	//	read config information
 	//
@@ -267,7 +268,8 @@ uint8_t LncvStorageClass::GetLightIntensityNight( uint8_t usLedNo )
 //
 bool LncvStorageClass::IsValidLNCVAddress( uint16_t Adresse )
 {
-	if( (LNCV_ADR_MODULE_ADDRESS <= Adresse) && (LNCV_ADR_LIGHT_N >= Adresse) )
+//	if( (LNCV_ADR_MODULE_ADDRESS <= Adresse) && (LNCV_ADR_LIGHT_N >= Adresse) )
+	if( LNCV_ADR_LIGHT_N >= Adresse )
 	{
 		return( true );
 	}

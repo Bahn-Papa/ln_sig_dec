@@ -220,7 +220,6 @@ void IO_ControlClass::Init( void )
 	m_bTransitionActive				= false;
 
 	SetSignalType();
-	GetFadeTimes();
 
 	for( uint8_t idx = 0 ; idx < SIGNAL_LEDS ; idx++ )
 	{
@@ -340,27 +339,53 @@ void IO_ControlClass::HandleLed( uint8_t usLedNo, bool bOn )
 //
 void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect )
 {
-	//----------------------------------------------------------
-	//	store new signal aspect in a buffer just in case
-	//	a signal aspect transition is active
-	//
-	if( m_usSignalAspectMainBuffer != usSignalAspect )
+	const uint16_t* pHelper;
+	uint16_t		uiFirstStep;
+
+
+	if( SIGNAL_ASPECTS_MAIN > usSignalAspect )
 	{
-		m_usSignalAspectMainBuffer = usSignalAspect;
-	}
-	
-	//----------------------------------------------------------
-	//	if no signal aspect transition is active then
-	//		start the transition
-	//		store new signal aspect
-	//
-	if(		!m_bTransitionActive
-		&&	(m_usSignalAspectMain != usSignalAspect) )
-	{
-		m_bTransitionActive		= true;
-		m_puiStepMain			=		m_puiSequenceMatrixMain
-									+	((SIGNAL_ASPECTS * m_usSignalAspectMain) + usSignalAspect);
-		m_usSignalAspectMain	= usSignalAspect;
+		//------------------------------------------------------
+		//	store new signal aspect in a buffer just in case
+		//	a signal aspect transition is active
+		//
+		if( m_usSignalAspectMainBuffer != usSignalAspect )
+		{
+			m_usSignalAspectMainBuffer = usSignalAspect;
+		}
+		
+		//------------------------------------------------------
+		//	if no signal aspect transition is active then
+		//		start the transition
+		//		store new signal aspect
+		//
+		if(		!m_bTransitionActive
+			&&	(m_usSignalAspectMain != usSignalAspect) )
+		{
+			//----------------------------------------------
+			//	pHelper is the pointer to a zell of the
+			//	sequence matrix.
+			//	A zell of the sequence matrix contains the
+			//	pointer to the first step of a sequence.
+			//
+			pHelper	=	  m_puiSequenceMatrixMain 
+					  + ((SIGNAL_ASPECTS_MAIN * m_usSignalAspectMain) + usSignalAspect);
+
+			m_puiStepMain	= pgm_read_word( pHelper );
+			uiFirstStep		= pgm_read_word( m_puiStepMain );
+
+			if( SEQUENCE_END != uiFirstStep )
+			{
+				m_bTransitionActive		= true;
+				m_usSignalAspectMain	= usSignalAspect;
+
+				SwitchLed( LED_BLUE, true );
+			}
+			else
+			{
+				m_usSignalAspectMainBuffer = m_usSignalAspectMain;
+			}
+		}
 	}
 }
 
@@ -471,9 +496,9 @@ void IO_ControlClass::SetSignalType( void )
 	switch( m_usSignalType )
 	{
 		case SIGNAL_TYPE_59:
-			m_uiFadeTimeUp				= g_clLncvStorage.GetFadeTimeUp(   IDX_FADE_TIME_MIDDLE );
-			m_uiFadeTimeDown			= g_clLncvStorage.GetFadeTimeDown( IDX_FADE_TIME_MIDDLE );
-			m_puiSequenceMatrixMain		= &g_arS59Main[ 0 ][ 0 ];
+			m_uiFadeTimeUp				= g_clLncvStorage.GetFadeTimeUp(   IDX_FADE_TIME_SLOW );
+			m_uiFadeTimeDown			= g_clLncvStorage.GetFadeTimeDown( IDX_FADE_TIME_SLOW );
+			m_puiSequenceMatrixMain		= (uint16_t*)&g_arS59Main[ 0 ][ 0 ];
 			m_puiSequenceMatrixApproach	= 0x0000;
 			break;
 			
@@ -560,7 +585,7 @@ void IO_ControlClass::ProcessTransition( void )
 	{
 		uiAspect = pgm_read_word( m_puiStepMain );
 
-		if( uiAspect )
+		if( SEQUENCE_END > uiAspect )
 		{
 			//--------------------------------------------------
 			//	check wich LEDs of the main signal
@@ -583,7 +608,7 @@ void IO_ControlClass::ProcessTransition( void )
 					}
 				}
 
-				mask <<= 1;
+				uiMask <<= 1;
 			}
 
 			m_puiStepMain++;
@@ -591,6 +616,13 @@ void IO_ControlClass::ProcessTransition( void )
 		else
 		{
 			m_bTransitionActive = false;
+
+			SwitchLed( LED_BLUE, false );
+
+			if( m_usSignalAspectMain != m_usSignalAspectMainBuffer )
+			{
+				HandleSignalAspectMain( m_usSignalAspectMainBuffer );
+			}
 		}
 	}
 }
@@ -688,7 +720,7 @@ void IO_ControlClass::ProcessBrightnessAndFade( void )
 			{
 				ulNewValue = pChannel->m_fActual + pChannel->m_fFadeRateUp;
 				
-				if( pChannel->m_fActual >= pChannel->m_fTarget )
+				if( ulNewValue >= pChannel->m_fTarget )
 				{
 					ulNewValue		= pChannel->m_fTarget;
 					m_uiFadeActive &= ~uiMask;
@@ -701,7 +733,7 @@ void IO_ControlClass::ProcessBrightnessAndFade( void )
 			{
 				ulNewValue = pChannel->m_fActual - pChannel->m_fFadeRateDwon;
 
-				if( pChannel->m_fActual <= pChannel->m_fTarget )
+				if( ulNewValue <= pChannel->m_fTarget )
 				{
 					ulNewValue		= pChannel->m_fTarget;
 					m_uiFadeActive &= ~uiMask;
