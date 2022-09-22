@@ -11,14 +11,14 @@
 //#	See the table below for the assignment:
 //#
 //#		LED		Board Pin	Port Bit	Nano	Description
-//#		 A			X3.2		D0		  0		Zusatzsanzeiger
+//#		 A			X3.2		D0		  0		Zusatzsanzeiger (ZS3)
 //#		 B			X3.3		C5		 19		Hp1
 //#		 C			X3.4		C4		 18		Hp00 Zugfahrt
 //#		 D			X3.5		C3		 17		Hp00 Rangierfahrt
 //#		 E			X3.6		C2		 16		Kennlicht
 //#		 F			X3.7		C1		 15		SH1 Rangierfahrt
 //#		 G			X3.8		C0		 14		Hp2
-//#		 H			X1.2		D7		  7		Ersatzsignal
+//#		 H			X1.2		D7		  7		Ersatzsignal (ZS1)
 //#		 I			X1.3		D6		  6		Zusatz-Kennlicht
 //#		 J			X1.4		D5		  5
 //#		 K			X1.5		D4		  4
@@ -28,11 +28,11 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	2		from: 21.09.2022
+//#	File Version:	2		from: 22.09.2022
 //#
 //#	Implementation:
 //#		-	initialize the signal with Hp0
-//#		-	implement signal aspects: Hp0, Hp1 and Hp2
+//#		-	implement signal aspects for signal type '59'
 //#			add variables
 //#				m_uiLedsOn
 //#				m_usSignalAspectMain
@@ -362,7 +362,7 @@ void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect )
 		if(		!m_bTransitionActive
 			&&	(m_usSignalAspectMain != usSignalAspect) )
 		{
-			//----------------------------------------------
+			//--------------------------------------------------
 			//	pHelper is the pointer to a zell of the
 			//	sequence matrix.
 			//	A zell of the sequence matrix contains the
@@ -374,16 +374,22 @@ void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect )
 			m_puiStepMain	= pgm_read_word( pHelper );
 			uiFirstStep		= pgm_read_word( m_puiStepMain );
 
-			if( SEQUENCE_END != uiFirstStep )
+			//--------------------------------------------------
+			//	if the first step is SEQUENCE_END
+			//	then we have nothing to do and stay at the
+			//	actual signal aspect.
+			//	In the other case we start a transition.
+			//
+			if( SEQUENCE_END == uiFirstStep )
+			{
+				m_usSignalAspectMainBuffer = m_usSignalAspectMain;
+			}
+			else
 			{
 				m_bTransitionActive		= true;
 				m_usSignalAspectMain	= usSignalAspect;
 
 				SwitchLed( LED_BLUE, true );
-			}
-			else
-			{
-				m_usSignalAspectMainBuffer = m_usSignalAspectMain;
 			}
 		}
 	}
@@ -585,7 +591,26 @@ void IO_ControlClass::ProcessTransition( void )
 	{
 		uiAspect = pgm_read_word( m_puiStepMain );
 
-		if( SEQUENCE_END > uiAspect )
+		if( SEQUENCE_END == uiAspect )
+		{
+			//--------------------------------------------------
+			//	the end of the sequence is reached
+			//	so stop the transition
+			//
+			m_bTransitionActive = false;
+
+			SwitchLed( LED_BLUE, false );
+
+			//--------------------------------------------------
+			//	check if we got a new signal aspect in between
+			//	if so, start a new transition
+			//
+			if( m_usSignalAspectMain != m_usSignalAspectMainBuffer )
+			{
+				HandleSignalAspectMain( m_usSignalAspectMainBuffer );
+			}
+		}
+		else
 		{
 			//--------------------------------------------------
 			//	check wich LEDs of the main signal
@@ -612,17 +637,6 @@ void IO_ControlClass::ProcessTransition( void )
 			}
 
 			m_puiStepMain++;
-		}
-		else
-		{
-			m_bTransitionActive = false;
-
-			SwitchLed( LED_BLUE, false );
-
-			if( m_usSignalAspectMain != m_usSignalAspectMainBuffer )
-			{
-				HandleSignalAspectMain( m_usSignalAspectMainBuffer );
-			}
 		}
 	}
 }
@@ -714,14 +728,21 @@ void IO_ControlClass::ProcessBrightnessAndFade( void )
 			}
 
 			//--------------------------------------------------
-			//	... process the fade
+			//	... process the fade ...
 			//
 			if( pChannel->m_fActual < pChannel->m_fTarget )
 			{
+				//------------------------------------------
+				//	... to brighter light
+				//
 				ulNewValue = pChannel->m_fActual + pChannel->m_fFadeRateUp;
 				
 				if( ulNewValue >= pChannel->m_fTarget )
 				{
+					//----------------------------------
+					//	the target is reached
+					//	so stop fading
+					//
 					ulNewValue		= pChannel->m_fTarget;
 					m_uiFadeActive &= ~uiMask;
 				}
@@ -731,10 +752,17 @@ void IO_ControlClass::ProcessBrightnessAndFade( void )
 
 			if( pChannel->m_fActual > pChannel->m_fTarget )
 			{
+				//------------------------------------------
+				//	... to darker light
+				//
 				ulNewValue = pChannel->m_fActual - pChannel->m_fFadeRateDwon;
 
 				if( ulNewValue <= pChannel->m_fTarget )
 				{
+					//----------------------------------
+					//	the target is reached
+					//	so stop fading
+					//
 					ulNewValue		= pChannel->m_fTarget;
 					m_uiFadeActive &= ~uiMask;
 				}

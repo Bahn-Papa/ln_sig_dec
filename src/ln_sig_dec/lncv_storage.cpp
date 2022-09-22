@@ -11,7 +11,11 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	3		from: 21.09.2022
+//#	File Version:	3		from: 22.09.2022
+//#
+//#	Implementation:
+//#		-	only write to EEPROM if the new value is different
+//#			than the old one
 //#
 //#	Bug Fix:
 //#		-	correct default addresses for test case
@@ -105,7 +109,7 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		WriteLNCV( LNCV_ADR_VERSION, uiVersionNumber );
 
 #ifdef WRITE_TEST_VALUES
-		WriteLNCV( LNCV_ADR_MODULE_ADDRESS,	1000 );
+		WriteLNCV( LNCV_ADR_MODULE_ADDRESS,	100 );
 		WriteLNCV( LNCV_ADR_SIGNAL_TYPE, SIGNAL_TYPE_59 );
 		WriteLNCV( LNCV_ADR_SIGNAL_VALID_WAIT_TIME, 5000 );
 #else
@@ -299,12 +303,22 @@ uint16_t LncvStorageClass::ReadLNCV( uint16_t Adresse )
 //**********************************************************************
 //	WriteLNCV
 //----------------------------------------------------------------------
+//	The function will write the given 'Value' to the given 'Address'
+//	in EEPROM, but only if the new value is different than the old one.
+//	This is done, because the EEPROM has a limited number of
+//	write cycles.
 //
-void LncvStorageClass::WriteLNCV( uint16_t Adresse, uint16_t Value )
+void LncvStorageClass::WriteLNCV( uint16_t Address, uint16_t Value )
 {
 	//--------------------------------------------------------------
 	//	because of uint16 values the address has to be shifted
 	//	by '1' (this will double the address).
 	//
-	eeprom_write_word( (uint16_t *)(Adresse << 1), Value );
+	uint16_t *	puiAdr	= (uint16_t *)(Address << 1);
+	uint16_t	uiValue	= eeprom_read_word( uiAdr );
+	
+	if( uiValue != Value )
+	{
+		eeprom_write_word( puiAdr, Value );
+	}
 }

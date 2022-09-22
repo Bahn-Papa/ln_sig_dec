@@ -29,10 +29,10 @@
 //#	 1	Hp1
 //#	 2	Hp2
 //#	 3	Sh1
-//#	 4	Hp1 mit 1 Zusatzanzeiger
-//#	 5	Hp2 mit 1 Zusatzanzeiger
+//#	 4	Hp1 mit 1 Zusatzanzeiger (ZS3)
+//#	 5	Hp2 mit 1 Zusatzanzeiger (ZS3)
 //#	 6	Kennlicht
-//#	 7	Ersatzsignal
+//#	 7	Ersatzsignal (ZS1)
 //#	 8	Hp1 mit 2 Zusatzanzeiger	(not implemented yet)
 //#	 9	Hp1 mit 3 Zusatzanzeiger	(not implemented yet)
 //#	10	Hp2 mit 2 Zusatzanzeiger	(not implemented yet)
@@ -40,7 +40,7 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	1		from: 21.09.2022
+//#	File Version:	1		from: 22.09.2022
 //#
 //#	Implementation:
 //#		-	first working version
@@ -66,6 +66,21 @@
 #define SIGNAL_ASPECTS_MAIN			8
 #define SIGNAL_ASPECTS_APPROACH		0
 
+//----------------------------------------------------------------------
+//	signal aspects
+//
+#define SIGNAL_ASPECT_HP0			0
+#define SIGNAL_ASPECT_HP1			1
+#define SIGNAL_ASPECT_HP2			2
+#define SIGNAL_ASPECT_SH1			3
+#define SIGNAL_ASPECT_HP1_ZS3		4
+#define SIGNAL_ASPECT_HP2_ZS3		5
+#define SIGNAL_ASPECT_KENNLICHT		6
+#define SIGNAL_ASPECT_ZS1			7
+
+//----------------------------------------------------------------------
+//	definitions for sequence control
+//
 #define SEQUENCE_END				0xFFFF
 
 

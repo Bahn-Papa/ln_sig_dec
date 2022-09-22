@@ -10,12 +10,11 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	2		from: 21.09.2022
+//#	File Version:	2		from: 22.09.2022
 //#
 //#	Implementation:
 //#		-	initialize the signal with Hp0
-//#		-	implement signal aspects: Hp0, Hp1 and Hp2
-//#			add definitions for signal aspects
+//#		-	implement signal aspects for signal type '59'
 //#			add variables
 //#				m_uiLedsOn
 //#				m_usSignalAspectMain
@@ -82,10 +81,6 @@
 #define	LED_BLUE			15
 #define LED_GREEN			14
 
-#define SIGNAL_ASPECT_HP0	0
-#define SIGNAL_ASPECT_HP1	1
-#define SIGNAL_ASPECT_HP2	2
-	
 
 //==========================================================================
 //

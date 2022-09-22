@@ -27,12 +27,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	Version:	x.01.01		from: 21.09.2022
+//#	Version:	x.01.01		from: 22.09.2022
 //#
 //#	Implementation:
 //#		-	add version number into EEPROM
 //#		-	initialize the signal with Hp0
-//#		-	implement signal aspects: Hp0, Hp1 and Hp2
+//#		-	implement signal aspects for signal type '59'
+//#
+//#	Bug Fix:
+//#		-	green LED will blink now in prog mode
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -87,8 +90,8 @@ bool		g_bIsProgMode;
 //**********************************************************************
 //	resetFunc
 //----------------------------------------------------------------------
-//	This function will reset the hole processor because by calling the
-//	function the program will jump to the hardware reset vector.
+//	This function will reset the hole processor
+//	This is implemented by jumping to the hardware reset vector.
 //
 void (*resetFunc)( void ) = 0;
 
@@ -135,7 +138,7 @@ void loop()
 	g_clControl.Loop();
 	
 	//--------------------------------------------------------------
-	//	in prog mode green LED should blink
+	//	in prog mode the green LED should blink
 	//
 	if( g_bIsProgMode )
 	{
@@ -159,7 +162,7 @@ void loop()
 	}
 
 	//--------------------------------------------------------------
-	//	Programmier-Modus
+	//	handle prog mode changes
 	//
 	if( g_clMyLoconet.IsProgMode() != g_bIsProgMode )
 	{
@@ -175,6 +178,7 @@ void loop()
 		{
 			//--------------------------------------------------
 			//	we switched to prog mode
+			//
 			g_bIsProgMode = true;
 		}
 	}
