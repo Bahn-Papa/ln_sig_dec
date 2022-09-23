@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		1
-#define VERSION_BUGFIX		1
+#define VERSION_BUGFIX		2
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,16 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.01.02		from: 23.09.2022
+//#
+//#	Implementation:
+//#		-	add checks to avoid a crash by wrong commands or parameters
+//#		-	simplify sequencer tables
+//#		-	only write to EEPROM if the new value is different
+//#			than the old one
 //#
 //#-------------------------------------------------------------------------
 //#

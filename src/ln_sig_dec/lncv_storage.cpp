@@ -11,7 +11,7 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	3		from: 22.09.2022
+//#	File Version:	3		from: 23.09.2022
 //#
 //#	Implementation:
 //#		-	only write to EEPROM if the new value is different
@@ -315,7 +315,7 @@ void LncvStorageClass::WriteLNCV( uint16_t Address, uint16_t Value )
 	//	by '1' (this will double the address).
 	//
 	uint16_t *	puiAdr	= (uint16_t *)(Address << 1);
-	uint16_t	uiValue	= eeprom_read_word( uiAdr );
+	uint16_t	uiValue	= eeprom_read_word( puiAdr );
 	
 	if( uiValue != Value )
 	{

@@ -10,6 +10,19 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	3		from: 23.09.2022
+//#
+//#	Implementation:
+//#		-	simplify sequencer tables
+//#			delete variables
+//#				m_puiSequenceMatrixMain
+//#				m_puiSequenceMatrixApproach
+//#			add functions
+//#				GetFirstStepMain()
+//#				GetFirstStepApproach()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	2		from: 22.09.2022
 //#
 //#	Implementation:
@@ -116,10 +129,8 @@ class IO_ControlClass
 
 
 	private:
-		const uint16_t*	m_puiSequenceMatrixMain;
-		const uint16_t*	m_puiSequenceMatrixApproach;
-		const uint16_t* m_puiStepMain;
-		const uint16_t* m_puiStepApproach;
+		uint16_t *	m_puiStepMain;
+		uint16_t *	m_puiStepApproach;
 
 		uint32_t	m_ulLastCycleStartTime;
 		uint32_t	m_ulCycleTime;
@@ -136,10 +147,12 @@ class IO_ControlClass
 		bool		m_bNightLight;
 		bool		m_bTransitionActive;
 
-		void SetSignalType( void );
-		void CalculateFadeRates( void );
-		void ProcessTransition( void );
-		void ProcessBrightnessAndFade( void );
+		void		SetSignalType( void );
+		void		CalculateFadeRates( void );
+		uint16_t *	GetFirstStepMain( uint8_t usFromAspect, uint8_t usToAspect );
+		uint16_t *	GetFirstStepApproach( uint8_t usFromAspect, uint8_t usToAspect );
+		void		ProcessTransition( void );
+		void		ProcessBrightnessAndFade( void );
 };
 
 

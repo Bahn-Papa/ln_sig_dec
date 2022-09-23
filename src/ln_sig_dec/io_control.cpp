@@ -28,6 +28,34 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	4		from: 23.09.2022
+//#
+//#	Implementation:
+//#		-	implement signal aspects for the approach signal
+//#			rename variables
+//#				from						to
+//#				m_bTransitionActive			m_bTransitionActiveMain
+//#			new variables
+//#				m_bTransitionActiveApproach
+//#				m_bStateMachineActive
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File Version:	3		from: 23.09.2022
+//#
+//#	Implementation:
+//#		-	add checks to avoid a crash by wrong commands or parameters
+//#			changes in function HandleLed()
+//#		-	simplify sequencer tables
+//#			delete variables
+//#				m_puiSequenceMatrixMain
+//#				m_puiSequenceMatrixApproach
+//#			add functions
+//#				GetFirstStepMain()
+//#				GetFirstStepApproach()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	2		from: 22.09.2022
 //#
 //#	Implementation:
@@ -201,8 +229,6 @@ IO_ControlClass::IO_ControlClass()
 //
 void IO_ControlClass::Init( void )
 {
-	m_puiSequenceMatrixMain			= 0x0000;
-	m_puiSequenceMatrixApproach		= 0x0000;
 	m_puiStepMain					= 0x0000;
 	m_puiStepApproach				= 0x0000;
 	m_ulLastCycleStartTime			= 0L;
@@ -291,43 +317,46 @@ void IO_ControlClass::HandleLed( uint8_t usLedNo, bool bOn )
 	PWMChannel_t*	pChannel		= &(g_arChannel[ usLedNo ]);
 	uint8_t			usBrightness;
 
-	if( m_bNightLight )
+	if( SIGNAL_LEDS > usLedNo )
 	{
-		usBrightness = pChannel->m_usBrightnessNight;
-	}
-	else
-	{
-		usBrightness = pChannel->m_usBrightnessDay;
-	}
-
-	if( bOn )
-	{
-		SetWordBit( m_uiLedsOn, usLedNo );
-
-		pChannel->m_fTarget = (float)PWM_STEP_TIME * usBrightness;
-
-		if( 0 == m_uiFadeTimeUp )
+		if( m_bNightLight )
 		{
-			pChannel->m_fActual = pChannel->m_fTarget;
+			usBrightness = pChannel->m_usBrightnessNight;
 		}
 		else
 		{
-			SetWordBit( m_uiFadeActive, usLedNo );
+			usBrightness = pChannel->m_usBrightnessDay;
 		}
-	}
-	else
-	{
-		ClearWordBit( m_uiLedsOn, usLedNo );
 
-		pChannel->m_fTarget = 0.0;
-
-		if( 0 == m_uiFadeTimeDown )
+		if( bOn )
 		{
-			pChannel->m_fActual = 0.0;
+			SetWordBit( m_uiLedsOn, usLedNo );
+
+			pChannel->m_fTarget = (float)PWM_STEP_TIME * usBrightness;
+
+			if( 0 == m_uiFadeTimeUp )
+			{
+				pChannel->m_fActual = pChannel->m_fTarget;
+			}
+			else
+			{
+				SetWordBit( m_uiFadeActive, usLedNo );
+			}
 		}
 		else
 		{
-			SetWordBit( m_uiFadeActive, usLedNo );
+			ClearWordBit( m_uiLedsOn, usLedNo );
+
+			pChannel->m_fTarget = 0.0;
+
+			if( 0 == m_uiFadeTimeDown )
+			{
+				pChannel->m_fActual = 0.0;
+			}
+			else
+			{
+				SetWordBit( m_uiFadeActive, usLedNo );
+			}
 		}
 	}
 }
@@ -339,57 +368,57 @@ void IO_ControlClass::HandleLed( uint8_t usLedNo, bool bOn )
 //
 void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect )
 {
-	const uint16_t* pHelper;
-	uint16_t		uiFirstStep;
+	uint16_t	uiFirstStep;
 
 
-	if( SIGNAL_ASPECTS_MAIN > usSignalAspect )
+	if( SIGNAL_ASPECTS > usSignalAspect )
 	{
 		//------------------------------------------------------
-		//	store new signal aspect in a buffer just in case
-		//	a signal aspect transition is active
+		//	first check if the new transition is allowed
+		//		allowed transitions are:
+		//			from Hp0 to xxx
+		//			from xxx to Hp0
 		//
-		if( m_usSignalAspectMainBuffer != usSignalAspect )
-		{
-			m_usSignalAspectMainBuffer = usSignalAspect;
-		}
-		
-		//------------------------------------------------------
-		//	if no signal aspect transition is active then
-		//		start the transition
-		//		store new signal aspect
-		//
-		if(		!m_bTransitionActive
-			&&	(m_usSignalAspectMain != usSignalAspect) )
+		if(		((SIGNAL_ASPECT_HP0 == m_usSignalAspectMain) && (SIGNAL_ASPECT_HP0 != usSignalAspect))
+			||	((SIGNAL_ASPECT_HP0 != m_usSignalAspectMain) && (SIGNAL_ASPECT_HP0 == usSignalAspect)) )
 		{
 			//--------------------------------------------------
-			//	pHelper is the pointer to a zell of the
-			//	sequence matrix.
-			//	A zell of the sequence matrix contains the
-			//	pointer to the first step of a sequence.
+			//	store new signal aspect in a buffer just in
+			//	case a signal aspect transition is active
 			//
-			pHelper	=	  m_puiSequenceMatrixMain 
-					  + ((SIGNAL_ASPECTS_MAIN * m_usSignalAspectMain) + usSignalAspect);
-
-			m_puiStepMain	= pgm_read_word( pHelper );
-			uiFirstStep		= pgm_read_word( m_puiStepMain );
-
-			//--------------------------------------------------
-			//	if the first step is SEQUENCE_END
-			//	then we have nothing to do and stay at the
-			//	actual signal aspect.
-			//	In the other case we start a transition.
-			//
-			if( SEQUENCE_END == uiFirstStep )
+			if( m_usSignalAspectMainBuffer != usSignalAspect )
 			{
-				m_usSignalAspectMainBuffer = m_usSignalAspectMain;
+				m_usSignalAspectMainBuffer = usSignalAspect;
 			}
-			else
+			
+			//------------------------------------------------------
+			//	if no signal aspect transition is active then
+			//		start the transition
+			//		store new signal aspect
+			//
+			if(		!m_bTransitionActive
+				&&	(m_usSignalAspectMain != usSignalAspect) )
 			{
-				m_bTransitionActive		= true;
-				m_usSignalAspectMain	= usSignalAspect;
+				m_puiStepMain	= GetFirstStepMain( m_usSignalAspectMain, usSignalAspect );
+				uiFirstStep		= pgm_read_word( m_puiStepMain );
 
-				SwitchLed( LED_BLUE, true );
+				//--------------------------------------------------
+				//	if the first step is SEQUENCE_END
+				//	then we have nothing to do and stay at the
+				//	actual signal aspect.
+				//	In the other case we start a transition.
+				//
+				if( SEQUENCE_END == uiFirstStep )
+				{
+					m_usSignalAspectMainBuffer = m_usSignalAspectMain;
+				}
+				else
+				{
+					m_bTransitionActive		= true;
+					m_usSignalAspectMain	= usSignalAspect;
+
+					SwitchLed( LED_BLUE, true );
+				}
 			}
 		}
 	}
@@ -502,10 +531,8 @@ void IO_ControlClass::SetSignalType( void )
 	switch( m_usSignalType )
 	{
 		case SIGNAL_TYPE_59:
-			m_uiFadeTimeUp				= g_clLncvStorage.GetFadeTimeUp(   IDX_FADE_TIME_SLOW );
-			m_uiFadeTimeDown			= g_clLncvStorage.GetFadeTimeDown( IDX_FADE_TIME_SLOW );
-			m_puiSequenceMatrixMain		= (uint16_t*)&g_arS59Main[ 0 ][ 0 ];
-			m_puiSequenceMatrixApproach	= 0x0000;
+			m_uiFadeTimeUp		= g_clLncvStorage.GetFadeTimeUp(   IDX_FADE_TIME_SLOW );
+			m_uiFadeTimeDown	= g_clLncvStorage.GetFadeTimeDown( IDX_FADE_TIME_SLOW );
 			break;
 			
 		case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
@@ -572,6 +599,156 @@ void IO_ControlClass::CalculateFadeRates( void )
 			pChannel->m_fFadeRateDwon = fHelper / m_uiFadeTimeDown / 1000 * PWM_STEP_TIME;
 		}
 	}
+}
+
+
+//******************************************************************
+//	GetFirstStepMain
+//------------------------------------------------------------------
+//	This function will return a pointer to the first step of
+//	a signal aspect sequence for the main signal
+//
+uint16_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usToAspect )
+{
+	uint16_t *	pFirstStep	= 0x0000;
+
+	if( SIGNAL_ASPECT_HP0 == usFromAspect )
+	{
+		switch( usToAspect )
+		{
+			case SIGNAL_ASPECT_HP1:
+				pFirstStep = (uint16_t *)Main_Hp0_Hp1;
+				break;
+
+			case SIGNAL_ASPECT_HP2:
+				pFirstStep = (uint16_t *)Main_Hp0_Hp2;
+				break;
+
+			case SIGNAL_ASPECT_HP1_ZS3:
+				pFirstStep = (uint16_t *)Main_Hp0_Hp1_ZS3;
+				break;
+
+			case SIGNAL_ASPECT_HP2_ZS3:
+				pFirstStep = (uint16_t *)Main_Hp0_Hp2_ZS3;
+				break;
+
+			case SIGNAL_ASPECT_SH1:
+				pFirstStep = (uint16_t *)Main_Hp0_Sh1;
+				break;
+
+			case SIGNAL_ASPECT_KENNLICHT:
+				pFirstStep = (uint16_t *)Main_Hp0_KL;
+				break;
+
+			case SIGNAL_ASPECT_ZS1:
+				pFirstStep = (uint16_t *)Main_Hp0_ZS1;
+				break;
+
+			default:
+				break;
+		}
+	}
+	else if( SIGNAL_ASPECT_HP0 == usToAspect )
+	{
+		switch( usFromAspect )
+		{
+			case SIGNAL_ASPECT_HP1:
+			case SIGNAL_ASPECT_HP2:
+			case SIGNAL_ASPECT_KENNLICHT:
+				pFirstStep = (uint16_t *)Main_to_Hp0;
+				break;
+
+			case SIGNAL_ASPECT_HP1_ZS3:
+			case SIGNAL_ASPECT_HP2_ZS3:
+				pFirstStep = (uint16_t *)Main_ZS3_Hp0;
+				break;
+
+			case SIGNAL_ASPECT_SH1:
+			case SIGNAL_ASPECT_ZS1:
+				pFirstStep = (uint16_t *)Main_Sh1_ZS1_Hp0;
+				break;
+
+			default:
+				break;
+		}
+	}
+
+	return( pFirstStep );
+}
+
+
+//******************************************************************
+//	GetFirstStepApproach
+//------------------------------------------------------------------
+//	This function will return a pointer to the first step of
+//	a signal aspect sequence for the approach signal
+//
+uint16_t * IO_ControlClass::GetFirstStepApproach( uint8_t usFromAspect, uint8_t usToAspect )
+{
+	uint16_t *	pFirstStep	= 0x0000;
+
+	if( SIGNAL_ASPECT_HP0 == usFromAspect )
+	{
+		switch( usToAspect )
+		{
+			case SIGNAL_ASPECT_HP1:
+//				pFirstStep = (uint16_t *)Main_Hp0_Hp1;
+				break;
+
+			case SIGNAL_ASPECT_HP2:
+//				pFirstStep = (uint16_t *)Main_Hp0_Hp2;
+				break;
+
+			case SIGNAL_ASPECT_HP1_ZS3:
+//				pFirstStep = (uint16_t *)Main_Hp0_Hp1_ZS3;
+				break;
+
+			case SIGNAL_ASPECT_HP2_ZS3:
+//				pFirstStep = (uint16_t *)Main_Hp0_Hp2_ZS3;
+				break;
+
+			case SIGNAL_ASPECT_SH1:
+//				pFirstStep = (uint16_t *)Main_Hp0_Sh1;
+				break;
+
+			case SIGNAL_ASPECT_KENNLICHT:
+//				pFirstStep = (uint16_t *)Main_Hp0_KL;
+				break;
+
+			case SIGNAL_ASPECT_ZS1:
+//				pFirstStep = (uint16_t *)Main_Hp0_ZS1;
+				break;
+
+			default:
+				break;
+		}
+	}
+	else if( SIGNAL_ASPECT_HP0 == usToAspect )
+	{
+		switch( usFromAspect )
+		{
+			case SIGNAL_ASPECT_HP1:
+			case SIGNAL_ASPECT_HP2:
+			case SIGNAL_ASPECT_KENNLICHT:
+//				pFirstStep = (uint16_t *)Main_to_Hp0;
+				break;
+
+			case SIGNAL_ASPECT_HP1_ZS3:
+			case SIGNAL_ASPECT_HP2_ZS3:
+//				pFirstStep = (uint16_t *)Main_ZS3_Hp0;
+				break;
+
+			case SIGNAL_ASPECT_SH1:
+			case SIGNAL_ASPECT_ZS1:
+//				pFirstStep = (uint16_t *)Main_Sh1_ZS1_Hp0;
+				break;
+
+			default:
+				break;
+		}
+	}
+
+	return( pFirstStep );
 }
 
 
