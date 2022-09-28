@@ -10,6 +10,13 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	3		from: 26.09.2022
+//#
+//#	Implementation:
+//#		-	add new signal types
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	2		from: 19.09.2022
 //#
 //#	Implementation:
@@ -44,10 +51,14 @@
 #define SIGNAL_TYPE_DIRECT_CONTROL_FAST		1
 #define SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE	2
 #define SIGNAL_TYPE_DIRECT_CONTROL_SLOW		3
-#define SIGNAL_TYPE_59						4
-#define SIGNAL_TYPE_60						5
-#define SIGNAL_TYPE_COMPACT					6
-#define SIGNAL_TYPE_KS						7
+#define SIGNAL_TYPE_59_A_SIG				4
+#define SIGNAL_TYPE_59_E_SIG				5
+#define SIGNAL_TYPE_60_A_SIG				6
+#define SIGNAL_TYPE_60_E_SIG				7
+#define SIGNAL_TYPE_COMPACT_A_SIG			8
+#define SIGNAL_TYPE_COMPACT_E_SIG			9
+#define SIGNAL_TYPE_KS_A_SIG				10
+#define SIGNAL_TYPE_KS_E_SIG				11
 
 
 //----------------------------------------------------------------------

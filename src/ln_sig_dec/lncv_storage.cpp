@@ -11,6 +11,13 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	4		from: 27.09.2022
+//#
+//#	Implementation:
+//#		-	add new signal types
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	3		from: 23.09.2022
 //#
 //#	Implementation:
@@ -110,7 +117,7 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 
 #ifdef WRITE_TEST_VALUES
 		WriteLNCV( LNCV_ADR_MODULE_ADDRESS,	100 );
-		WriteLNCV( LNCV_ADR_SIGNAL_TYPE, SIGNAL_TYPE_59 );
+		WriteLNCV( LNCV_ADR_SIGNAL_TYPE, SIGNAL_TYPE_59_E_SIG );
 		WriteLNCV( LNCV_ADR_SIGNAL_VALID_WAIT_TIME, 5000 );
 #else
 		WriteLNCV( LNCV_ADR_MODULE_ADDRESS,	1 );
@@ -161,13 +168,9 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 	}
 	else
 	{
-		uiVersion = ReadLNCV( LNCV_ADR_VERSION );
-		
-		if( uiVersion != uiVersionNumber )
-		{
-			WriteLNCV( LNCV_ADR_VERSION, uiVersionNumber );
-		}
+		WriteLNCV( LNCV_ADR_VERSION, uiVersionNumber );
 	}
+
 	delay( 500 );
 }
 

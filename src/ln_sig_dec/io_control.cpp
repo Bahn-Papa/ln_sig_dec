@@ -341,6 +341,8 @@ void IO_ControlClass::HandleLed( uint8_t usLedNo, bool bOn )
 			else
 			{
 				SetWordBit( m_uiFadeActive, usLedNo );
+
+				SwitchLed( LED_N, true );
 			}
 		}
 		else
@@ -356,6 +358,8 @@ void IO_ControlClass::HandleLed( uint8_t usLedNo, bool bOn )
 			else
 			{
 				SetWordBit( m_uiFadeActive, usLedNo );
+
+				SwitchLed( LED_N, true );
 			}
 		}
 	}
@@ -530,7 +534,7 @@ void IO_ControlClass::SetSignalType( void )
 
 	switch( m_usSignalType )
 	{
-		case SIGNAL_TYPE_59:
+		case SIGNAL_TYPE_59_A_SIG:
 			m_uiFadeTimeUp		= g_clLncvStorage.GetFadeTimeUp(   IDX_FADE_TIME_SLOW );
 			m_uiFadeTimeDown	= g_clLncvStorage.GetFadeTimeDown( IDX_FADE_TIME_SLOW );
 			break;
@@ -551,9 +555,13 @@ void IO_ControlClass::SetSignalType( void )
 			break;
 
 		case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
-		case SIGNAL_TYPE_60:
-		case SIGNAL_TYPE_COMPACT:
-		case SIGNAL_TYPE_KS:
+		case SIGNAL_TYPE_59_E_SIG:
+		case SIGNAL_TYPE_60_A_SIG:
+		case SIGNAL_TYPE_60_E_SIG:
+		case SIGNAL_TYPE_COMPACT_A_SIG:
+		case SIGNAL_TYPE_COMPACT_E_SIG:
+		case SIGNAL_TYPE_KS_A_SIG:
+		case SIGNAL_TYPE_KS_E_SIG:
 		default:
 			break;
 	}
@@ -922,6 +930,8 @@ void IO_ControlClass::ProcessBrightnessAndFade( void )
 					//
 					ulNewValue		= pChannel->m_fTarget;
 					m_uiFadeActive &= ~uiMask;
+
+					SwitchLed( LED_N, false );
 				}
 
 				pChannel->m_fActual = ulNewValue;
@@ -942,6 +952,8 @@ void IO_ControlClass::ProcessBrightnessAndFade( void )
 					//
 					ulNewValue		= pChannel->m_fTarget;
 					m_uiFadeActive &= ~uiMask;
+
+					SwitchLed( LED_N, false );
 				}
 
 				pChannel->m_fActual = ulNewValue;
