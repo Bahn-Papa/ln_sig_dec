@@ -10,6 +10,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	2		from: 28.09.2022
+//#
+//#	Implementation:
+//#		-	change struct 'device_t' to save some memory space
+//#			combine	bool 'm_bSensor' and bool 'm_bInvert'
+//#				to	uint8_t 'm_bFlags'
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	1		from: 17.09.2022
 //#
 //#	Implementation:
@@ -38,8 +47,7 @@
 typedef struct
 {
 	uint16_t	m_uiAddress;
-	bool		m_bSensor;
-	bool		m_bInvert;
+	uint8_t		m_bFlags;
 
 } device_t;
 

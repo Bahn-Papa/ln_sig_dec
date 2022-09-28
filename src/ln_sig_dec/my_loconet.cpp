@@ -7,6 +7,28 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	4		from: 28.09.2022
+//#
+//#	Implementation:
+//#		-	add new signal types
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File version:	3		from: 28.09.2022
+//#
+//#	Implementation:
+//#		-	change struct 'device_t' to save some memory space
+//#			combine	bool 'm_bSensor' and bool 'm_bInvert'
+//#				to	uint8_t 'm_bFlags'
+//#			add definitions for
+//#				DEVICE_IS_SENSOR
+//#				DEVICE_IS_INVERT
+//#			changes in function
+//#				SetDeviceInfo()
+//#				LoconetReceived()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	2		from: 19.09.2022
 //#
 //#	Implementation:
@@ -53,6 +75,9 @@
 
 #define SIGNAL_SELECTED_MAIN		1
 #define SIGNAL_SELECTED_APPROACH	2
+
+#define DEVICE_IS_INVERT			0x01
+#define DEVICE_IS_SENSOR			0x02
 
 
 //==========================================================================
@@ -193,11 +218,12 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 			//	a sensor message ('isSensor' == true) or
 			//	a switch message ('isSensor' == false)
 			//
-			if( isSensor == pDevice->m_bSensor )
+			if( isSensor == (pDevice->m_usFlags & DEVICE_IS_SENSOR) )
 			{
 				//--------------------------------------------------
 				//	we get to this code area only
-				//	if 'isSensor' and 'pDevice->m_bSensor' are both
+				//	if 'isSensor' and the expression
+				//	'pDevice->m_usFlags & DEVICE_IS_SENSOR' are both
 				//		true	==>		sensor message
 				//		false	==>		switch message
 				//--------------------------------------------------
@@ -209,7 +235,7 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 				//--------------------------------------------------
 				//	Check if 'dir' should be inverted
 				//
-				if( pDevice->m_bInvert )
+				if( pDevice->m_usFlags & DEVICE_IS_INVERT )
 				{
 					bIsGreen = !bIsGreen;
 				}
@@ -217,12 +243,12 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 				//--------------------------------------------------
 				//	proces message for ...
 				//
-				if( idx < NUMBER_LIGHTS )
+				if( NUMBER_LIGHTS > idx )
 				{
-					if( SIGNAL_TYPE_59 > m_usSignalType )
+					if( SIGNAL_TYPE_59_A_SIG > m_usSignalType )
 					{
 						//------------------------------------------
-						//	... a light device
+						//	... a direct controlled light device
 						//
 						g_clControl.HandleLed( idx, bIsGreen );
 					}
@@ -317,8 +343,7 @@ void MyLoconetClass::SetDeviceInfo( uint8_t idx, uint16_t uiInfo )
 	helper -= (address * 10);
 
 	m_arDevices[ idx ].m_uiAddress	= address;
-	m_arDevices[ idx ].m_bSensor	= ((helper & 0x0002) != 0);
-	m_arDevices[ idx ].m_bInvert	= ((helper & 0x0001) != 0);
+	m_arDevices[ idx ].m_usFlags	= (uint8_t)helper;
 }
 
 
