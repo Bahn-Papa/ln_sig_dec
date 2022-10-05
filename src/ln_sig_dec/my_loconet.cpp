@@ -218,7 +218,7 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 			//	a sensor message ('isSensor' == true) or
 			//	a switch message ('isSensor' == false)
 			//
-			if( isSensor == (pDevice->m_usFlags & DEVICE_IS_SENSOR) )
+			if( isSensor == (pDevice->m_bFlags & DEVICE_IS_SENSOR) )
 			{
 				//--------------------------------------------------
 				//	we get to this code area only
@@ -235,7 +235,7 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 				//--------------------------------------------------
 				//	Check if 'dir' should be inverted
 				//
-				if( pDevice->m_usFlags & DEVICE_IS_INVERT )
+				if( pDevice->m_bFlags & DEVICE_IS_INVERT )
 				{
 					bIsGreen = !bIsGreen;
 				}
@@ -343,7 +343,7 @@ void MyLoconetClass::SetDeviceInfo( uint8_t idx, uint16_t uiInfo )
 	helper -= (address * 10);
 
 	m_arDevices[ idx ].m_uiAddress	= address;
-	m_arDevices[ idx ].m_usFlags	= (uint8_t)helper;
+	m_arDevices[ idx ].m_bFlags		= (uint8_t)helper;
 }
 
 

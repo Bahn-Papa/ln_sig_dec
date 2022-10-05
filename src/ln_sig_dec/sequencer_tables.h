@@ -40,6 +40,13 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	3		from: 01.10.2022
+//#
+//#	Implementation:
+//#		-	add sequencer tables for signal type 59 E-Sig
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	2		from: 23.09.2022
 //#
 //#	Implementation:
@@ -90,6 +97,8 @@
 //	definitions for sequence control
 //
 #define SEQUENCE_END				0xFFFF
+#define SEQUENCE_APPROACH_ON		0xEFFF
+#define SEQUENCE_APPROACH_OFF		0xDFFF
 
 
 //==========================================================================
@@ -147,7 +156,7 @@ const uint16_t Main_Hp0_Sh1[] PROGMEM =
 //------------------------------------------------------------------
 //	Main: from Hp0 to Hp1 including ZS3
 //
-const uint16_t Main_Hp0_Hp1_ZS3[] PROGMEM =
+const uint16_t E_Sig_Main_Hp0_Hp1_ZS3[] PROGMEM =
 {
 	0b0000000000001101,
 	0b0000000000000001,
@@ -158,7 +167,7 @@ const uint16_t Main_Hp0_Hp1_ZS3[] PROGMEM =
 //------------------------------------------------------------------
 //	Main: from Hp0 to Hp2 including ZS3
 //
-const uint16_t Main_Hp0_Hp2_ZS3[] PROGMEM =
+const uint16_t E_Sig_Main_Hp0_Hp2_ZS3[] PROGMEM =
 {
 	0b0000000000001101,
 	0b0000000000000001,
@@ -179,7 +188,7 @@ const uint16_t Main_Hp0_KL[] PROGMEM =
 //------------------------------------------------------------------
 //	Main: from Hp0 to Ersatzsignal (ZS1)
 //
-const uint16_t Main_Hp0_ZS1[] PROGMEM =
+const uint16_t E_Sig_Main_Hp0_ZS1[] PROGMEM =
 {
 	0b0000000000000100,
 	0b0000000010000100,
@@ -189,7 +198,7 @@ const uint16_t Main_Hp0_ZS1[] PROGMEM =
 //------------------------------------------------------------------
 //	Main: from xxx to Hp0
 //
-const uint16_t Main_to_Hp0[] PROGMEM =
+const uint16_t E_Sig_Main_to_Hp0[] PROGMEM =
 {
 	0b0000000000000000,
 	0b0000000000001100,
@@ -199,7 +208,7 @@ const uint16_t Main_to_Hp0[] PROGMEM =
 //------------------------------------------------------------------
 //	Main: from ZS3 to Hp0
 //
-const uint16_t Main_ZS3_Hp0[] PROGMEM =
+const uint16_t E_Sig_Main_ZS3_Hp0[] PROGMEM =
 {
 	0b0000000000000001,
 	0b0000000000001101,
@@ -210,9 +219,32 @@ const uint16_t Main_ZS3_Hp0[] PROGMEM =
 //------------------------------------------------------------------
 //	Main: from Sh1 or ZS1 to Hp0
 //
-const uint16_t Main_Sh1_ZS1_Hp0[] PROGMEM =
+const uint16_t E_Sig_Main_Sh1_ZS1_Hp0[] PROGMEM =
 {
 	0b0000000000000100,
 	0b0000000000001100,
 	SEQUENCE_END
+};
+
+
+//**********************************************************************
+//	Signal Type 59
+//
+
+//------------------------------------------------------------------
+//	E-Sig from Hp0
+//
+const uint16_t* const Sig_Type_59_E_Sig_Main_From_Hp0[] PROGMEM =
+{
+	sNOP, Main_Hp0_Hp1, Main_Hp0_Hp2, Main_Hp0_Sh1,
+	E_Sig_Main_Hp0_Hp1_ZS3, E_Sig_Main_Hp0_Hp2_ZS3, Main_Hp0_KL, E_Sig_Main_Hp0_ZS1
+} ;
+
+//------------------------------------------------------------------
+//	E-Sig to Hp0
+//
+const uint16_t* const Sig_Type_59_E_Sig_Main_To_Hp0[] PROGMEM =
+{
+	sNOP, E_Sig_Main_to_Hp0, E_Sig_Main_to_Hp0, E_Sig_Main_Sh1_ZS1_Hp0,
+	E_Sig_Main_ZS3_Hp0, E_Sig_Main_ZS3_Hp0, E_Sig_Main_to_Hp0, E_Sig_Main_Sh1_ZS1_Hp0
 };

@@ -31,6 +31,7 @@
 //#	File Version:	4		from: 23.09.2022
 //#
 //#	Implementation:
+//#		-	add sequencer tables for signal type 59 E-Sig
 //#		-	implement signal aspects for the approach signal
 //#			rename variables
 //#				from						to
@@ -115,16 +116,23 @@
 
 #define SIGNAL_MAIN_LEDS		0x21FF
 
+#define	LEDS_PORTB				0x30
+#define LEDS_PORTC				0x3F
+#define LEDS_PORTD				0xFF
+
+//----------------------------------------------------------------------
+//	State machine to switch approach signal on and off
+//
+#define STATE_APPROACH_OFF			1
+#define	STATE_APPROACH_ON			2
+#define STATE_TRANSITION_TO_OFF		3
+#define STATE_TRANSITION_TO_ON		4
 
 //----------------------------------------------------------------------
 //	Cycle time in µs
 //
 #define PWM_CYCLE_TIME			20400
 #define PWM_STEP_TIME			(PWM_CYCLE_TIME / 255)
-
-#define	LEDS_PORTB				0x30
-#define LEDS_PORTC				0x3F
-#define LEDS_PORTD				0xFF
 
 typedef struct
 {
@@ -622,6 +630,7 @@ uint16_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usTo
 
 	if( SIGNAL_ASPECT_HP0 == usFromAspect )
 	{
+/*
 		switch( usToAspect )
 		{
 			case SIGNAL_ASPECT_HP1:
@@ -633,11 +642,11 @@ uint16_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usTo
 				break;
 
 			case SIGNAL_ASPECT_HP1_ZS3:
-				pFirstStep = (uint16_t *)Main_Hp0_Hp1_ZS3;
+				pFirstStep = (uint16_t *)E_Sig_Main_Hp0_Hp1_ZS3;
 				break;
 
 			case SIGNAL_ASPECT_HP2_ZS3:
-				pFirstStep = (uint16_t *)Main_Hp0_Hp2_ZS3;
+				pFirstStep = (uint16_t *)E_Sig_Main_Hp0_Hp2_ZS3;
 				break;
 
 			case SIGNAL_ASPECT_SH1:
@@ -655,9 +664,31 @@ uint16_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usTo
 			default:
 				break;
 		}
+*/
+		switch( m_usSignalType )
+		{
+			case SIGNAL_TYPE_59_A_SIG:
+				pFirstStep = Sig_Type_59_E_Sig_Main_From_Hp0[ usToAspect ];
+				break;
+
+			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
+			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
+			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
+			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
+			case SIGNAL_TYPE_59_E_SIG:
+			case SIGNAL_TYPE_60_A_SIG:
+			case SIGNAL_TYPE_60_E_SIG:
+			case SIGNAL_TYPE_COMPACT_A_SIG:
+			case SIGNAL_TYPE_COMPACT_E_SIG:
+			case SIGNAL_TYPE_KS_A_SIG:
+			case SIGNAL_TYPE_KS_E_SIG:
+			default:
+				break;
+		}
 	}
 	else if( SIGNAL_ASPECT_HP0 == usToAspect )
 	{
+/*
 		switch( usFromAspect )
 		{
 			case SIGNAL_ASPECT_HP1:
@@ -679,6 +710,27 @@ uint16_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usTo
 			default:
 				break;
 		}
+*/
+		switch( m_usSignalType )
+		{
+			case SIGNAL_TYPE_59_A_SIG:
+				pFirstStep = Sig_Type_59_E_Sig_Main_To_Hp0[ usFromAspect ];
+				break;
+
+			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
+			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
+			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
+			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
+			case SIGNAL_TYPE_59_E_SIG:
+			case SIGNAL_TYPE_60_A_SIG:
+			case SIGNAL_TYPE_60_E_SIG:
+			case SIGNAL_TYPE_COMPACT_A_SIG:
+			case SIGNAL_TYPE_COMPACT_E_SIG:
+			case SIGNAL_TYPE_KS_A_SIG:
+			case SIGNAL_TYPE_KS_E_SIG:
+			default:
+				break;
+		}
 	}
 
 	return( pFirstStep );
@@ -697,60 +749,46 @@ uint16_t * IO_ControlClass::GetFirstStepApproach( uint8_t usFromAspect, uint8_t 
 
 	if( SIGNAL_ASPECT_HP0 == usFromAspect )
 	{
-		switch( usToAspect )
+		switch( m_usSignalType )
 		{
-			case SIGNAL_ASPECT_HP1:
-//				pFirstStep = (uint16_t *)Main_Hp0_Hp1;
+			case SIGNAL_TYPE_59_A_SIG:
+//				pFirstStep = Sig_Type_59_E_Sig_Main_From_Hp0[ usToAspect ];
 				break;
 
-			case SIGNAL_ASPECT_HP2:
-//				pFirstStep = (uint16_t *)Main_Hp0_Hp2;
-				break;
-
-			case SIGNAL_ASPECT_HP1_ZS3:
-//				pFirstStep = (uint16_t *)Main_Hp0_Hp1_ZS3;
-				break;
-
-			case SIGNAL_ASPECT_HP2_ZS3:
-//				pFirstStep = (uint16_t *)Main_Hp0_Hp2_ZS3;
-				break;
-
-			case SIGNAL_ASPECT_SH1:
-//				pFirstStep = (uint16_t *)Main_Hp0_Sh1;
-				break;
-
-			case SIGNAL_ASPECT_KENNLICHT:
-//				pFirstStep = (uint16_t *)Main_Hp0_KL;
-				break;
-
-			case SIGNAL_ASPECT_ZS1:
-//				pFirstStep = (uint16_t *)Main_Hp0_ZS1;
-				break;
-
+			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
+			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
+			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
+			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
+			case SIGNAL_TYPE_59_E_SIG:
+			case SIGNAL_TYPE_60_A_SIG:
+			case SIGNAL_TYPE_60_E_SIG:
+			case SIGNAL_TYPE_COMPACT_A_SIG:
+			case SIGNAL_TYPE_COMPACT_E_SIG:
+			case SIGNAL_TYPE_KS_A_SIG:
+			case SIGNAL_TYPE_KS_E_SIG:
 			default:
 				break;
 		}
 	}
 	else if( SIGNAL_ASPECT_HP0 == usToAspect )
 	{
-		switch( usFromAspect )
+		switch( m_usSignalType )
 		{
-			case SIGNAL_ASPECT_HP1:
-			case SIGNAL_ASPECT_HP2:
-			case SIGNAL_ASPECT_KENNLICHT:
-//				pFirstStep = (uint16_t *)Main_to_Hp0;
+			case SIGNAL_TYPE_59_A_SIG:
+//				pFirstStep = Sig_Type_59_E_Sig_Main_To_Hp0[ usFromAspect ];
 				break;
 
-			case SIGNAL_ASPECT_HP1_ZS3:
-			case SIGNAL_ASPECT_HP2_ZS3:
-//				pFirstStep = (uint16_t *)Main_ZS3_Hp0;
-				break;
-
-			case SIGNAL_ASPECT_SH1:
-			case SIGNAL_ASPECT_ZS1:
-//				pFirstStep = (uint16_t *)Main_Sh1_ZS1_Hp0;
-				break;
-
+			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
+			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
+			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
+			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
+			case SIGNAL_TYPE_59_E_SIG:
+			case SIGNAL_TYPE_60_A_SIG:
+			case SIGNAL_TYPE_60_E_SIG:
+			case SIGNAL_TYPE_COMPACT_A_SIG:
+			case SIGNAL_TYPE_COMPACT_E_SIG:
+			case SIGNAL_TYPE_KS_A_SIG:
+			case SIGNAL_TYPE_KS_E_SIG:
 			default:
 				break;
 		}
