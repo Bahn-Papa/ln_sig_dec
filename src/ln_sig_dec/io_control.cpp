@@ -20,15 +20,15 @@
 //#		 G			X3.8		C0		 14		Hp2
 //#		 H			X1.2		D7		  7		Ersatzsignal (ZS1)
 //#		 I			X1.3		D6		  6		Zusatz-Kennlicht
-//#		 J			X1.4		D5		  5
-//#		 K			X1.5		D4		  4
-//#		 L			X1.6		D3		  3
-//#		 M			X1.7		D2		  2
+//#		 J			X1.4		D5		  5		rot
+//#		 K			X1.5		D4		  4		grün
+//#		 L			X1.6		D3		  3		rot
+//#		 M			X1.7		D2		  2		grün
 //#		 N			X1.8		D1		  1
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	4		from: 23.09.2022
+//#	File Version:	4		from: 07.10.2022
 //#
 //#	Implementation:
 //#		-	add sequencer tables for signal type 59 E-Sig
@@ -37,8 +37,17 @@
 //#				from						to
 //#				m_bTransitionActive			m_bTransitionActiveMain
 //#			new variables
+//#				m_usState
+//#				m_usOldState
 //#				m_bTransitionActiveApproach
 //#				m_bStateMachineActive
+//#			rename function
+//#				from						to
+//#				ProcessTransition			ProcessTransitionMain
+//#			new functions
+//#				StartAspectTransitionApproach
+//#				ProcessTransitionApproach
+//#				ProcessStateMachine
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -114,19 +123,25 @@
 //
 //==========================================================================
 
-#define SIGNAL_MAIN_LEDS		0x21FF
+#define SIGNAL_MAIN_LEDS			0x21FF
+#define SIGNAL_APPROACH_LEDS		0x1E00
 
-#define	LEDS_PORTB				0x30
-#define LEDS_PORTC				0x3F
-#define LEDS_PORTD				0xFF
+#define MAIN_LEDS_IDX_START			0
+#define APPROACH_LEDS_IDX_START		9
+
+#define	LEDS_PORTB					0x30
+#define LEDS_PORTC					0x3F
+#define LEDS_PORTD					0xFF
 
 //----------------------------------------------------------------------
 //	State machine to switch approach signal on and off
 //
 #define STATE_APPROACH_OFF			1
 #define	STATE_APPROACH_ON			2
-#define STATE_TRANSITION_TO_OFF		3
-#define STATE_TRANSITION_TO_ON		4
+#define STATE_SWITCH_OFF			3
+#define STATE_SWITCH_ON				4
+#define STATE_SET_SIGNAL_ASPECT		5
+#define STATE_SET_HP0				6
 
 //----------------------------------------------------------------------
 //	Cycle time in µs
@@ -250,8 +265,12 @@ void IO_ControlClass::Init( void )
 	m_usSignalAspectMainBuffer		= SIGNAL_ASPECT_HP0;
 	m_usSignalAspectApproach		= SIGNAL_ASPECT_HP0;
 	m_usSignalAspectApproachBuffer	= SIGNAL_ASPECT_HP0;
+	m_usState						= STATE_APPROACH_OFF;
+	m_usOldState					= m_usState;
 	m_bNightLight					= false;
-	m_bTransitionActive				= false;
+	m_bTransitionActiveMain			= false;
+	m_bTransitionActiveApproach		= false;
+	m_bStateMachineActive			= false;
 
 	SetSignalType();
 
@@ -278,17 +297,21 @@ void IO_ControlClass::Init( void )
 //
 void IO_ControlClass::Loop( void )
 {
-	//----------------------------------------------------------
-	//	process signal aspect transition
-	//
-	if( m_bTransitionActive )
+	if( m_bStateMachineActive )
 	{
-		ProcessTransition();
+		ProcessStateMachine();
 	}
 
-	//----------------------------------------------------------
-	//	process fading
-	//
+	if( m_bTransitionActiveApproach )
+	{
+		ProcessTransitionApproach();
+	}
+
+	if( !m_bStateMachineActive && m_bTransitionActiveMain )
+	{
+		ProcessTransitionMain();
+	}
+
 	ProcessBrightnessAndFade();
 }
 
@@ -380,9 +403,6 @@ void IO_ControlClass::HandleLed( uint8_t usLedNo, bool bOn )
 //
 void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect )
 {
-	uint16_t	uiFirstStep;
-
-
 	if( SIGNAL_ASPECTS > usSignalAspect )
 	{
 		//------------------------------------------------------
@@ -403,34 +423,19 @@ void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect )
 				m_usSignalAspectMainBuffer = usSignalAspect;
 			}
 			
-			//------------------------------------------------------
+			//--------------------------------------------------
 			//	if no signal aspect transition is active then
 			//		start the transition
 			//		store new signal aspect
 			//
-			if(		!m_bTransitionActive
+			if(		!m_bTransitionActiveMain
 				&&	(m_usSignalAspectMain != usSignalAspect) )
 			{
-				m_puiStepMain	= GetFirstStepMain( m_usSignalAspectMain, usSignalAspect );
-				uiFirstStep		= pgm_read_word( m_puiStepMain );
+				m_puiStepMain			= GetFirstStepMain( m_usSignalAspectMain, usSignalAspect );
+				m_usSignalAspectMain	= usSignalAspect;
+				m_bTransitionActiveMain	= true;
 
-				//--------------------------------------------------
-				//	if the first step is SEQUENCE_END
-				//	then we have nothing to do and stay at the
-				//	actual signal aspect.
-				//	In the other case we start a transition.
-				//
-				if( SEQUENCE_END == uiFirstStep )
-				{
-					m_usSignalAspectMainBuffer = m_usSignalAspectMain;
-				}
-				else
-				{
-					m_bTransitionActive		= true;
-					m_usSignalAspectMain	= usSignalAspect;
-
-					SwitchLed( LED_BLUE, true );
-				}
+				SwitchLed( LED_BLUE, true );
 			}
 		}
 	}
@@ -443,6 +448,52 @@ void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect )
 //
 void IO_ControlClass::HandleSignalAspectApproach( uint8_t usSignalAspect )
 {
+	if( SIGNAL_ASPECTS > usSignalAspect )
+	{
+		//------------------------------------------------------
+		//	first check if the new transition is allowed
+		//		allowed transitions are:
+		//			from Hp0 to xxx
+		//			from xxx to Hp0
+		//
+		if(		((SIGNAL_ASPECT_HP0 == m_usSignalAspectApproach) && (SIGNAL_ASPECT_HP0 != usSignalAspect))
+			||	((SIGNAL_ASPECT_HP0 != m_usSignalAspectApproach) && (SIGNAL_ASPECT_HP0 == usSignalAspect)) )
+		{
+			if( STATE_APPROACH_OFF == m_usState )
+			{
+				//----------------------------------------------
+				//	the approach signal is switched OFF
+				//	so just set the new signal aspect
+				//
+				m_usSignalAspectApproach		= usSignalAspect;
+				m_usSignalAspectApproachBuffer	= usSignalAspect;
+			}
+			else
+			{
+				//--------------------------------------------------
+				//	store new signal aspect in a buffer just in
+				//	case a signal aspect transition is active
+				//
+				if( m_usSignalAspectApproachBuffer != usSignalAspect )
+				{
+					m_usSignalAspectApproachBuffer = usSignalAspect;
+				}
+				
+				//--------------------------------------------------
+				//	if no signal aspect transition is active then
+				//		start the transition
+				//		store new signal aspect
+				//
+				if(		!m_bTransitionActiveApproach
+					&&	(m_usSignalAspectApproach != usSignalAspect) )
+				{
+					StartAspectTransitionApproach( m_usSignalAspectApproach, usSignalAspect );
+
+					m_usSignalAspectApproach = usSignalAspect;
+				}
+			}
+		}
+	}
 }
 
 
@@ -529,6 +580,19 @@ bool IO_ControlClass::IsFadeFinished( uint8_t usLedNo )
 	}
 
 	return( false );
+}
+
+
+//******************************************************************
+//	StartAspectTransitionApproach
+//------------------------------------------------------------------
+//
+void IO_ControlClass::StartAspectTransitionApproach( uint8_t usAspectFrom, uint8_t usAspectTo )
+{
+	m_puiStepApproach			= GetFirstStepApproach( usAspectFrom, usAspectTo );
+	m_bTransitionActiveApproach	= true;
+
+	SwitchLed( LED_BLUE, true );
 }
 
 
@@ -799,12 +863,12 @@ uint16_t * IO_ControlClass::GetFirstStepApproach( uint8_t usFromAspect, uint8_t 
 
 
 //******************************************************************
-//	ProcessTransition
+//	ProcessTransitionMain
 //------------------------------------------------------------------
 //	This function will process the steps of
-//	a signal aspect transition
+//	a signal aspect transition for the main signal
 //
-void IO_ControlClass::ProcessTransition( void )
+void IO_ControlClass::ProcessTransitionMain( void )
 {
 	uint16_t	uiAspect;
 	uint16_t	uiDiff;
@@ -820,7 +884,7 @@ void IO_ControlClass::ProcessTransition( void )
 			//	the end of the sequence is reached
 			//	so stop the transition
 			//
-			m_bTransitionActive = false;
+			m_bTransitionActiveMain = false;
 
 			SwitchLed( LED_BLUE, false );
 
@@ -833,6 +897,22 @@ void IO_ControlClass::ProcessTransition( void )
 				HandleSignalAspectMain( m_usSignalAspectMainBuffer );
 			}
 		}
+		else if( SEQUENCE_APPROACH_ON == uiAspect )
+		{
+			//--------------------------------------------------
+			//	the approach signal should be switched ON
+			//
+			m_usState				= STATE_SWITCH_ON;
+			m_bStateMachineActive	= true;
+		}
+		else if( SEQUENCE_APPROACH_OFF == uiAspect )
+		{
+			//--------------------------------------------------
+			//	the approach signal should be switched OFF
+			//
+			m_usState				= STATE_SET_HP0;
+			m_bStateMachineActive	= true;
+		}
 		else
 		{
 			//--------------------------------------------------
@@ -842,7 +922,7 @@ void IO_ControlClass::ProcessTransition( void )
 			uiDiff  = m_uiLedsOn & SIGNAL_MAIN_LEDS;
 			uiDiff ^= uiAspect;
 
-			for( uint8_t idx = 0 ; SIGNAL_LEDS > idx ; idx++ )
+			for( uint8_t idx = MAIN_LEDS_IDX_START ; (SIGNAL_LEDS > idx) && (uiDiff != 0) ; idx++ )
 			{
 				if( uiDiff & uiMask )
 				{
@@ -854,6 +934,8 @@ void IO_ControlClass::ProcessTransition( void )
 					{
 						HandleLed( idx, false );
 					}
+
+					uiDiff &= ~uiMask;
 				}
 
 				uiMask <<= 1;
@@ -861,6 +943,191 @@ void IO_ControlClass::ProcessTransition( void )
 
 			m_puiStepMain++;
 		}
+	}
+}
+
+
+//******************************************************************
+//	ProcessTransitionApproach
+//------------------------------------------------------------------
+//	This function will process the steps of
+//	a signal aspect transition for the approach signal
+//
+void IO_ControlClass::ProcessTransitionApproach( void )
+{
+	uint16_t	uiAspect;
+	uint16_t	uiDiff;
+	uint16_t	uiMask	= 0x020;
+
+	if( IsFadeFinished() )
+	{
+		uiAspect = pgm_read_word( m_puiStepApproach );
+
+		if( SEQUENCE_END == uiAspect )
+		{
+			//--------------------------------------------------
+			//	the end of the sequence is reached
+			//	so stop the transition
+			//
+			m_bTransitionActiveApproach = false;
+
+			if( !m_bTransitionActiveMain )
+			{
+				SwitchLed( LED_BLUE, false );
+			}
+
+			//--------------------------------------------------
+			//	check if we got a new signal aspect in between
+			//	if so, start a new transition
+			//
+			if( m_usSignalAspectApproach != m_usSignalAspectApproachBuffer )
+			{
+				StartAspectTransitionApproach( m_usSignalAspectApproach, m_usSignalAspectApproachBuffer );
+			}
+		}
+		else
+		{
+			//--------------------------------------------------
+			//	check wich LEDs of the approach signal
+			//	should go OFF and wich should go ON
+			//
+			uiDiff  = m_uiLedsOn & SIGNAL_APPROACH_LEDS;
+			uiDiff ^= uiAspect;
+
+			for( uint8_t idx = APPROACH_LEDS_IDX_START ; (SIGNAL_LEDS > idx) && (uiDiff != 0) ; idx++ )
+			{
+				if( uiDiff & uiMask )
+				{
+					if( uiAspect & uiMask )
+					{
+						HandleLed( idx, true );
+					}
+					else
+					{
+						HandleLed( idx, false );
+					}
+
+					uiDiff &= ~uiMask;
+				}
+
+				uiMask <<= 1;
+			}
+
+			m_puiStepApproach++;
+		}
+	}
+}
+
+
+//******************************************************************
+//	ProcessStateMachine
+//------------------------------------------------------------------
+//	This function will process the state machine to switch the
+//	approach signal ON or OFF
+//
+void IO_ControlClass::ProcessStateMachine( void )
+{
+	switch( m_usState )
+	{
+		//------------------------------------------------------
+		//
+		case STATE_APPROACH_OFF:
+			if( m_usState != m_usOldState )
+			{
+				m_usOldState			= m_usState;
+				m_bStateMachineActive	= false;
+			}
+			break;
+
+		//------------------------------------------------------
+		//
+		case STATE_SWITCH_ON:
+			if( m_usState != m_usOldState )
+			{
+				m_usOldState = m_usState;
+
+				//------------------------------------------
+				//	set signal aspect Hp0
+				//
+				HandleLed( LED_J, true );
+				HandleLed( LED_L, true );
+			}
+			else if( IsFadeFinished() )
+			{
+				if( SIGNAL_ASPECT_HP0 == m_usSignalAspectApproach )
+				{
+					m_usState = STATE_APPROACH_ON;
+				}
+				else
+				{
+					m_usState = STATE_SET_SIGNAL_ASPECT;
+				}
+			}
+			break;
+
+		//------------------------------------------------------
+		//
+		case STATE_SET_SIGNAL_ASPECT:
+			if( m_usState != m_usOldState )
+			{
+				m_usOldState = m_usState;
+
+				StartAspectTransitionApproach( SIGNAL_ASPECT_HP0, m_usSignalAspectApproach );
+			}
+			else if( !m_bTransitionActiveApproach )
+			{
+				m_usState = STATE_APPROACH_ON;
+			}
+			break;
+
+		//------------------------------------------------------
+		//
+		case STATE_APPROACH_ON:
+			if( m_usState != m_usOldState )
+			{
+				m_usOldState			= m_usState;
+				m_bStateMachineActive	= false;
+			}
+			break;
+
+		//------------------------------------------------------
+		//
+		case STATE_SET_HP0:
+			if( m_usState != m_usOldState )
+			{
+				m_usOldState = m_usState;
+
+				if( SIGNAL_ASPECT_HP0 != m_usSignalAspectApproach )
+				{
+					StartAspectTransitionApproach( SIGNAL_ASPECT_HP0, m_usSignalAspectApproach );
+				}
+			}
+			else if( !m_bTransitionActiveApproach )
+			{
+				m_usState = STATE_SWITCH_OFF;
+			}
+			break;
+
+		//------------------------------------------------------
+		//
+		case STATE_SWITCH_OFF:
+			if( m_usState != m_usOldState )
+			{
+				m_usOldState = m_usState;
+
+				HandleLed( LED_J, false );
+				HandleLed( LED_L, false );
+			}
+			else if( IsFadeFinished() )
+			{
+				m_usState = STATE_APPROACH_OFF;
+			}
+			break;
+
+		//------------------------------------------------------
+		//
+		default:
+			break;
 	}
 }
 
