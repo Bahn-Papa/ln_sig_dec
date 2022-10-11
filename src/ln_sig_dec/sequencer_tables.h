@@ -12,15 +12,14 @@
 //#
 //#	Each bit of a sequence value represents one LED of the signal.
 //#	If a bit is set that LED is ON.
-//#
-//#		LED									ge	ws	KL	rt	rt	gr	ZA
+//#														re	li
+//#		LED		ws	ge	gr	ge	gr	KlZ	ES	ge	ws	KL	rt	rt	gr	ZA
 //#				 N	 M	 L	 K	 J	 I	 H	 G	 F	 E	 D	 C	 B	 A
 //#		Bit		13	12	11	10	 9	 8	 7	 6	 5	 4	 3	 2	 1	 0
 //#
 //#	The first value in each sequence is the first change of
 //#	a signal aspect.
-//#	Each sequence will end with a value of '0',
-//#	because at least one LED of a signal is on.
+//#	Each sequence will end with SEQUENCE_END.
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -123,7 +122,7 @@ const uint16_t sNOP[] PROGMEM = { SEQUENCE_END };
 //	there are two sets of sequences
 //		one set for the main signal and
 //		one set for the approach signal
-//	if there are different sequences neede for a specific signal type
+//	if there are different sequences needed for a specific signal type
 //	the tables are behind this section
 //
 
@@ -168,12 +167,28 @@ const uint16_t A_Sig_Main_Hp0_Hp1_ZS3[] PROGMEM =
 	SEQUENCE_END
 };
 
+const uint16_t E_Sig_Main_Hp0_Hp1_ZS3[] PROGMEM =
+{
+	0b0000000000000101,
+	0b0000000000000001,
+	0b0000000000000011,
+	SEQUENCE_END
+};
+
 //------------------------------------------------------------------
 //	Main: from Hp0 to Hp2 including ZS3
 //
 const uint16_t A_Sig_Main_Hp0_Hp2_ZS3[] PROGMEM =
 {
 	0b0000000000001101,
+	0b0000000000000001,
+	0b0000000001000011,
+	SEQUENCE_END
+};
+
+const uint16_t E_Sig_Main_Hp0_Hp2_ZS3[] PROGMEM =
+{
+	0b0000000000000101,
 	0b0000000000000001,
 	0b0000000001000011,
 	SEQUENCE_END
@@ -199,6 +214,13 @@ const uint16_t A_Sig_Main_Hp0_ZS1[] PROGMEM =
 	SEQUENCE_END
 };
 
+const uint16_t E_Sig_Main_Hp0_ZS1[] PROGMEM =
+{
+	0b0000000000000000,
+	0b0000000010001000,
+	SEQUENCE_END
+};
+
 //------------------------------------------------------------------
 //	Main: from xxx to Hp0
 //
@@ -206,6 +228,13 @@ const uint16_t A_Sig_Main_to_Hp0[] PROGMEM =
 {
 	0b0000000000000000,
 	0b0000000000001100,
+	SEQUENCE_END
+};
+
+const uint16_t E_Sig_Main_to_Hp0[] PROGMEM =
+{
+	0b0000000000000000,
+	0b0000000000000100,
 	SEQUENCE_END
 };
 
@@ -217,6 +246,14 @@ const uint16_t A_Sig_Main_ZS3_Hp0[] PROGMEM =
 	0b0000000000000001,
 	0b0000000000001101,
 	0b0000000000001100,
+	SEQUENCE_END
+};
+
+const uint16_t E_Sig_Main_ZS3_Hp0[] PROGMEM =
+{
+	0b0000000000000001,
+	0b0000000000000101,
+	0b0000000000000100,
 	SEQUENCE_END
 };
 
@@ -236,7 +273,7 @@ const uint16_t A_Sig_Main_Sh1_ZS1_Hp0[] PROGMEM =
 //
 
 //------------------------------------------------------------------
-//	E-Sig from Hp0
+//	A-Sig from Hp0
 //
 const uint16_t* const Sig_Type_59_A_Sig_Main_From_Hp0[] PROGMEM =
 {
@@ -245,10 +282,28 @@ const uint16_t* const Sig_Type_59_A_Sig_Main_From_Hp0[] PROGMEM =
 } ;
 
 //------------------------------------------------------------------
-//	E-Sig to Hp0
+//	A-Sig to Hp0
 //
 const uint16_t* const Sig_Type_59_A_Sig_Main_To_Hp0[] PROGMEM =
 {
 	sNOP, A_Sig_Main_to_Hp0, A_Sig_Main_to_Hp0, A_Sig_Main_Sh1_ZS1_Hp0,
 	A_Sig_Main_ZS3_Hp0, A_Sig_Main_ZS3_Hp0, A_Sig_Main_to_Hp0, A_Sig_Main_Sh1_ZS1_Hp0
+};
+
+//------------------------------------------------------------------
+//	E-Sig from Hp0
+//
+const uint16_t* const Sig_Type_59_E_Sig_Main_From_Hp0[] PROGMEM =
+{
+	sNOP, Main_Hp0_Hp1, Main_Hp0_Hp2, sNOP,
+	E_Sig_Main_Hp0_Hp1_ZS3, E_Sig_Main_Hp0_Hp2_ZS3, Main_Hp0_KL, E_Sig_Main_Hp0_ZS1
+} ;
+
+//------------------------------------------------------------------
+//	E-Sig to Hp0
+//
+const uint16_t* const Sig_Type_59_E_Sig_Main_To_Hp0[] PROGMEM =
+{
+	sNOP, E_Sig_Main_to_Hp0, E_Sig_Main_to_Hp0, E_Sig_Main_to_Hp0,
+	E_Sig_Main_ZS3_Hp0, E_Sig_Main_ZS3_Hp0, E_Sig_Main_to_Hp0, E_Sig_Main_to_Hp0
 };

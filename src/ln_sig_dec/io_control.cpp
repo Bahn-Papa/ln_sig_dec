@@ -28,7 +28,7 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	4		from: 07.10.2022
+//#	File Version:	4		from: 11.10.2022
 //#
 //#	Implementation:
 //#		-	add sequencer tables for signal type 59 E-Sig
@@ -52,6 +52,8 @@
 //#	Bug Fix:
 //#		-	sequences so far are for A-Sig not for E-Sig
 //#			so rename all tables accordingly
+//#		-	only switch approach signal ON if it is OFF
+//#			and vice versa
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -611,6 +613,7 @@ void IO_ControlClass::SetSignalType( void )
 	switch( m_usSignalType )
 	{
 		case SIGNAL_TYPE_59_A_SIG:
+		case SIGNAL_TYPE_59_E_SIG:
 			m_uiFadeTimeUp		= g_clLncvStorage.GetFadeTimeUp(   IDX_FADE_TIME_SLOW );
 			m_uiFadeTimeDown	= g_clLncvStorage.GetFadeTimeDown( IDX_FADE_TIME_SLOW );
 			break;
@@ -631,7 +634,6 @@ void IO_ControlClass::SetSignalType( void )
 			break;
 
 		case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
-		case SIGNAL_TYPE_59_E_SIG:
 		case SIGNAL_TYPE_60_A_SIG:
 		case SIGNAL_TYPE_60_E_SIG:
 		case SIGNAL_TYPE_COMPACT_A_SIG:
@@ -704,11 +706,14 @@ uint16_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usTo
 				pFirstStep = Sig_Type_59_A_Sig_Main_From_Hp0[ usToAspect ];
 				break;
 
+			case SIGNAL_TYPE_59_E_SIG:
+				pFirstStep = Sig_Type_59_E_Sig_Main_From_Hp0[ usToAspect ];
+				break;
+
 			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
 			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
 			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
 			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
-			case SIGNAL_TYPE_59_E_SIG:
 			case SIGNAL_TYPE_60_A_SIG:
 			case SIGNAL_TYPE_60_E_SIG:
 			case SIGNAL_TYPE_COMPACT_A_SIG:
@@ -727,11 +732,14 @@ uint16_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usTo
 				pFirstStep = Sig_Type_59_A_Sig_Main_To_Hp0[ usFromAspect ];
 				break;
 
+			case SIGNAL_TYPE_59_E_SIG:
+				pFirstStep = Sig_Type_59_E_Sig_Main_To_Hp0[ usFromAspect ];
+				break;
+
 			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
 			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
 			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
 			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
-			case SIGNAL_TYPE_59_E_SIG:
 			case SIGNAL_TYPE_60_A_SIG:
 			case SIGNAL_TYPE_60_E_SIG:
 			case SIGNAL_TYPE_COMPACT_A_SIG:
@@ -848,16 +856,22 @@ void IO_ControlClass::ProcessTransitionMain( void )
 			//--------------------------------------------------
 			//	the approach signal should be switched ON
 			//
-			m_usState				= STATE_SWITCH_ON;
-			m_bStateMachineActive	= true;
+			if( STATE_APPROACH_OFF == m_usState )
+			{
+				m_usState				= STATE_SWITCH_ON;
+				m_bStateMachineActive	= true;
+			}
 		}
 		else if( SEQUENCE_APPROACH_OFF == uiAspect )
 		{
 			//--------------------------------------------------
 			//	the approach signal should be switched OFF
 			//
-			m_usState				= STATE_SET_HP0;
-			m_bStateMachineActive	= true;
+			if( STATE_APPROACH_ON == m_usState )
+			{
+				m_usState				= STATE_SET_HP0;
+				m_bStateMachineActive	= true;
+			}
 		}
 		else
 		{
