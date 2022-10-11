@@ -49,6 +49,10 @@
 //#				ProcessTransitionApproach
 //#				ProcessStateMachine
 //#
+//#	Bug Fix:
+//#		-	sequences so far are for A-Sig not for E-Sig
+//#			so rename all tables accordingly
+//#
 //#-------------------------------------------------------------------------
 //#
 //#	File Version:	3		from: 23.09.2022
@@ -694,45 +698,10 @@ uint16_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usTo
 
 	if( SIGNAL_ASPECT_HP0 == usFromAspect )
 	{
-/*
-		switch( usToAspect )
-		{
-			case SIGNAL_ASPECT_HP1:
-				pFirstStep = (uint16_t *)Main_Hp0_Hp1;
-				break;
-
-			case SIGNAL_ASPECT_HP2:
-				pFirstStep = (uint16_t *)Main_Hp0_Hp2;
-				break;
-
-			case SIGNAL_ASPECT_HP1_ZS3:
-				pFirstStep = (uint16_t *)E_Sig_Main_Hp0_Hp1_ZS3;
-				break;
-
-			case SIGNAL_ASPECT_HP2_ZS3:
-				pFirstStep = (uint16_t *)E_Sig_Main_Hp0_Hp2_ZS3;
-				break;
-
-			case SIGNAL_ASPECT_SH1:
-				pFirstStep = (uint16_t *)Main_Hp0_Sh1;
-				break;
-
-			case SIGNAL_ASPECT_KENNLICHT:
-				pFirstStep = (uint16_t *)Main_Hp0_KL;
-				break;
-
-			case SIGNAL_ASPECT_ZS1:
-				pFirstStep = (uint16_t *)Main_Hp0_ZS1;
-				break;
-
-			default:
-				break;
-		}
-*/
 		switch( m_usSignalType )
 		{
 			case SIGNAL_TYPE_59_A_SIG:
-				pFirstStep = Sig_Type_59_E_Sig_Main_From_Hp0[ usToAspect ];
+				pFirstStep = Sig_Type_59_A_Sig_Main_From_Hp0[ usToAspect ];
 				break;
 
 			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
@@ -752,33 +721,10 @@ uint16_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usTo
 	}
 	else if( SIGNAL_ASPECT_HP0 == usToAspect )
 	{
-/*
-		switch( usFromAspect )
-		{
-			case SIGNAL_ASPECT_HP1:
-			case SIGNAL_ASPECT_HP2:
-			case SIGNAL_ASPECT_KENNLICHT:
-				pFirstStep = (uint16_t *)Main_to_Hp0;
-				break;
-
-			case SIGNAL_ASPECT_HP1_ZS3:
-			case SIGNAL_ASPECT_HP2_ZS3:
-				pFirstStep = (uint16_t *)Main_ZS3_Hp0;
-				break;
-
-			case SIGNAL_ASPECT_SH1:
-			case SIGNAL_ASPECT_ZS1:
-				pFirstStep = (uint16_t *)Main_Sh1_ZS1_Hp0;
-				break;
-
-			default:
-				break;
-		}
-*/
 		switch( m_usSignalType )
 		{
 			case SIGNAL_TYPE_59_A_SIG:
-				pFirstStep = Sig_Type_59_E_Sig_Main_To_Hp0[ usFromAspect ];
+				pFirstStep = Sig_Type_59_A_Sig_Main_To_Hp0[ usFromAspect ];
 				break;
 
 			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
@@ -816,7 +762,7 @@ uint16_t * IO_ControlClass::GetFirstStepApproach( uint8_t usFromAspect, uint8_t 
 		switch( m_usSignalType )
 		{
 			case SIGNAL_TYPE_59_A_SIG:
-//				pFirstStep = Sig_Type_59_E_Sig_Main_From_Hp0[ usToAspect ];
+//				pFirstStep = Sig_Type_59_A_Sig_Main_From_Hp0[ usToAspect ];
 				break;
 
 			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
@@ -839,7 +785,7 @@ uint16_t * IO_ControlClass::GetFirstStepApproach( uint8_t usFromAspect, uint8_t 
 		switch( m_usSignalType )
 		{
 			case SIGNAL_TYPE_59_A_SIG:
-//				pFirstStep = Sig_Type_59_E_Sig_Main_To_Hp0[ usFromAspect ];
+//				pFirstStep = Sig_Type_59_A_Sig_Main_To_Hp0[ usFromAspect ];
 				break;
 
 			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
