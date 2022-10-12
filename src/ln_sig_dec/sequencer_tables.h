@@ -43,6 +43,7 @@
 //#
 //#	Implementation:
 //#		-	rename sequences to make it more clear what will happen
+//#		-	add approach signal sequences
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -138,6 +139,7 @@ const uint16_t sNOP[] PROGMEM = { SEQUENCE_END };
 //
 const uint16_t Main_to_Hp1[] PROGMEM =
 {
+	SEQUENCE_APPROACH_ON,
 	0b0000000000000000,
 	0b0000000000000010,
 	SEQUENCE_END
@@ -148,6 +150,7 @@ const uint16_t Main_to_Hp1[] PROGMEM =
 //
 const uint16_t Main_to_Hp2[] PROGMEM =
 {
+	SEQUENCE_APPROACH_ON,
 	0b0000000000000000,
 	0b0000000001000010,
 	SEQUENCE_END
@@ -168,6 +171,7 @@ const uint16_t Main_to_Sh1[] PROGMEM =
 //
 const uint16_t A_Sig_Main_to_Hp1_ZS3[] PROGMEM =
 {
+	SEQUENCE_APPROACH_ON,
 	0b0000000000001101,
 	0b0000000000000001,
 	0b0000000000000011,
@@ -176,6 +180,7 @@ const uint16_t A_Sig_Main_to_Hp1_ZS3[] PROGMEM =
 
 const uint16_t E_Sig_Main_to_Hp1_ZS3[] PROGMEM =
 {
+	SEQUENCE_APPROACH_ON,
 	0b0000000000000101,
 	0b0000000000000001,
 	0b0000000000000011,
@@ -187,6 +192,7 @@ const uint16_t E_Sig_Main_to_Hp1_ZS3[] PROGMEM =
 //
 const uint16_t A_Sig_Main_to_Hp2_ZS3[] PROGMEM =
 {
+	SEQUENCE_APPROACH_ON,
 	0b0000000000001101,
 	0b0000000000000001,
 	0b0000000001000011,
@@ -195,6 +201,7 @@ const uint16_t A_Sig_Main_to_Hp2_ZS3[] PROGMEM =
 
 const uint16_t E_Sig_Main_to_Hp2_ZS3[] PROGMEM =
 {
+	SEQUENCE_APPROACH_ON,
 	0b0000000000000101,
 	0b0000000000000001,
 	0b0000000001000011,
@@ -235,6 +242,7 @@ const uint16_t A_Sig_Main_to_Hp0[] PROGMEM =
 {
 	0b0000000000000000,
 	0b0000000000001100,
+	SEQUENCE_APPROACH_OFF,
 	SEQUENCE_END
 };
 
@@ -242,6 +250,7 @@ const uint16_t E_Sig_Main_to_Hp0[] PROGMEM =
 {
 	0b0000000000000000,
 	0b0000000000000100,
+	SEQUENCE_APPROACH_OFF,
 	SEQUENCE_END
 };
 
@@ -253,6 +262,7 @@ const uint16_t A_Sig_Main_from_ZS3[] PROGMEM =
 	0b0000000000000001,
 	0b0000000000001101,
 	0b0000000000001100,
+	SEQUENCE_APPROACH_OFF,
 	SEQUENCE_END
 };
 
@@ -261,6 +271,7 @@ const uint16_t E_Sig_Main_from_ZS3[] PROGMEM =
 	0b0000000000000001,
 	0b0000000000000101,
 	0b0000000000000100,
+	SEQUENCE_APPROACH_OFF,
 	SEQUENCE_END
 };
 
@@ -273,6 +284,59 @@ const uint16_t A_Sig_Main_from_Sh1_ZS1[] PROGMEM =
 	0b0000000000001100,
 	SEQUENCE_END
 };
+
+
+//------------------------------------------------------------------
+//------------------------------------------------------------------
+//	Approach: from Hp0 to Hp1
+//
+const uint16_t Appr_to_Hp1[] PROGMEM =
+{
+	0b0000000000000000,
+	0b0000101000000000,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	Approach: from Hp0 to Hp2
+//
+const uint16_t Appr_to_Hp2[] PROGMEM =
+{
+	0b0000000000000000,
+	0b0001001000000000,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	Approach: from xxx to Hp0
+//
+const uint16_t Appr_to_Hp0[] PROGMEM =
+{
+	0b0000000000000000,
+	0b0001010000000000,
+	SEQUENCE_END
+};
+
+
+//**********************************************************************
+//	General Signal Type
+//
+
+//------------------------------------------------------------------
+//	Approach Signal from Hp0
+//
+const uint16_t* const Approach_From_Hp0[] PROGMEM =
+{
+	sNOP, Appr_to_Hp1, Appr_to_Hp2, sNOP, Appr_to_Hp1, Appr_to_Hp2, sNOP, sNOP
+} ;
+
+//------------------------------------------------------------------
+//	Approach Signal to Hp0
+//
+const uint16_t* const Approach_To_Hp0[] PROGMEM =
+{
+	sNOP, Appr_to_Hp0, Appr_to_Hp0, sNOP, Appr_to_Hp0, Appr_to_Hp0, sNOP, sNOP
+} ;
 
 
 //**********************************************************************

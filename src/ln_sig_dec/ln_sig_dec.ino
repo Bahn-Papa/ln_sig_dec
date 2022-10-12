@@ -15,7 +15,7 @@
 #include "compile_options.h"
 
 #define VERSION_MAIN		PLATINE_VERSION
-#define	VERSION_MINOR		2
+#define	VERSION_MINOR		3
 #define VERSION_BUGFIX		0
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
@@ -27,10 +27,17 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	Version:	x.02.00		from: 07.10.2022
+//#	Version:	x.03.00		from: 12.10.2022
 //#
 //#	Implementation:
 //#		-	implement signal aspects for the approach signal
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.02.00		from: 11.10.2022
+//#
+//#	Implementation:
+//#		-	implementation of signal aspects for signal type 59 finished
 //#
 //#-------------------------------------------------------------------------
 //#

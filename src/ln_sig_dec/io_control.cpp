@@ -28,6 +28,13 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	5		from: 12.10.2022
+//#
+//#	Implementation:
+//#		-	add approach signal sequences
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	4		from: 11.10.2022
 //#
 //#	Implementation:
@@ -769,14 +776,11 @@ uint16_t * IO_ControlClass::GetFirstStepApproach( uint8_t usFromAspect, uint8_t 
 	{
 		switch( m_usSignalType )
 		{
-			case SIGNAL_TYPE_59_A_SIG:
-//				pFirstStep = Sig_Type_59_A_Sig_Main_From_Hp0[ usToAspect ];
-				break;
-
 			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
 			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
 			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
 			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
+			case SIGNAL_TYPE_59_A_SIG:
 			case SIGNAL_TYPE_59_E_SIG:
 			case SIGNAL_TYPE_60_A_SIG:
 			case SIGNAL_TYPE_60_E_SIG:
@@ -784,6 +788,9 @@ uint16_t * IO_ControlClass::GetFirstStepApproach( uint8_t usFromAspect, uint8_t 
 			case SIGNAL_TYPE_COMPACT_E_SIG:
 			case SIGNAL_TYPE_KS_A_SIG:
 			case SIGNAL_TYPE_KS_E_SIG:
+				pFirstStep = Approach_From_Hp0[ usToAspect ];
+				break;
+
 			default:
 				break;
 		}
@@ -792,14 +799,11 @@ uint16_t * IO_ControlClass::GetFirstStepApproach( uint8_t usFromAspect, uint8_t 
 	{
 		switch( m_usSignalType )
 		{
-			case SIGNAL_TYPE_59_A_SIG:
-//				pFirstStep = Sig_Type_59_A_Sig_Main_To_Hp0[ usFromAspect ];
-				break;
-
 			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
 			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
 			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
 			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
+			case SIGNAL_TYPE_59_A_SIG:
 			case SIGNAL_TYPE_59_E_SIG:
 			case SIGNAL_TYPE_60_A_SIG:
 			case SIGNAL_TYPE_60_E_SIG:
@@ -807,6 +811,9 @@ uint16_t * IO_ControlClass::GetFirstStepApproach( uint8_t usFromAspect, uint8_t 
 			case SIGNAL_TYPE_COMPACT_E_SIG:
 			case SIGNAL_TYPE_KS_A_SIG:
 			case SIGNAL_TYPE_KS_E_SIG:
+				pFirstStep = Approach_To_Hp0[ usToAspect ];
+				break;
+
 			default:
 				break;
 		}
@@ -831,6 +838,8 @@ void IO_ControlClass::ProcessTransitionMain( void )
 	if( IsFadeFinished() )
 	{
 		uiAspect = pgm_read_word( m_puiStepMain );
+
+		m_puiStepMain++;
 
 		if( SEQUENCE_END == uiAspect )
 		{
@@ -900,8 +909,6 @@ void IO_ControlClass::ProcessTransitionMain( void )
 
 				uiMask <<= 1;
 			}
-
-			m_puiStepMain++;
 		}
 	}
 }
@@ -922,6 +929,8 @@ void IO_ControlClass::ProcessTransitionApproach( void )
 	if( IsFadeFinished() )
 	{
 		uiAspect = pgm_read_word( m_puiStepApproach );
+
+		m_puiStepApproach++;
 
 		if( SEQUENCE_END == uiAspect )
 		{
@@ -972,8 +981,6 @@ void IO_ControlClass::ProcessTransitionApproach( void )
 
 				uiMask <<= 1;
 			}
-
-			m_puiStepApproach++;
 		}
 	}
 }
