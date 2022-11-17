@@ -8,6 +8,10 @@
 //#	Here are all sequences defined that describe the transitions
 //# from one signal aspect to another.
 //#
+//#	There are two sets of sequences:
+//#		-		main signal aspect sequences
+//#		-	approach signal aspect sequences
+//#
 //#-------------------------------------------------------------------------
 //#
 //#	Each bit of a sequence value represents one LED of the signal.
@@ -17,9 +21,17 @@
 //#				 N	 M	 L	 K	 J	 I	 H	 G	 F	 E	 D	 C	 B	 A
 //#		Bit		13	12	11	10	 9	 8	 7	 6	 5	 4	 3	 2	 1	 0
 //#
+//#	The sequences for the main signal will cover the LEDs B to G
+//#		where LED B is bit 0 in the sequence table
+//#
+//#	The sequences for the approach signal will cover the LEDs J to M
+//#		where LED J is bit 0 in the sequence table
+//#
 //#	The first value in each sequence is the first change of
-//#	a signal aspect.
+//#		a signal aspect.
 //#	Each sequence will end with SEQUENCE_END.
+//#	During main signal sequences the approach signal can be switched
+//#		ON / OFF (SEQUENCE_APPROACH_ON, SEQUENCE_APPROACH_OFF)
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -28,14 +40,16 @@
 //#	 1	Hp1
 //#	 2	Hp2
 //#	 3	Sh1
-//#	 4	Hp1 mit 1 Zusatzanzeiger (ZS3)
-//#	 5	Hp2 mit 1 Zusatzanzeiger (ZS3)
-//#	 6	Kennlicht
-//#	 7	Ersatzsignal (ZS1)
-//#	 8	Hp1 mit 2 Zusatzanzeiger	(not implemented yet)
-//#	 9	Hp1 mit 3 Zusatzanzeiger	(not implemented yet)
-//#	10	Hp2 mit 2 Zusatzanzeiger	(not implemented yet)
-//#	11	Hp2 mit 3 Zusatzanzeiger	(not implemented yet)
+//#	 4	Kennlicht
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File Version:	5		from: 18.11.2022
+//#
+//#	Implementation:
+//#		-	split into two sets of sequences
+//#					main signal sequences
+//#				approach signal sequences
 //#
 //#-------------------------------------------------------------------------
 //#
