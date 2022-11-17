@@ -11,6 +11,19 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	5		from: 17.11.2022
+//#
+//#	Implementation:
+//#		-	streamlining lncv storage
+//#			remove functions
+//#				GetSignalType()
+//#				GetLightIntensityDay()
+//#				GetLightIntensityNight()
+//#			remove variable
+//#				m_usSignalType
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	4		from: 27.09.2022
 //#
 //#	Implementation:
@@ -183,13 +196,6 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 //
 void LncvStorageClass::Init( void )
 {
-	//--------------------------------------------------------------
-	//	read config information
-	//
-	m_usSignalType = (uint8_t)ReadLNCV( LNCV_ADR_SIGNAL_TYPE );
-
-
-	delay( 100 );
 }
 
 
@@ -228,44 +234,6 @@ uint16_t LncvStorageClass::GetFadeTimeDown( uint8_t idx )
 	}
 
 	return( uiFadeTime );
-}
-
-
-//**********************************************************************
-//	GetLightIntensityDay
-//----------------------------------------------------------------------
-//
-uint8_t LncvStorageClass::GetLightIntensityDay( uint8_t usLedNo )
-{
-	uint8_t		usLightIntensity = BRIGHTNESS_MAX;
-	uint16_t	uiHelper;
-
-	if( NUMBER_LIGHTS > usLedNo  )
-	{
-		uiHelper			= ReadLNCV( LNCV_ADR_LIGHT_INTENSITY_LED_A + usLedNo );
-		usLightIntensity	= (uint8_t)((uiHelper & MASK_INTENSITIY_DAY) >> 8);
-	}
-	
-	return( usLightIntensity );
-}
-
-
-//**********************************************************************
-//	GetLightIntensityNight
-//----------------------------------------------------------------------
-//
-uint8_t LncvStorageClass::GetLightIntensityNight( uint8_t usLedNo )
-{
-	uint8_t		usLightIntensity = BRIGHTNESS_MAX;
-	uint16_t	uiHelper;
-
-	if( NUMBER_LIGHTS > usLedNo  )
-	{
-		uiHelper			= ReadLNCV( LNCV_ADR_LIGHT_INTENSITY_LED_A + usLedNo );
-		usLightIntensity	= (uint8_t)( uiHelper & MASK_INTENSITIY_NIGHT);
-	}
-	
-	return( usLightIntensity );
 }
 
 

@@ -7,6 +7,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	5		from: 17.11.2022
+//#
+//#	Implementation:
+//#		-	streamlining lncv storage
+//#			changes in function 'Init()'
+//#				now read signal type direct from LNCV
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	4		from: 28.09.2022
 //#
 //#	Implementation:
@@ -128,7 +137,7 @@ void MyLoconetClass::Init( void )
 	m_usSignalSelected			= 0;
 	m_usSignalAspect			= 0;
 	m_bIsProgMode				= false;
-	m_usSignalType				= g_clLncvStorage.GetSignalType();
+	m_usSignalType				= (uint8_t)g_clLncvStorage.ReadLNCV( LNCV_ADR_SIGNAL_TYPE );
 	m_uiSignalValidWaitTime		= g_clLncvStorage.ReadLNCV( LNCV_ADR_SIGNAL_VALID_WAIT_TIME );
 
 	g_uiArticleNumber			= g_clLncvStorage.ReadLNCV( LNCV_ADR_ARTIKEL_NUMMER );

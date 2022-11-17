@@ -28,6 +28,17 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	6		from: 17.11.2022
+//#
+//#	Implementation:
+//#		-	streamlining lncv storage
+//#			changes in function 'Init()'
+//#				now read the light intensity direct from LNCV
+//#			changes in function 'SetSignalType()'
+//#				now read signal type direct from LNCV
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	5		from: 12.10.2022
 //#
 //#	Implementation:
@@ -162,6 +173,13 @@
 #define PWM_CYCLE_TIME			20400
 #define PWM_STEP_TIME			(PWM_CYCLE_TIME / 255)
 
+//----------------------------------------------------------------------
+//	Light intensity masks
+//
+#define MASK_INTENSITY_NIGHT		0x00FF
+#define MASK_INTENSITY_DAY			0xFF00
+
+
 typedef struct
 {
 	uint8_t	m_usBrightnessDay;
@@ -265,6 +283,8 @@ IO_ControlClass::IO_ControlClass()
 //
 void IO_ControlClass::Init( void )
 {
+	uint16_t	uiHelper;
+
 	m_puiStepMain					= 0x0000;
 	m_puiStepApproach				= 0x0000;
 	m_ulLastCycleStartTime			= 0L;
@@ -287,10 +307,12 @@ void IO_ControlClass::Init( void )
 
 	SetSignalType();
 
-	for( uint8_t idx = 0 ; idx < SIGNAL_LEDS ; idx++ )
+	for( uint8_t idx = 0 ; SIGNAL_LEDS > idx ; idx++ )
 	{
-		g_arChannel[ idx ].m_usBrightnessDay	= g_clLncvStorage.GetLightIntensityDay( idx );
-		g_arChannel[ idx ].m_usBrightnessNight	= g_clLncvStorage.GetLightIntensityNight( idx );
+		uiHelper = g_clLncvStorage.ReadLNCV( LNCV_ADR_LIGHT_INTENSITY_LED_A + idx );
+
+		g_arChannel[ idx ].m_usBrightnessDay	= (uint8_t)((uiHelper & MASK_INTENSITY_DAY) >> 8);
+		g_arChannel[ idx ].m_usBrightnessNight	= (uint8_t)( uiHelper & MASK_INTENSITY_NIGHT);
 		g_arChannel[ idx ].m_fTarget = 0.0;
 		g_arChannel[ idx ].m_fActual = 0.0;
 	}
@@ -615,7 +637,7 @@ void IO_ControlClass::StartAspectTransitionApproach( uint8_t usAspectFrom, uint8
 //
 void IO_ControlClass::SetSignalType( void )
 {
-	m_usSignalType	= g_clLncvStorage.GetSignalType();
+	m_usSignalType	= (uint8_t)g_clLncvStorage.ReadLNCV( LNCV_ADR_SIGNAL_TYPE );
 
 	switch( m_usSignalType )
 	{

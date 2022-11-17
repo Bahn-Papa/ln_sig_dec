@@ -10,6 +10,19 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	4		from: 17.11.2022
+//#
+//#	Implementation:
+//#		-	streamlining lncv storage
+//#			remove functions
+//#				GetSignalType()
+//#				GetLightIntensityDay()
+//#				GetLightIntensityNight()
+//#			remove variable
+//#				m_usSignalType
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	3		from: 26.09.2022
 //#
 //#	Implementation:
@@ -95,9 +108,6 @@
 #define LNCV_ADR_LIGHT_INTENSITY_LED_L		22
 #define LNCV_ADR_LIGHT_INTENSITY_LED_M		23
 #define LNCV_ADR_LIGHT_INTENSITY_LED_N		24
-
-#define MASK_INTENSITIY_NIGHT				0x00FF
-#define MASK_INTENSITIY_DAY					0xFF00
 
 #define BRIGHTNESS_MAX						255
 #define BRIGHTNESS_MIN						0
@@ -185,29 +195,15 @@ class LncvStorageClass
 		//
 		LncvStorageClass();
 
-		//----------------------------------------------------------
-		//
-		inline uint8_t GetSignalType( void )
-		{
-			return( m_usSignalType );
-		}
-
-
 		void CheckEEPROM( uint16_t uiVersionNumber );
 		void Init( void );
 
 		uint16_t GetFadeTimeUp(   uint8_t idx );
 		uint16_t GetFadeTimeDown( uint8_t idx );
-		uint8_t  GetLightIntensityDay(	uint8_t usLedNo );
-		uint8_t  GetLightIntensityNight( uint8_t usLedNo );
 
 		bool IsValidLNCVAddress( uint16_t uiAddress );
 		uint16_t ReadLNCV(  uint16_t uiAddress );
 		void	 WriteLNCV( uint16_t uiAddress, uint16_t uiValue );
-
-
-	private:
-		uint8_t	m_usSignalType;
 };
 
 
