@@ -28,6 +28,13 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	7		from: 18.11.2022
+//#
+//#	Implementation:
+//#		-	split into two sets of sequences
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	6		from: 17.11.2022
 //#
 //#	Implementation:
@@ -147,11 +154,16 @@
 //
 //==========================================================================
 
-#define SIGNAL_MAIN_LEDS			0x21FF
+#define SIGNAL_MAIN_LEDS			0x007E
 #define SIGNAL_APPROACH_LEDS		0x1E00
 
-#define MAIN_LEDS_IDX_START			0
+#define MAIN_LEDS_IDX_START			1
+#define MAIN_LEDS_IDX_COUNT			6
+#define MAIN_LEDS_IDX_STOP			(MAIN_LEDS_IDX_START + MAIN_LEDS_IDX_COUNT)
+
 #define APPROACH_LEDS_IDX_START		9
+#define APPROACH_LEDS_IDX_COUNT		4
+#define APPROACH_LEDS_IDX_STOP		(APPROACH_LEDS_IDX_START + APPROACH_LEDS_IDX_COUNT)
 
 #define	LEDS_PORTB					0x30
 #define LEDS_PORTC					0x3F
@@ -285,8 +297,8 @@ void IO_ControlClass::Init( void )
 {
 	uint16_t	uiHelper;
 
-	m_puiStepMain					= 0x0000;
-	m_puiStepApproach				= 0x0000;
+	m_puiStepMain					= NULL;
+	m_puiStepApproach				= NULL;
 	m_ulLastCycleStartTime			= 0L;
 	m_ulCycleTime					= 0L;
 	m_ulCycleStepTime				= 0L;
@@ -723,9 +735,9 @@ void IO_ControlClass::CalculateFadeRates( void )
 //	This function will return a pointer to the first step of
 //	a signal aspect sequence for the main signal
 //
-uint16_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usToAspect )
+uint8_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usToAspect )
 {
-	uint16_t *	pFirstStep	= 0x0000;
+	uint8_t *	pFirstStep	= NULL;
 
 	if( SIGNAL_ASPECT_HP0 == usFromAspect )
 	{
@@ -790,9 +802,9 @@ uint16_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usTo
 //	This function will return a pointer to the first step of
 //	a signal aspect sequence for the approach signal
 //
-uint16_t * IO_ControlClass::GetFirstStepApproach( uint8_t usFromAspect, uint8_t usToAspect )
+uint8_t * IO_ControlClass::GetFirstStepApproach( uint8_t usFromAspect, uint8_t usToAspect )
 {
-	uint16_t *	pFirstStep	= 0x0000;
+	uint8_t *	pFirstStep	= NULL;
 
 	if( SIGNAL_ASPECT_HP0 == usFromAspect )
 	{
@@ -853,17 +865,17 @@ uint16_t * IO_ControlClass::GetFirstStepApproach( uint8_t usFromAspect, uint8_t 
 //
 void IO_ControlClass::ProcessTransitionMain( void )
 {
-	uint16_t	uiAspect;
-	uint16_t	uiDiff;
-	uint16_t	uiMask	= 0x0001;
+	uint8_t	usAspect;
+	uint8_t	usDiff;
+	uint8_t	usMask	= 0x01;
 
 	if( IsFadeFinished() )
 	{
-		uiAspect = pgm_read_word( m_puiStepMain );
+		usAspect = pgm_read_byte( m_pusStepMain );
 
-		m_puiStepMain++;
+		m_pusStepMain++;
 
-		if( SEQUENCE_END == uiAspect )
+		if( SEQUENCE_END == usAspect )
 		{
 			//--------------------------------------------------
 			//	the end of the sequence is reached
@@ -882,7 +894,7 @@ void IO_ControlClass::ProcessTransitionMain( void )
 				HandleSignalAspectMain( m_usSignalAspectMainBuffer );
 			}
 		}
-		else if( SEQUENCE_APPROACH_ON == uiAspect )
+		else if( SEQUENCE_APPROACH_ON == usAspect )
 		{
 			//--------------------------------------------------
 			//	the approach signal should be switched ON
@@ -893,7 +905,7 @@ void IO_ControlClass::ProcessTransitionMain( void )
 				m_bStateMachineActive	= true;
 			}
 		}
-		else if( SEQUENCE_APPROACH_OFF == uiAspect )
+		else if( SEQUENCE_APPROACH_OFF == usAspect )
 		{
 			//--------------------------------------------------
 			//	the approach signal should be switched OFF
@@ -910,10 +922,10 @@ void IO_ControlClass::ProcessTransitionMain( void )
 			//	check wich LEDs of the main signal
 			//	should go OFF and wich should go ON
 			//
-			uiDiff  = m_uiLedsOn & SIGNAL_MAIN_LEDS;
+			uiDiff  = (uint8_t)((m_uiLedsOn & SIGNAL_MAIN_LEDS) >> MAIN_LEDS_IDX_START);
 			uiDiff ^= uiAspect;
 
-			for( uint8_t idx = MAIN_LEDS_IDX_START ; (SIGNAL_LEDS > idx) && (uiDiff != 0) ; idx++ )
+			for( uint8_t idx = MAIN_LEDS_IDX_START ; (MAIN_LEDS_IDX_STOP > idx) && (uiDiff != 0) ; idx++ )
 			{
 				if( uiDiff & uiMask )
 				{
@@ -950,7 +962,7 @@ void IO_ControlClass::ProcessTransitionApproach( void )
 
 	if( IsFadeFinished() )
 	{
-		uiAspect = pgm_read_word( m_puiStepApproach );
+		uiAspect = pgm_read_byte( m_puiStepApproach );
 
 		m_puiStepApproach++;
 

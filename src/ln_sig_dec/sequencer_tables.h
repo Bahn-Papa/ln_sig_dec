@@ -104,7 +104,7 @@
 //
 //==========================================================================
 
-#define SIGNAL_ASPECTS			8
+#define SIGNAL_ASPECTS			5
 
 //----------------------------------------------------------------------
 //	signal aspects
@@ -113,17 +113,14 @@
 #define SIGNAL_ASPECT_HP1			1
 #define SIGNAL_ASPECT_HP2			2
 #define SIGNAL_ASPECT_SH1			3
-#define SIGNAL_ASPECT_HP1_ZS3		4
-#define SIGNAL_ASPECT_HP2_ZS3		5
-#define SIGNAL_ASPECT_KENNLICHT		6
-#define SIGNAL_ASPECT_ZS1			7
+#define SIGNAL_ASPECT_KENNLICHT		4
 
 //----------------------------------------------------------------------
 //	definitions for sequence control
 //
-#define SEQUENCE_END				0xFFFF
-#define SEQUENCE_APPROACH_ON		0xEFFF
-#define SEQUENCE_APPROACH_OFF		0xDFFF
+#define SEQUENCE_END				0xFF
+#define SEQUENCE_APPROACH_ON		0xEF
+#define SEQUENCE_APPROACH_OFF		0xDF
 
 
 //==========================================================================
@@ -135,7 +132,7 @@
 //**********************************************************************
 //	The no operation (NOP) sequence
 //
-const uint16_t sNOP[] PROGMEM = { SEQUENCE_END };
+const uint8_t sNOP[] PROGMEM = { SEQUENCE_END };
 
 
 //**********************************************************************
@@ -151,140 +148,62 @@ const uint16_t sNOP[] PROGMEM = { SEQUENCE_END };
 //------------------------------------------------------------------
 //	Main: from Hp0 to Hp1
 //
-const uint16_t Main_to_Hp1[] PROGMEM =
+const uint8_t Main_to_Hp1[] PROGMEM =
 {
 	SEQUENCE_APPROACH_ON,
-	0b0000000000000000,
-	0b0000000000000010,
+	0b00000000,
+	0b00000001,
 	SEQUENCE_END
 };
 
 //------------------------------------------------------------------
 //	Main: from Hp0 to Hp2
 //
-const uint16_t Main_to_Hp2[] PROGMEM =
+const uint8_t Main_to_Hp2[] PROGMEM =
 {
 	SEQUENCE_APPROACH_ON,
-	0b0000000000000000,
-	0b0000000001000010,
+	0b00000000,
+	0b00100001,
 	SEQUENCE_END
 };
 
 //------------------------------------------------------------------
 //	Main: from Hp0 to Sh1
 //
-const uint16_t Main_to_Sh1[] PROGMEM =
+const uint8_t Main_to_Sh1[] PROGMEM =
 {
-	0b0000000000000100,
-	0b0000000000100100,
-	SEQUENCE_END
-};
-
-//------------------------------------------------------------------
-//	Main: from Hp0 to Hp1 including ZS3
-//
-const uint16_t A_Sig_Main_to_Hp1_ZS3[] PROGMEM =
-{
-	SEQUENCE_APPROACH_ON,
-	0b0000000000001101,
-	0b0000000000000001,
-	0b0000000000000011,
-	SEQUENCE_END
-};
-
-const uint16_t E_Sig_Main_to_Hp1_ZS3[] PROGMEM =
-{
-	SEQUENCE_APPROACH_ON,
-	0b0000000000000101,
-	0b0000000000000001,
-	0b0000000000000011,
-	SEQUENCE_END
-};
-
-//------------------------------------------------------------------
-//	Main: from Hp0 to Hp2 including ZS3
-//
-const uint16_t A_Sig_Main_to_Hp2_ZS3[] PROGMEM =
-{
-	SEQUENCE_APPROACH_ON,
-	0b0000000000001101,
-	0b0000000000000001,
-	0b0000000001000011,
-	SEQUENCE_END
-};
-
-const uint16_t E_Sig_Main_to_Hp2_ZS3[] PROGMEM =
-{
-	SEQUENCE_APPROACH_ON,
-	0b0000000000000101,
-	0b0000000000000001,
-	0b0000000001000011,
+	0b00000010,
+	0b00010010,
 	SEQUENCE_END
 };
 
 //------------------------------------------------------------------
 //	Main: from Hp0 to Kennlicht
 //
-const uint16_t Main_to_KL[] PROGMEM =
+const uint8_t Main_to_KL[] PROGMEM =
 {
-	0b0000000000000000,
-	0b0000000000010000,
+	0b00000000,
+	0b00001000,
 	SEQUENCE_END
 };
 
-//------------------------------------------------------------------
-//	Main: from Hp0 to Ersatzsignal (ZS1)
-//
-const uint16_t A_Sig_Main_to_ZS1[] PROGMEM =
-{
-	0b0000000000000100,
-	0b0000000010000100,
-	SEQUENCE_END
-};
 
-const uint16_t E_Sig_Main_to_ZS1[] PROGMEM =
-{
-	0b0000000000000000,
-	0b0000000010001000,
-	SEQUENCE_END
-};
 
 //------------------------------------------------------------------
 //	Main: from xxx to Hp0
 //
-const uint16_t A_Sig_Main_to_Hp0[] PROGMEM =
+const uint8_t A_Sig_Main_to_Hp0[] PROGMEM =
 {
-	0b0000000000000000,
-	0b0000000000001100,
+	0b00000000,
+	0b00000110,
 	SEQUENCE_APPROACH_OFF,
 	SEQUENCE_END
 };
 
-const uint16_t E_Sig_Main_to_Hp0[] PROGMEM =
+const uint8_t E_Sig_Main_to_Hp0[] PROGMEM =
 {
-	0b0000000000000000,
-	0b0000000000000100,
-	SEQUENCE_APPROACH_OFF,
-	SEQUENCE_END
-};
-
-//------------------------------------------------------------------
-//	Main: from ZS3 to Hp0
-//
-const uint16_t A_Sig_Main_from_ZS3[] PROGMEM =
-{
-	0b0000000000000001,
-	0b0000000000001101,
-	0b0000000000001100,
-	SEQUENCE_APPROACH_OFF,
-	SEQUENCE_END
-};
-
-const uint16_t E_Sig_Main_from_ZS3[] PROGMEM =
-{
-	0b0000000000000001,
-	0b0000000000000101,
-	0b0000000000000100,
+	0b00000000,
+	0b00000010,
 	SEQUENCE_APPROACH_OFF,
 	SEQUENCE_END
 };
@@ -292,10 +211,10 @@ const uint16_t E_Sig_Main_from_ZS3[] PROGMEM =
 //------------------------------------------------------------------
 //	Main: from Sh1 or ZS1 to Hp0
 //
-const uint16_t A_Sig_Main_from_Sh1_ZS1[] PROGMEM =
+const uint8_t A_Sig_Main_from_Sh1[] PROGMEM =
 {
-	0b0000000000000100,
-	0b0000000000001100,
+	0b00000010,
+	0b00000110,
 	SEQUENCE_END
 };
 
@@ -304,30 +223,30 @@ const uint16_t A_Sig_Main_from_Sh1_ZS1[] PROGMEM =
 //------------------------------------------------------------------
 //	Approach: from Hp0 to Hp1
 //
-const uint16_t Appr_to_Hp1[] PROGMEM =
+const uint8_t Appr_to_Hp1[] PROGMEM =
 {
-	0b0000000000000000,
-	0b0000101000000000,
+	0b00000000,
+	0b00000101,
 	SEQUENCE_END
 };
 
 //------------------------------------------------------------------
 //	Approach: from Hp0 to Hp2
 //
-const uint16_t Appr_to_Hp2[] PROGMEM =
+const uint8_t Appr_to_Hp2[] PROGMEM =
 {
-	0b0000000000000000,
-	0b0001001000000000,
+	0b00000000,
+	0b00001001,
 	SEQUENCE_END
 };
 
 //------------------------------------------------------------------
 //	Approach: from xxx to Hp0
 //
-const uint16_t Appr_to_Hp0[] PROGMEM =
+const uint8_t Appr_to_Hp0[] PROGMEM =
 {
-	0b0000000000000000,
-	0b0001010000000000,
+	0b00000000,
+	0b00001010,
 	SEQUENCE_END
 };
 
@@ -339,17 +258,17 @@ const uint16_t Appr_to_Hp0[] PROGMEM =
 //------------------------------------------------------------------
 //	Approach Signal from Hp0
 //
-const uint16_t* const Approach_From_Hp0[] PROGMEM =
+const uint8_t* const Approach_From_Hp0[] PROGMEM =
 {
-	sNOP, Appr_to_Hp1, Appr_to_Hp2, sNOP, Appr_to_Hp1, Appr_to_Hp2, sNOP, sNOP
+	sNOP, Appr_to_Hp1, Appr_to_Hp2, sNOP, sNOP
 } ;
 
 //------------------------------------------------------------------
 //	Approach Signal to Hp0
 //
-const uint16_t* const Approach_To_Hp0[] PROGMEM =
+const uint8_t* const Approach_To_Hp0[] PROGMEM =
 {
-	sNOP, Appr_to_Hp0, Appr_to_Hp0, sNOP, Appr_to_Hp0, Appr_to_Hp0, sNOP, sNOP
+	sNOP, Appr_to_Hp0, Appr_to_Hp0, sNOP, sNOP
 } ;
 
 
@@ -360,35 +279,47 @@ const uint16_t* const Approach_To_Hp0[] PROGMEM =
 //------------------------------------------------------------------
 //	A-Sig from Hp0
 //
-const uint16_t* const Sig_Type_59_A_Sig_Main_From_Hp0[] PROGMEM =
+const uint8_t* const Sig_Type_59_A_Sig_Main_From_Hp0[] PROGMEM =
 {
-	sNOP, Main_to_Hp1, Main_to_Hp2, Main_to_Sh1,
-	A_Sig_Main_to_Hp1_ZS3, A_Sig_Main_to_Hp2_ZS3, Main_to_KL, A_Sig_Main_to_ZS1
-} ;
+	sNOP,
+	Main_to_Hp1,
+	Main_to_Hp2,
+	Main_to_Sh1,
+	Main_to_KL
+};
 
 //------------------------------------------------------------------
 //	A-Sig to Hp0
 //
-const uint16_t* const Sig_Type_59_A_Sig_Main_To_Hp0[] PROGMEM =
+const uint8_t* const Sig_Type_59_A_Sig_Main_To_Hp0[] PROGMEM =
 {
-	sNOP, A_Sig_Main_to_Hp0, A_Sig_Main_to_Hp0, A_Sig_Main_from_Sh1_ZS1,
-	A_Sig_Main_from_ZS3, A_Sig_Main_from_ZS3, A_Sig_Main_to_Hp0, A_Sig_Main_from_Sh1_ZS1
+	sNOP,
+	A_Sig_Main_to_Hp0,
+	A_Sig_Main_to_Hp0,
+	A_Sig_Main_from_Sh1,
+	A_Sig_Main_to_Hp0
 };
 
 //------------------------------------------------------------------
 //	E-Sig from Hp0
 //
-const uint16_t* const Sig_Type_59_E_Sig_Main_From_Hp0[] PROGMEM =
+const uint8_t* const Sig_Type_59_E_Sig_Main_From_Hp0[] PROGMEM =
 {
-	sNOP, Main_to_Hp1, Main_to_Hp2, sNOP,
-	E_Sig_Main_to_Hp1_ZS3, E_Sig_Main_to_Hp2_ZS3, Main_to_KL, E_Sig_Main_to_ZS1
+	sNOP,
+	Main_to_Hp1,
+	Main_to_Hp2,
+	sNOP,
+	Main_to_KL
 } ;
 
 //------------------------------------------------------------------
 //	E-Sig to Hp0
 //
-const uint16_t* const Sig_Type_59_E_Sig_Main_To_Hp0[] PROGMEM =
+const uint8_t* const Sig_Type_59_E_Sig_Main_To_Hp0[] PROGMEM =
 {
-	sNOP, E_Sig_Main_to_Hp0, E_Sig_Main_to_Hp0, E_Sig_Main_to_Hp0,
-	E_Sig_Main_from_ZS3, E_Sig_Main_from_ZS3, E_Sig_Main_to_Hp0, E_Sig_Main_to_Hp0
+	sNOP,
+	E_Sig_Main_to_Hp0,
+	E_Sig_Main_to_Hp0,
+	sNOP,
+	E_Sig_Main_to_Hp0
 };

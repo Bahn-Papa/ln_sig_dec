@@ -10,6 +10,13 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	5		from: 18.11.2022
+//#
+//#	Implementation:
+//#		-	split into two sets of sequences
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	4		from: 07.10.2022
 //#
 //#	Implementation:
@@ -152,8 +159,8 @@ class IO_ControlClass
 
 
 	private:
-		uint16_t *	m_puiStepMain;
-		uint16_t *	m_puiStepApproach;
+		uint8_t *	m_pusStepMain;
+		uint8_t *	m_pusStepApproach;
 
 		uint32_t	m_ulLastCycleStartTime;
 		uint32_t	m_ulCycleTime;
@@ -176,8 +183,8 @@ class IO_ControlClass
 
 		void		SetSignalType( void );
 		void		CalculateFadeRates( void );
-		uint16_t *	GetFirstStepMain( uint8_t usFromAspect, uint8_t usToAspect );
-		uint16_t *	GetFirstStepApproach( uint8_t usFromAspect, uint8_t usToAspect );
+		uint8_t *	GetFirstStepMain( uint8_t usFromAspect, uint8_t usToAspect );
+		uint8_t *	GetFirstStepApproach( uint8_t usFromAspect, uint8_t usToAspect );
 		void		StartAspectTransitionApproach( uint8_t usAspectFrom, uint8_t usAspectTo );
 		void		ProcessTransitionMain( void );
 		void		ProcessTransitionApproach( void );
