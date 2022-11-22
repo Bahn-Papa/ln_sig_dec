@@ -7,6 +7,14 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	6		from: 22.11.2022
+//#
+//#	Implementation:
+//#		-	add way to mix signal aspects with direct controlled LEDs
+//#			change in function: LoconetReceived()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	5		from: 17.11.2022
 //#
 //#	Implementation:
@@ -254,7 +262,11 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 				//
 				if( NUMBER_LIGHTS > idx )
 				{
-					if( SIGNAL_TYPE_59_A_SIG > m_usSignalType )
+					if(		(SIGNAL_TYPE_59_A_SIG > m_usSignalType)
+						||	(IDX_ADR_LED_A == idx)
+						||	(IDX_ADR_LED_H == idx)
+						||	(IDX_ADR_LED_I == idx)
+						||	(IDX_ADR_LED_N == idx)		)
 					{
 						//------------------------------------------
 						//	... a direct controlled light device
@@ -274,7 +286,7 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 							//	... a main signal
 							//
 							usHelpSelect	= SIGNAL_SELECTED_MAIN;
-							usBitNo			= idx;
+							usBitNo			= idx - IDX_SIGNAL_MAIN_BIT_0;
 						}
 						else
 						{

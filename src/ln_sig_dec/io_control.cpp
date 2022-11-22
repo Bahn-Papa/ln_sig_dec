@@ -28,7 +28,7 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	7		from: 18.11.2022
+//#	File Version:	7		from: 21.11.2022
 //#
 //#	Implementation:
 //#		-	split into two sets of sequences
@@ -297,8 +297,8 @@ void IO_ControlClass::Init( void )
 {
 	uint16_t	uiHelper;
 
-	m_puiStepMain					= NULL;
-	m_puiStepApproach				= NULL;
+	m_pusStepMain					= NULL;
+	m_pusStepApproach				= NULL;
 	m_ulLastCycleStartTime			= 0L;
 	m_ulCycleTime					= 0L;
 	m_ulCycleStepTime				= 0L;
@@ -478,7 +478,7 @@ void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect )
 			if(		!m_bTransitionActiveMain
 				&&	(m_usSignalAspectMain != usSignalAspect) )
 			{
-				m_puiStepMain			= GetFirstStepMain( m_usSignalAspectMain, usSignalAspect );
+				m_pusStepMain			= GetFirstStepMain( m_usSignalAspectMain, usSignalAspect );
 				m_usSignalAspectMain	= usSignalAspect;
 				m_bTransitionActiveMain	= true;
 
@@ -636,7 +636,7 @@ bool IO_ControlClass::IsFadeFinished( uint8_t usLedNo )
 //
 void IO_ControlClass::StartAspectTransitionApproach( uint8_t usAspectFrom, uint8_t usAspectTo )
 {
-	m_puiStepApproach			= GetFirstStepApproach( usAspectFrom, usAspectTo );
+	m_pusStepApproach			= GetFirstStepApproach( usAspectFrom, usAspectTo );
 	m_bTransitionActiveApproach	= true;
 
 	SwitchLed( LED_BLUE, true );
@@ -744,11 +744,11 @@ uint8_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usToA
 		switch( m_usSignalType )
 		{
 			case SIGNAL_TYPE_59_A_SIG:
-				pFirstStep = Sig_Type_59_A_Sig_Main_From_Hp0[ usToAspect ];
+				pFirstStep = A_Sig_Main_From_Hp0[ usToAspect ];
 				break;
 
 			case SIGNAL_TYPE_59_E_SIG:
-				pFirstStep = Sig_Type_59_E_Sig_Main_From_Hp0[ usToAspect ];
+				pFirstStep = E_Sig_Main_From_Hp0[ usToAspect ];
 				break;
 
 			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
@@ -770,11 +770,11 @@ uint8_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usToA
 		switch( m_usSignalType )
 		{
 			case SIGNAL_TYPE_59_A_SIG:
-				pFirstStep = Sig_Type_59_A_Sig_Main_To_Hp0[ usFromAspect ];
+				pFirstStep = A_Sig_Main_To_Hp0[ usFromAspect ];
 				break;
 
 			case SIGNAL_TYPE_59_E_SIG:
-				pFirstStep = Sig_Type_59_E_Sig_Main_To_Hp0[ usFromAspect ];
+				pFirstStep = E_Sig_Main_To_Hp0[ usFromAspect ];
 				break;
 
 			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
@@ -922,14 +922,14 @@ void IO_ControlClass::ProcessTransitionMain( void )
 			//	check wich LEDs of the main signal
 			//	should go OFF and wich should go ON
 			//
-			uiDiff  = (uint8_t)((m_uiLedsOn & SIGNAL_MAIN_LEDS) >> MAIN_LEDS_IDX_START);
-			uiDiff ^= uiAspect;
+			usDiff  = (uint8_t)((m_uiLedsOn & SIGNAL_MAIN_LEDS) >> MAIN_LEDS_IDX_START);
+			usDiff ^= usAspect;
 
-			for( uint8_t idx = MAIN_LEDS_IDX_START ; (MAIN_LEDS_IDX_STOP > idx) && (uiDiff != 0) ; idx++ )
+			for( uint8_t idx = MAIN_LEDS_IDX_START ; (MAIN_LEDS_IDX_STOP > idx) && (usDiff != 0) ; idx++ )
 			{
-				if( uiDiff & uiMask )
+				if( usDiff & usMask )
 				{
-					if( uiAspect & uiMask )
+					if( usAspect & usMask )
 					{
 						HandleLed( idx, true );
 					}
@@ -938,10 +938,10 @@ void IO_ControlClass::ProcessTransitionMain( void )
 						HandleLed( idx, false );
 					}
 
-					uiDiff &= ~uiMask;
+					usDiff &= ~usMask;
 				}
 
-				uiMask <<= 1;
+				usMask <<= 1;
 			}
 		}
 	}
@@ -956,17 +956,17 @@ void IO_ControlClass::ProcessTransitionMain( void )
 //
 void IO_ControlClass::ProcessTransitionApproach( void )
 {
-	uint16_t	uiAspect;
-	uint16_t	uiDiff;
-	uint16_t	uiMask	= 0x020;
+	uint16_t	usAspect;
+	uint16_t	usDiff;
+	uint16_t	usMask	= 0x01;
 
 	if( IsFadeFinished() )
 	{
-		uiAspect = pgm_read_byte( m_puiStepApproach );
+		usAspect = pgm_read_byte( m_pusStepApproach );
 
-		m_puiStepApproach++;
+		m_pusStepApproach++;
 
-		if( SEQUENCE_END == uiAspect )
+		if( SEQUENCE_END == usAspect )
 		{
 			//--------------------------------------------------
 			//	the end of the sequence is reached
@@ -994,14 +994,14 @@ void IO_ControlClass::ProcessTransitionApproach( void )
 			//	check wich LEDs of the approach signal
 			//	should go OFF and wich should go ON
 			//
-			uiDiff  = m_uiLedsOn & SIGNAL_APPROACH_LEDS;
-			uiDiff ^= uiAspect;
+			usDiff  = (uint8_t)((m_uiLedsOn & SIGNAL_APPROACH_LEDS) >> APPROACH_LEDS_IDX_START);
+			usDiff ^= usAspect;
 
-			for( uint8_t idx = APPROACH_LEDS_IDX_START ; (SIGNAL_LEDS > idx) && (uiDiff != 0) ; idx++ )
+			for( uint8_t idx = APPROACH_LEDS_IDX_START ; (APPROACH_LEDS_IDX_STOP > idx) && (usDiff != 0) ; idx++ )
 			{
-				if( uiDiff & uiMask )
+				if( usDiff & usMask )
 				{
-					if( uiAspect & uiMask )
+					if( usAspect & usMask )
 					{
 						HandleLed( idx, true );
 					}
@@ -1010,10 +1010,10 @@ void IO_ControlClass::ProcessTransitionApproach( void )
 						HandleLed( idx, false );
 					}
 
-					uiDiff &= ~uiMask;
+					usDiff &= ~usMask;
 				}
 
-				uiMask <<= 1;
+				usMask <<= 1;
 			}
 		}
 	}
