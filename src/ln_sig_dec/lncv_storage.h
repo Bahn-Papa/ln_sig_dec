@@ -10,6 +10,14 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	5		from: 21.11.2022
+//#
+//#	Implementation:
+//#		-	add index defines used to index a device address from the
+//#			device address array
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	4		from: 17.11.2022
 //#
 //#	Implementation:
@@ -165,21 +173,35 @@
 //----------------------------------------------------------------------
 //	index for signal aspects
 //
-#define IDX_SIGNAL_MAIN_BIT_0			0
-#define IDX_SIGNAL_MAIN_BIT_1			1
-#define IDX_SIGNAL_MAIN_BIT_2			2
-#define IDX_SIGNAL_MAIN_BIT_3			3
+#define IDX_SIGNAL_MAIN_BIT_0			1
+#define IDX_SIGNAL_MAIN_BIT_1			2
+#define IDX_SIGNAL_MAIN_BIT_2			3
+#define IDX_SIGNAL_MAIN_BIT_3			4
 
-#define IDX_SIGNAL_APPROACH_BIT_0		7
-#define IDX_SIGNAL_APPROACH_BIT_1		8
-#define IDX_SIGNAL_APPROACH_BIT_2		9
-#define IDX_SIGNAL_APPROACH_BIT_3		10
+#define IDX_SIGNAL_APPROACH_BIT_0		9
+#define IDX_SIGNAL_APPROACH_BIT_1		10
+#define IDX_SIGNAL_APPROACH_BIT_2		11
+#define IDX_SIGNAL_APPROACH_BIT_3		12
 
 
 //----------------------------------------------------------------------
 //	index into IN address array
 //	to use when call function GetInAddress()
 //
+#define IDX_ADR_LED_A				0
+#define IDX_ADR_LED_B				1
+#define IDX_ADR_LED_C				2
+#define IDX_ADR_LED_D				3
+#define IDX_ADR_LED_E				4
+#define IDX_ADR_LED_F				5
+#define IDX_ADR_LED_G				6
+#define IDX_ADR_LED_H				7
+#define IDX_ADR_LED_I				8
+#define IDX_ADR_LED_J				9
+#define IDX_ADR_LED_K				10
+#define IDX_ADR_LED_L				11
+#define IDX_ADR_LED_M				12
+#define IDX_ADR_LED_N				13
 #define IDX_TRACK_CONTACT			(NUMBER_LIGHTS)
 #define IDX_NIGHTLIGHT				(NUMBER_LIGHTS + 1)
 
