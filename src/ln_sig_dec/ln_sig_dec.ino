@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		4
-#define VERSION_BUGFIX		0
+#define VERSION_BUGFIX		1
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,14 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.04.01		from: 22.10.2022
+//#
+//#	Bug Fix:
+//#		-	switch the correct LEDs for approch signal
+//#		-	correction of access to the sequences
 //#
 //#-------------------------------------------------------------------------
 //#

@@ -20,11 +20,19 @@
 //#		 G			X3.8		C0		 14		Hp2
 //#		 H			X1.2		D7		  7		Ersatzsignal (ZS1)
 //#		 I			X1.3		D6		  6		Zusatz-Kennlicht
-//#		 J			X1.4		D5		  5		rot
-//#		 K			X1.5		D4		  4		grün
-//#		 L			X1.6		D3		  3		rot
-//#		 M			X1.7		D2		  2		grün
+//#		 J			X1.4		D5		  5		grün oben
+//#		 K			X1.5		D4		  4		gelb oben
+//#		 L			X1.6		D3		  3		grün unten
+//#		 M			X1.7		D2		  2		gelb unten
 //#		 N			X1.8		D1		  1
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File Version:	8		from: 24.11.2022
+//#
+//#	Bug Fix:
+//#		-	switch the correct LEDs for approch signal
+//#		-	correction of access to the sequences
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -744,11 +752,11 @@ uint8_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usToA
 		switch( m_usSignalType )
 		{
 			case SIGNAL_TYPE_59_A_SIG:
-				pFirstStep = A_Sig_Main_From_Hp0[ usToAspect ];
+				pFirstStep = pgm_read_word( &A_Sig_Main_From_Hp0[ usToAspect ] );
 				break;
 
 			case SIGNAL_TYPE_59_E_SIG:
-				pFirstStep = E_Sig_Main_From_Hp0[ usToAspect ];
+				pFirstStep = pgm_read_word( &E_Sig_Main_From_Hp0[ usToAspect ] );
 				break;
 
 			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
@@ -770,11 +778,11 @@ uint8_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usToA
 		switch( m_usSignalType )
 		{
 			case SIGNAL_TYPE_59_A_SIG:
-				pFirstStep = A_Sig_Main_To_Hp0[ usFromAspect ];
+				pFirstStep = pgm_read_word( &A_Sig_Main_To_Hp0[ usFromAspect ] );
 				break;
 
 			case SIGNAL_TYPE_59_E_SIG:
-				pFirstStep = E_Sig_Main_To_Hp0[ usFromAspect ];
+				pFirstStep = pgm_read_word( &E_Sig_Main_To_Hp0[ usFromAspect ] );
 				break;
 
 			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
@@ -822,7 +830,7 @@ uint8_t * IO_ControlClass::GetFirstStepApproach( uint8_t usFromAspect, uint8_t u
 			case SIGNAL_TYPE_COMPACT_E_SIG:
 			case SIGNAL_TYPE_KS_A_SIG:
 			case SIGNAL_TYPE_KS_E_SIG:
-				pFirstStep = Approach_From_Hp0[ usToAspect ];
+				pFirstStep = pgm_read_word( &Approach_From_Hp0[ usToAspect ] );
 				break;
 
 			default:
@@ -845,7 +853,7 @@ uint8_t * IO_ControlClass::GetFirstStepApproach( uint8_t usFromAspect, uint8_t u
 			case SIGNAL_TYPE_COMPACT_E_SIG:
 			case SIGNAL_TYPE_KS_A_SIG:
 			case SIGNAL_TYPE_KS_E_SIG:
-				pFirstStep = Approach_To_Hp0[ usToAspect ];
+				pFirstStep = pgm_read_word( Approach_To_Hp0[ usToAspect ] );
 				break;
 
 			default:
@@ -1050,8 +1058,8 @@ void IO_ControlClass::ProcessStateMachine( void )
 				//------------------------------------------
 				//	set signal aspect Hp0
 				//
-				HandleLed( LED_J, true );
-				HandleLed( LED_L, true );
+				HandleLed( LED_K, true );
+				HandleLed( LED_M, true );
 			}
 			else if( IsFadeFinished() )
 			{
@@ -1116,8 +1124,8 @@ void IO_ControlClass::ProcessStateMachine( void )
 			{
 				m_usOldState = m_usState;
 
-				HandleLed( LED_J, false );
-				HandleLed( LED_L, false );
+				HandleLed( LED_K, false );
+				HandleLed( LED_M, false );
 			}
 			else if( IsFadeFinished() )
 			{
