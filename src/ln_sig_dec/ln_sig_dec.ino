@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		4
-#define VERSION_BUGFIX		2
+#define VERSION_BUGFIX		3
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,21 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.04.03		from: 25.11.2022
+//#
+//#	Implementation:
+//#		-	ignore handling of approach signal if there is no
+//#			approach signal
+//#			new variable	m_bApproachSignalPresent
+//#		-	set the correct LEDs to Hp0 during Init()
+//#			change function
+//#				SetSignalType()	the function will return 'true' if the
+//#								signal is a type of 'A-Sig'
+//#		-	include function GetFirstStepApproach() into function
+//#			StartAspectTransitionApproach()
 //#
 //#-------------------------------------------------------------------------
 //#

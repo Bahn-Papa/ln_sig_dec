@@ -10,6 +10,21 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	6		from: 25.11.2022
+//#
+//#	Implementation:
+//#		-	ignore handling of approach signal if there is no
+//#			approach signal
+//#			new variable	m_bApproachSignalPresent
+//#		-	set the correct LEDs to Hp0 during Init()
+//#			change function
+//#				SetSignalType()	the function will return 'true' if the
+//#								signal is a type of 'A-Sig'
+//#		-	include function GetFirstStepApproach() into function
+//#			StartAspectTransitionApproach()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	5		from: 18.11.2022
 //#
 //#	Implementation:
@@ -177,14 +192,14 @@ class IO_ControlClass
 		uint8_t		m_usState;
 		uint8_t		m_usOldState;
 		bool		m_bNightLight;
+		bool		m_bApproachSignalPresent;
 		bool		m_bTransitionActiveMain;
 		bool		m_bTransitionActiveApproach;
 		bool		m_bStateMachineActive;
 
-		void		SetSignalType( void );
+		bool		SetSignalType( void );
 		void		CalculateFadeRates( void );
 		uint8_t *	GetFirstStepMain( uint8_t usFromAspect, uint8_t usToAspect );
-		uint8_t *	GetFirstStepApproach( uint8_t usFromAspect, uint8_t usToAspect );
 		void		StartAspectTransitionApproach( uint8_t usAspectFrom, uint8_t usAspectTo );
 		void		ProcessTransitionMain( void );
 		void		ProcessTransitionApproach( void );

@@ -28,6 +28,21 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	10		from: 25.11.2022
+//#
+//#	Implementation:
+//#		-	ignore handling of approach signal if there is no
+//#			approach signal
+//#			new variable	m_bApproachSignalPresent
+//#		-	set the correct LEDs to Hp0 during Init()
+//#			change function
+//#				SetSignalType()	the function will return 'true' if the
+//#								signal is a type of 'A-Sig'
+//#		-	include function GetFirstStepApproach() into function
+//#			StartAspectTransitionApproach()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	9		from: 25.11.2022
 //#
 //#	Implementation:
@@ -315,6 +330,7 @@ IO_ControlClass::IO_ControlClass()
 void IO_ControlClass::Init( void )
 {
 	uint16_t	uiHelper;
+	bool		bIsASig;
 
 	m_pusStepMain					= NULL;
 	m_pusStepApproach				= NULL;
@@ -332,11 +348,12 @@ void IO_ControlClass::Init( void )
 	m_usState						= STATE_APPROACH_OFF;
 	m_usOldState					= m_usState;
 	m_bNightLight					= false;
+	m_bApproachSignalPresent		= false;
 	m_bTransitionActiveMain			= false;
 	m_bTransitionActiveApproach		= false;
 	m_bStateMachineActive			= false;
 
-	SetSignalType();
+	bIsASig = SetSignalType();
 
 	for( uint8_t idx = 0 ; SIGNAL_LEDS > idx ; idx++ )
 	{
@@ -350,10 +367,19 @@ void IO_ControlClass::Init( void )
 
 	CalculateFadeRates();
 
+	if( 0 != g_clLncvStorage.ReadLNCV( LNCV_ADR_LIGHT_J ) )
+	{
+		m_bApproachSignalPresent = true;
+	}
+
 	delay( 100 );
 
 	SwitchLed( LED_C, true );
-	SwitchLed( LED_D, true );
+
+	if( bIsASig )
+	{
+		SwitchLed( LED_D, true );
+	}
 }
 
 
@@ -514,7 +540,7 @@ void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect )
 //
 void IO_ControlClass::HandleSignalAspectApproach( uint8_t usSignalAspect )
 {
-	if( SIGNAL_ASPECTS > usSignalAspect )
+	if( m_bApproachSignalPresent && (SIGNAL_ASPECTS > usSignalAspect) )
 	{
 		//------------------------------------------------------
 		//	first check if the new transition is allowed
@@ -655,7 +681,55 @@ bool IO_ControlClass::IsFadeFinished( uint8_t usLedNo )
 //
 void IO_ControlClass::StartAspectTransitionApproach( uint8_t usAspectFrom, uint8_t usAspectTo )
 {
-	m_pusStepApproach			= GetFirstStepApproach( usAspectFrom, usAspectTo );
+	m_pusStepApproach = sNOP;
+
+	if( SIGNAL_ASPECT_HP0 == usAspectFrom )
+	{
+		switch( m_usSignalType )
+		{
+			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
+			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
+			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
+			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
+			case SIGNAL_TYPE_59_A_SIG:
+			case SIGNAL_TYPE_59_E_SIG:
+			case SIGNAL_TYPE_60_A_SIG:
+			case SIGNAL_TYPE_60_E_SIG:
+			case SIGNAL_TYPE_COMPACT_A_SIG:
+			case SIGNAL_TYPE_COMPACT_E_SIG:
+			case SIGNAL_TYPE_KS_A_SIG:
+			case SIGNAL_TYPE_KS_E_SIG:
+				m_pusStepApproach = pgm_read_word( &Approach_From_Hp0[ usAspectTo ] );
+				break;
+
+			default:
+				break;
+		}
+	}
+	else if( SIGNAL_ASPECT_HP0 == usAspectTo )
+	{
+		switch( m_usSignalType )
+		{
+			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
+			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
+			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
+			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
+			case SIGNAL_TYPE_59_A_SIG:
+			case SIGNAL_TYPE_59_E_SIG:
+			case SIGNAL_TYPE_60_A_SIG:
+			case SIGNAL_TYPE_60_E_SIG:
+			case SIGNAL_TYPE_COMPACT_A_SIG:
+			case SIGNAL_TYPE_COMPACT_E_SIG:
+			case SIGNAL_TYPE_KS_A_SIG:
+			case SIGNAL_TYPE_KS_E_SIG:
+				m_pusStepApproach = pgm_read_word( &Approach_To_Hp0[ usAspectFrom ] );
+				break;
+
+			default:
+				break;
+		}
+	}
+
 	m_bTransitionActiveApproach	= true;
 
 	SwitchLed( LED_GREEN, true );
@@ -666,13 +740,18 @@ void IO_ControlClass::StartAspectTransitionApproach( uint8_t usAspectFrom, uint8
 //	SetSignalType
 //------------------------------------------------------------------
 //
-void IO_ControlClass::SetSignalType( void )
+bool IO_ControlClass::SetSignalType( void )
 {
+	bool	bIsASig	= false;
+
+
 	m_usSignalType	= (uint8_t)g_clLncvStorage.ReadLNCV( LNCV_ADR_SIGNAL_TYPE );
 
 	switch( m_usSignalType )
 	{
 		case SIGNAL_TYPE_59_A_SIG:
+			bIsASig = true;
+
 		case SIGNAL_TYPE_59_E_SIG:
 			m_uiFadeTimeUp		= g_clLncvStorage.GetFadeTimeUp(   IDX_FADE_TIME_SLOW );
 			m_uiFadeTimeDown	= g_clLncvStorage.GetFadeTimeDown( IDX_FADE_TIME_SLOW );
@@ -693,16 +772,20 @@ void IO_ControlClass::SetSignalType( void )
 			m_uiFadeTimeDown	= g_clLncvStorage.GetFadeTimeDown( IDX_FADE_TIME_SLOW );
 			break;
 
-		case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
 		case SIGNAL_TYPE_60_A_SIG:
-		case SIGNAL_TYPE_60_E_SIG:
 		case SIGNAL_TYPE_COMPACT_A_SIG:
-		case SIGNAL_TYPE_COMPACT_E_SIG:
 		case SIGNAL_TYPE_KS_A_SIG:
+			bIsASig = true;
+
+		case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
+		case SIGNAL_TYPE_60_E_SIG:
+		case SIGNAL_TYPE_COMPACT_E_SIG:
 		case SIGNAL_TYPE_KS_E_SIG:
 		default:
 			break;
 	}
+
+	return( bIsASig );
 }
 
 
@@ -756,17 +839,23 @@ void IO_ControlClass::CalculateFadeRates( void )
 //
 uint8_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usToAspect )
 {
-	uint8_t *	pFirstStep	= NULL;
+	uint8_t *	pFirstStep	= sNOP;
 
 	if( SIGNAL_ASPECT_HP0 == usFromAspect )
 	{
 		switch( m_usSignalType )
 		{
 			case SIGNAL_TYPE_59_A_SIG:
+			case SIGNAL_TYPE_60_A_SIG:
+			case SIGNAL_TYPE_COMPACT_A_SIG:
+			case SIGNAL_TYPE_KS_A_SIG:
 				pFirstStep = pgm_read_word( &A_Sig_Main_From_Hp0[ usToAspect ] );
 				break;
 
 			case SIGNAL_TYPE_59_E_SIG:
+			case SIGNAL_TYPE_60_E_SIG:
+			case SIGNAL_TYPE_COMPACT_E_SIG:
+			case SIGNAL_TYPE_KS_E_SIG:
 				pFirstStep = pgm_read_word( &E_Sig_Main_From_Hp0[ usToAspect ] );
 				break;
 
@@ -774,12 +863,6 @@ uint8_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usToA
 			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
 			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
 			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
-			case SIGNAL_TYPE_60_A_SIG:
-			case SIGNAL_TYPE_60_E_SIG:
-			case SIGNAL_TYPE_COMPACT_A_SIG:
-			case SIGNAL_TYPE_COMPACT_E_SIG:
-			case SIGNAL_TYPE_KS_A_SIG:
-			case SIGNAL_TYPE_KS_E_SIG:
 			default:
 				break;
 		}
@@ -789,10 +872,16 @@ uint8_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usToA
 		switch( m_usSignalType )
 		{
 			case SIGNAL_TYPE_59_A_SIG:
+			case SIGNAL_TYPE_60_A_SIG:
+			case SIGNAL_TYPE_COMPACT_A_SIG:
+			case SIGNAL_TYPE_KS_A_SIG:
 				pFirstStep = pgm_read_word( &A_Sig_Main_To_Hp0[ usFromAspect ] );
 				break;
 
 			case SIGNAL_TYPE_59_E_SIG:
+			case SIGNAL_TYPE_60_E_SIG:
+			case SIGNAL_TYPE_COMPACT_E_SIG:
+			case SIGNAL_TYPE_KS_E_SIG:
 				pFirstStep = pgm_read_word( &E_Sig_Main_To_Hp0[ usFromAspect ] );
 				break;
 
@@ -800,73 +889,6 @@ uint8_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usToA
 			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
 			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
 			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
-			case SIGNAL_TYPE_60_A_SIG:
-			case SIGNAL_TYPE_60_E_SIG:
-			case SIGNAL_TYPE_COMPACT_A_SIG:
-			case SIGNAL_TYPE_COMPACT_E_SIG:
-			case SIGNAL_TYPE_KS_A_SIG:
-			case SIGNAL_TYPE_KS_E_SIG:
-			default:
-				break;
-		}
-	}
-
-	return( pFirstStep );
-}
-
-
-//******************************************************************
-//	GetFirstStepApproach
-//------------------------------------------------------------------
-//	This function will return a pointer to the first step of
-//	a signal aspect sequence for the approach signal
-//
-uint8_t * IO_ControlClass::GetFirstStepApproach( uint8_t usFromAspect, uint8_t usToAspect )
-{
-	uint8_t *	pFirstStep	= NULL;
-
-	if( SIGNAL_ASPECT_HP0 == usFromAspect )
-	{
-		switch( m_usSignalType )
-		{
-			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
-			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
-			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
-			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
-			case SIGNAL_TYPE_59_A_SIG:
-			case SIGNAL_TYPE_59_E_SIG:
-			case SIGNAL_TYPE_60_A_SIG:
-			case SIGNAL_TYPE_60_E_SIG:
-			case SIGNAL_TYPE_COMPACT_A_SIG:
-			case SIGNAL_TYPE_COMPACT_E_SIG:
-			case SIGNAL_TYPE_KS_A_SIG:
-			case SIGNAL_TYPE_KS_E_SIG:
-				pFirstStep = pgm_read_word( &Approach_From_Hp0[ usToAspect ] );
-				break;
-
-			default:
-				break;
-		}
-	}
-	else if( SIGNAL_ASPECT_HP0 == usToAspect )
-	{
-		switch( m_usSignalType )
-		{
-			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
-			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
-			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
-			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
-			case SIGNAL_TYPE_59_A_SIG:
-			case SIGNAL_TYPE_59_E_SIG:
-			case SIGNAL_TYPE_60_A_SIG:
-			case SIGNAL_TYPE_60_E_SIG:
-			case SIGNAL_TYPE_COMPACT_A_SIG:
-			case SIGNAL_TYPE_COMPACT_E_SIG:
-			case SIGNAL_TYPE_KS_A_SIG:
-			case SIGNAL_TYPE_KS_E_SIG:
-				pFirstStep = pgm_read_word( Approach_To_Hp0[ usToAspect ] );
-				break;
-
 			default:
 				break;
 		}
@@ -918,7 +940,7 @@ void IO_ControlClass::ProcessTransitionMain( void )
 			//--------------------------------------------------
 			//	the approach signal should be switched ON
 			//
-			if( STATE_APPROACH_OFF == m_usState )
+			if( m_bApproachSignalPresent && (STATE_APPROACH_OFF == m_usState) )
 			{
 				m_usState				= STATE_SWITCH_ON;
 				m_bStateMachineActive	= true;
@@ -929,7 +951,7 @@ void IO_ControlClass::ProcessTransitionMain( void )
 			//--------------------------------------------------
 			//	the approach signal should be switched OFF
 			//
-			if( STATE_APPROACH_ON == m_usState )
+			if( m_bApproachSignalPresent && (STATE_APPROACH_ON == m_usState) )
 			{
 				m_usState				= STATE_SET_HP0;
 				m_bStateMachineActive	= true;
