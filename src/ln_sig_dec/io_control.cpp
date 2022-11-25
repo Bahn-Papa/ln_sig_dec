@@ -28,6 +28,17 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	9		from: 25.11.2022
+//#
+//#	Implementation:
+//#		-	new use of LED_GREEN and LED_BLUE for debugging:
+//#				LED_GREEN:	wait time for signal aspect is active
+//#							signal aspect transition is active
+//#				LED_BLUE:	fading is active
+//#		-	removed LED_N for debugging purpose
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	8		from: 24.11.2022
 //#
 //#	Bug Fix:
@@ -428,7 +439,7 @@ void IO_ControlClass::HandleLed( uint8_t usLedNo, bool bOn )
 			{
 				SetWordBit( m_uiFadeActive, usLedNo );
 
-				SwitchLed( LED_N, true );
+				SwitchLed( LED_BLUE, true );
 			}
 		}
 		else
@@ -445,7 +456,7 @@ void IO_ControlClass::HandleLed( uint8_t usLedNo, bool bOn )
 			{
 				SetWordBit( m_uiFadeActive, usLedNo );
 
-				SwitchLed( LED_N, true );
+				SwitchLed( LED_BLUE, true );
 			}
 		}
 	}
@@ -490,7 +501,7 @@ void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect )
 				m_usSignalAspectMain	= usSignalAspect;
 				m_bTransitionActiveMain	= true;
 
-				SwitchLed( LED_BLUE, true );
+				SwitchLed( LED_GREEN, true );
 			}
 		}
 	}
@@ -647,7 +658,7 @@ void IO_ControlClass::StartAspectTransitionApproach( uint8_t usAspectFrom, uint8
 	m_pusStepApproach			= GetFirstStepApproach( usAspectFrom, usAspectTo );
 	m_bTransitionActiveApproach	= true;
 
-	SwitchLed( LED_BLUE, true );
+	SwitchLed( LED_GREEN, true );
 }
 
 
@@ -891,7 +902,7 @@ void IO_ControlClass::ProcessTransitionMain( void )
 			//
 			m_bTransitionActiveMain = false;
 
-			SwitchLed( LED_BLUE, false );
+			SwitchLed( LED_GREEN, false );
 
 			//--------------------------------------------------
 			//	check if we got a new signal aspect in between
@@ -984,7 +995,7 @@ void IO_ControlClass::ProcessTransitionApproach( void )
 
 			if( !m_bTransitionActiveMain )
 			{
-				SwitchLed( LED_BLUE, false );
+				SwitchLed( LED_GREEN, false );
 			}
 
 			//--------------------------------------------------
@@ -1245,7 +1256,7 @@ void IO_ControlClass::ProcessBrightnessAndFade( void )
 					ulNewValue		= pChannel->m_fTarget;
 					m_uiFadeActive &= ~uiMask;
 
-					SwitchLed( LED_N, false );
+					SwitchLed( LED_BLUE, false );
 				}
 
 				pChannel->m_fActual = ulNewValue;
@@ -1267,7 +1278,7 @@ void IO_ControlClass::ProcessBrightnessAndFade( void )
 					ulNewValue		= pChannel->m_fTarget;
 					m_uiFadeActive &= ~uiMask;
 
-					SwitchLed( LED_N, false );
+					SwitchLed( LED_BLUE, false );
 				}
 
 				pChannel->m_fActual = ulNewValue;
