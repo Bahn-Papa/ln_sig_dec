@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		4
-#define VERSION_BUGFIX		1
+#define VERSION_BUGFIX		2
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,17 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.04.02		from: 25.11.2022
+//#
+//#	Implementation:
+//#		-	new use of LED_GREEN and LED_BLUE for debugging:
+//#				LED_GREEN:	wait time for signal aspect is active
+//#							signal aspect transition is active
+//#				LED_BLUE:	fading is active
+//#		-	removed LED_N for debugging purpose
 //#
 //#-------------------------------------------------------------------------
 //#
