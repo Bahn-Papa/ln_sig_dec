@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		4
-#define VERSION_BUGFIX		3
+#define VERSION_BUGFIX		4
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,14 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.04.04		from: 28.11.2022
+//#
+//#	Bug Fix:
+//#		-	in function 'ProcessStateMachine()' the call to change the
+//#			approach aspect to Vr0 had a parameter mismatch.
 //#
 //#-------------------------------------------------------------------------
 //#

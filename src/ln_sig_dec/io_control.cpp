@@ -28,6 +28,14 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	11		from: 28.11.2022
+//#
+//#	Bug Fix:
+//#		-	in function 'ProcessStateMachine()' the call to change the
+//#			approach aspect to Vr0 had a parameter mismatch.
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	10		from: 25.11.2022
 //#
 //#	Implementation:
@@ -1141,7 +1149,7 @@ void IO_ControlClass::ProcessStateMachine( void )
 
 				if( SIGNAL_ASPECT_HP0 != m_usSignalAspectApproach )
 				{
-					StartAspectTransitionApproach( SIGNAL_ASPECT_HP0, m_usSignalAspectApproach );
+					StartAspectTransitionApproach( m_usSignalAspectApproach, SIGNAL_ASPECT_HP0 );
 				}
 			}
 			else if( !m_bTransitionActiveApproach )
