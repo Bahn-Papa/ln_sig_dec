@@ -28,6 +28,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	12		from: 29.11.2022
+//#
+//#	Bug Fix:
+//#		-	LED handling blocked if a LED was switched to the actual
+//#			state again.
+//#			changes in function
+//#				HandleLed()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	11		from: 28.11.2022
 //#
 //#	Bug Fix:
@@ -461,36 +471,42 @@ void IO_ControlClass::HandleLed( uint8_t usLedNo, bool bOn )
 
 		if( bOn )
 		{
-			SetWordBit( m_uiLedsOn, usLedNo );
-
-			pChannel->m_fTarget = (float)PWM_STEP_TIME * usBrightness;
-
-			if( 0 == m_uiFadeTimeUp )
+			if( IsWordBitClear( m_uiLedsOn, usLedNo ) )
 			{
-				pChannel->m_fActual = pChannel->m_fTarget;
-			}
-			else
-			{
-				SetWordBit( m_uiFadeActive, usLedNo );
+				SetWordBit( m_uiLedsOn, usLedNo );
 
-				SwitchLed( LED_BLUE, true );
+				pChannel->m_fTarget = (float)PWM_STEP_TIME * usBrightness;
+
+				if( 0 == m_uiFadeTimeUp )
+				{
+					pChannel->m_fActual = pChannel->m_fTarget;
+				}
+				else
+				{
+					SetWordBit( m_uiFadeActive, usLedNo );
+
+					SwitchLed( LED_BLUE, true );
+				}
 			}
 		}
 		else
 		{
-			ClearWordBit( m_uiLedsOn, usLedNo );
-
-			pChannel->m_fTarget = 0.0;
-
-			if( 0 == m_uiFadeTimeDown )
+			if( IsWordBitSet( m_uiLedsOn, usLedNo ) )
 			{
-				pChannel->m_fActual = 0.0;
-			}
-			else
-			{
-				SetWordBit( m_uiFadeActive, usLedNo );
+				ClearWordBit( m_uiLedsOn, usLedNo );
 
-				SwitchLed( LED_BLUE, true );
+				pChannel->m_fTarget = 0.0;
+
+				if( 0 == m_uiFadeTimeDown )
+				{
+					pChannel->m_fActual = 0.0;
+				}
+				else
+				{
+					SetWordBit( m_uiFadeActive, usLedNo );
+
+					SwitchLed( LED_BLUE, true );
+				}
 			}
 		}
 	}
