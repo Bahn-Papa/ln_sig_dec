@@ -9,6 +9,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	3		from: 29.11.2022
+//#
+//#	Implementation:
+//#		-	add macros to check if a bit is set or cleared in a word
+//#				IsWordBitClear()
+//#				IsWordBitSet()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	2		from: 19.09.2022
 //#
 //#	Implementation:
@@ -54,4 +63,12 @@
 
 #ifndef SetWordBit
 #define SetWordBit( theWord, bit )		(theWord |= (1 << bit))
+#endif
+
+#ifndef IsWordBitClear
+#define IsWordBitClear( theWord, bit )	(0 == (theWord & (1 << bit)))
+#endif
+
+#ifndef IsWordBitSet
+#define IsWordBitSet( theWord, bit )	(0 != (theWord & (1 << bit)))
 #endif
