@@ -73,6 +73,7 @@ class MyLoconetClass
 		void Init( void );
 		void CheckForMessageAndProcess( void );
 		void LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, uint8_t output );
+		void SendTrackContactMessage( bool bOccupied );
 
 		inline void SetProgMode( bool bProgMode )
 		{

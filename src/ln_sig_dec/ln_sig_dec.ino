@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		4
-#define VERSION_BUGFIX		5
+#define VERSION_BUGFIX		6
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -161,6 +161,7 @@
 uint32_t	g_ulBlinkTimer;
 bool		g_bLedOn;
 bool		g_bIsProgMode;
+bool		g_bTrackContactOccupied;
 
 
 //==========================================================================
@@ -184,9 +185,10 @@ void (*resetFunc)( void ) = 0;
 //
 void setup()
 {
-	g_ulBlinkTimer	= 0L;
-	g_bLedOn		= false;
-	g_bIsProgMode	= false;
+	g_ulBlinkTimer			= 0L;
+	g_bLedOn				= false;
+	g_bIsProgMode			= false;
+	g_bTrackContactOccupied	= false;
 
 	//--------------------------------------------------------------
 	//
@@ -200,6 +202,8 @@ void setup()
 	g_clControl.Init();
 
 	g_clMyLoconet.Init();
+
+	g_bTrackContactOccupied = g_clControl.IsContactOccupied();
 }
 
 
@@ -219,6 +223,16 @@ void loop()
 	//
 	g_clControl.Loop();
 	
+	//--------------------------------------------------------------
+	//	process track contact state changes
+	//
+	if( g_clControl.IsContactOccupied() != g_bTrackContactOccupied )
+	{
+		g_bTrackContactOccupied = g_clControl.IsContactOccupied();
+
+		g_clMyLoconet.SendTrackContactMessage( g_bTrackContactOccupied );
+	}
+
 	//--------------------------------------------------------------
 	//	in prog mode the green LED should blink
 	//
