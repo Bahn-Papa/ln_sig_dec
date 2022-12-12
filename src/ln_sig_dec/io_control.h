@@ -10,6 +10,18 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	7		from: 12.12.2022
+//#
+//#	Implementation:
+//#		-	add handling of the track contact
+//#			new variable
+//#				m_bContactOccupied
+//#				m_ulContactTime
+//#			new function
+//#				IsContactOccupied()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	6		from: 25.11.2022
 //#
 //#	Implementation:
@@ -172,6 +184,11 @@ class IO_ControlClass
 		bool IsFadeFinished( void );
 		bool IsFadeFinished( uint8_t usLedNo );
 
+		inline bool IsContactOccupied( void )
+		{
+			return( m_bContactOccupied );
+		}
+
 
 	private:
 		uint8_t *	m_pusStepMain;
@@ -180,6 +197,7 @@ class IO_ControlClass
 		uint32_t	m_ulLastCycleStartTime;
 		uint32_t	m_ulCycleTime;
 		uint32_t	m_ulCycleStepTime;
+		uint32_t	m_ulContactTime;
 		uint16_t	m_uiLedsOn;
 		uint16_t	m_uiFadeTimeUp;
 		uint16_t	m_uiFadeTimeDown;
@@ -196,6 +214,7 @@ class IO_ControlClass
 		bool		m_bTransitionActiveMain;
 		bool		m_bTransitionActiveApproach;
 		bool		m_bStateMachineActive;
+		bool		m_bContactOccupied;
 
 		bool		SetSignalType( void );
 		void		CalculateFadeRates( void );

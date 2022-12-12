@@ -3,7 +3,7 @@
 //#		io_control.cpp
 //#
 //#	This class operates the ports of the Atmel chip.
-//#	here only LEDs are controlled by the help of the PWM library
+//#	here the LEDs, the track contact and the micro switch are controlled
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -25,6 +25,21 @@
 //#		 L			X1.6		D3		  3		grün unten
 //#		 M			X1.7		D2		  2		gelb unten
 //#		 N			X1.8		D1		  1
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File Version:	13		from: 12.12.2022
+//#
+//#	Implementation:
+//#		-	add handling of the track contact
+//#			new variable
+//#				m_bContactOccupied
+//#				m_ulContactTime
+//#			new function
+//#				IsContactOccupied()
+//#			changed functions
+//#				Init()
+//#				Loop()
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -222,6 +237,17 @@
 #define LEDS_PORTD					0xFF
 
 //----------------------------------------------------------------------
+//	Track contact definitions
+//
+#define	TRACK_BIT					PB2
+#define TRACK_PIN					PINB
+
+#define TRACK_CONTACT_WAIT_TIME		100
+
+#define READ_CONTACT				(0 == (TRACK_PIN & (1 << TRACK_BIT)))
+
+
+//----------------------------------------------------------------------
 //	State machine to switch approach signal on and off
 //
 #define STATE_APPROACH_OFF			1
@@ -327,17 +353,17 @@ PWMChannel_t	g_arChannel[ SIGNAL_LEDS ];
 //------------------------------------------------------------------
 //	here for all Ports the relevant I/O pins will be configured.
 //	Not used I/O's will be set to Input with PullUp.
-//	all connected devices (like LED's) will set to 'off'.
+//	all connected devices (like LED's) will be set to 'off'.
 //
 IO_ControlClass::IO_ControlClass()
 {
-	DDRB	|= LEDS_PORTB;
-	DDRC	|= LEDS_PORTC;
-	DDRD	|= LEDS_PORTD;
+	DDRB	= LEDS_PORTB;
+	DDRC	= LEDS_PORTC;
+	DDRD	= LEDS_PORTD;
 
-	PORTB	&= ~(LEDS_PORTB);
-	PORTC	&= ~(LEDS_PORTC);
-	PORTD	&= ~(LEDS_PORTD);
+	PORTB	= ~(LEDS_PORTB);
+	PORTC	= ~(LEDS_PORTC);
+	PORTD	= ~(LEDS_PORTD);
 }
 
 
@@ -355,6 +381,7 @@ void IO_ControlClass::Init( void )
 	m_ulLastCycleStartTime			= 0L;
 	m_ulCycleTime					= 0L;
 	m_ulCycleStepTime				= 0L;
+	m_ulContactTime					= 0L;
 	m_uiLedsOn						= 0x0000;
 	m_uiFadeActive					= 0x0000;
 	m_uiFadeTimeUp					= 0;
@@ -370,6 +397,8 @@ void IO_ControlClass::Init( void )
 	m_bTransitionActiveMain			= false;
 	m_bTransitionActiveApproach		= false;
 	m_bStateMachineActive			= false;
+
+	m_bContactOccupied				= false;
 
 	bIsASig = SetSignalType();
 
@@ -392,6 +421,14 @@ void IO_ControlClass::Init( void )
 
 	delay( 100 );
 
+	//----------------------------------------------------------
+	//	read contact
+	//
+	m_bContactOccupied = READ_CONTACT;
+
+	//----------------------------------------------------------
+	//	set signal to show Hp0
+	//
 	SwitchLed( LED_C, true );
 
 	if( bIsASig )
@@ -423,6 +460,40 @@ void IO_ControlClass::Loop( void )
 	}
 
 	ProcessBrightnessAndFade();
+
+	//----------------------------------------------------------
+	//	check track contact
+	//
+	if( m_ulContactTime )
+	{
+		//-------------------------------------------------
+		//	the debounce timer is active,
+		//	so check if it is elapsed...
+		//
+		if( millis() > m_ulContactTime )
+		{
+			//---------------------------------------------
+			//	the timer is elapsed
+			//	so check if the track contact state is
+			//	still different and
+			//	if so save the actual state
+			//
+			m_ulContactTime = 0L;
+			
+			if( READ_CONTACT != m_bContactOccupied )
+			{
+				m_bContactOccupied = READ_CONTACT;
+			}
+		}
+	}
+	else if( READ_CONTACT != m_bContactOccupied )
+	{
+		//------------------------------------------------------
+		//	track contact state is different than before
+		//	so start debounce timer
+		//
+		m_ulContactTime = millis() + TRACK_CONTACT_WAIT_TIME;
+	}
 }
 
 
