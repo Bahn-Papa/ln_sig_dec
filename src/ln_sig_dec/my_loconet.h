@@ -10,6 +10,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	3		from: 12.12.2022
+//#
+//#	Implementation:
+//#		-	add handling of the track contact
+//#			new function
+//#				SendTrackContactMessage()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	2		from: 28.09.2022
 //#
 //#	Implementation:

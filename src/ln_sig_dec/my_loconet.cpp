@@ -7,6 +7,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	7		from: 12.12.2022
+//#
+//#	Implementation:
+//#		-	add handling of the track contact
+//#			new function
+//#				SendTrackContactMessage()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	6		from: 22.11.2022
 //#
 //#	Implementation:
@@ -348,6 +357,33 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 				}
 			}
 		}
+	}
+}
+
+
+//**********************************************************************
+//	SendTrackContactMessage
+//----------------------------------------------------------------------
+//
+void MyLoconetClass::SendTrackContactMessage( bool bOccupied )
+{
+	uint16_t	uiAddress	= m_arDevices[ IDX_TRACK_CONTACT ].m_uiAddress;
+	uint8_t		usFlags		= m_arDevices[ IDX_TRACK_CONTACT ].m_bFlags;
+
+	if( DEVICE_IS_INVERT & usFlags )
+	{
+		bOccupied = !bOccupied;
+	}
+
+	if( DEVICE_IS_SENSOR & usFlags )
+	{
+		LocoNet.reportSensor( uiAddress, bOccupied );
+	}
+	else
+	{
+		LocoNet.requestSwitch( uiAddress, 1, bOccupied );
+		delay( 10 );
+		LocoNet.requestSwitch( uiAddress, 0, bOccupied );
 	}
 }
 
