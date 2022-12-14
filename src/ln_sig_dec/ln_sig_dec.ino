@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		4
-#define VERSION_BUGFIX		6
+#define VERSION_BUGFIX		7
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,17 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.04.07		from: 14.12.2022
+//#
+//#	Implementation:
+//#		-	add track contact delay time
+//#			when the track contact gets free then a timer is started
+//#			to delay the sending of the new state.
+//#			If the contact gets occupied again during the delay time
+//#			than the timer will be reset.
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -166,6 +177,8 @@
 //==========================================================================
 
 uint32_t	g_ulBlinkTimer;
+uint32_t	g_ulContactOffDelayTimer;
+uint16_t	g_uiDelayTime;
 bool		g_bLedOn;
 bool		g_bIsProgMode;
 bool		g_bTrackContactOccupied;
@@ -192,10 +205,11 @@ void (*resetFunc)( void ) = 0;
 //
 void setup()
 {
-	g_ulBlinkTimer			= 0L;
-	g_bLedOn				= false;
-	g_bIsProgMode			= false;
-	g_bTrackContactOccupied	= false;
+	g_ulBlinkTimer				= 0L;
+	g_ulContactOffDelayTimer	= 0L;
+	g_bLedOn					= false;
+	g_bIsProgMode				= false;
+	g_bTrackContactOccupied		= false;
 
 	//--------------------------------------------------------------
 	//
@@ -210,7 +224,8 @@ void setup()
 
 	g_clMyLoconet.Init();
 
-	g_bTrackContactOccupied = g_clControl.IsContactOccupied();
+	g_bTrackContactOccupied	= g_clControl.IsContactOccupied();
+	g_uiDelayTime			= g_clLncvStorage.ReadLNCV( LNCV_ADR_TRACK_CONTACT_DELAY_TIME );
 }
 
 
@@ -233,11 +248,58 @@ void loop()
 	//--------------------------------------------------------------
 	//	process track contact state changes
 	//
-	if( g_clControl.IsContactOccupied() != g_bTrackContactOccupied )
+	if( g_ulContactOffDelayTimer )
 	{
-		g_bTrackContactOccupied = g_clControl.IsContactOccupied();
+		//----------------------------------------------------------
+		//	the off delay timer is aktive
+		//
+		if( millis() > g_ulContactOffDelayTimer )
+		{
+			//--------------------------------------------------
+			//	timer elapsed, so
+			//	-	switch timer off
+			//	-	send occupied state to Loconet
+			//
+			g_ulContactOffDelayTimer	= 0L;
+			g_bTrackContactOccupied		= g_clControl.IsContactOccupied();
 
-		g_clMyLoconet.SendTrackContactMessage( g_bTrackContactOccupied );
+			g_clMyLoconet.SendTrackContactMessage( g_bTrackContactOccupied );
+		}
+		else if( g_clControl.IsContactOccupied() == g_bTrackContactOccupied )
+		{
+			//--------------------------------------------------
+			//	the contact is occupied again and before
+			//	the timer elapsed, so stop the timer
+			//
+			g_ulContactOffDelayTimer = 0L;
+		}
+	}
+	else if( g_clControl.IsContactOccupied() != g_bTrackContactOccupied )
+	{
+		//----------------------------------------------------------
+		//	track contact changed state
+		//	-	new state is occupied	=> send LN message direct
+		//	-	new state is free		=> start delay timer
+		//
+		if( g_clControl.IsContactOccupied() )
+		{
+			g_bTrackContactOccupied = g_clControl.IsContactOccupied();
+
+			g_clMyLoconet.SendTrackContactMessage( g_bTrackContactOccupied );
+		}
+		else if( g_uiDelayTime )
+		{
+			g_ulContactOffDelayTimer = millis() + g_uiDelayTime;
+		}
+		else
+		{
+			//------------------------------------------------------
+			//	no delay time configured, so send free message
+			//	direct
+			g_bTrackContactOccupied = g_clControl.IsContactOccupied();
+
+			g_clMyLoconet.SendTrackContactMessage( g_bTrackContactOccupied );
+		}
 	}
 
 	//--------------------------------------------------------------
