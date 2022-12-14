@@ -10,6 +10,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	6		from: 14.12.2022
+//#
+//#	Implementation:
+//#		-	add track contact delay time and re-organize LNCVs
+//#			new definitions
+//#				LNCV_ADR_FOUR
+//#				LNCV_ADR_TRACK_CONTACT_DELAY_TIME
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	5		from: 21.11.2022
 //#
 //#	Implementation:
@@ -89,11 +99,13 @@
 #define LNCV_ADR_ARTIKEL_NUMMER				1
 #define LNCV_ADR_VERSION					2
 #define LNCV_ADR_SIGNAL_TYPE				3
-#define LNCV_ADR_TRACK_CONTACT				4
+#define LNCV_ADR_FOUR						4
 #define LNCV_ADR_NIGHTLIGHT					5
 #define LNCV_ADR_SIGNAL_VALID_WAIT_TIME		6
+#define LNCV_ADR_TRACK_CONTACT				7
+#define LNCV_ADR_TRACK_CONTACT_DELAY_TIME	8
 
-#define LNCV_ADR_SPARE						7
+#define LNCV_ADR_SPARE						9
 
 
 //----------------------------------------------------------------------

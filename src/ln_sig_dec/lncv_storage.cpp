@@ -11,6 +11,18 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	6		from: 14.12.2022
+//#
+//#	Implementation:
+//#		-	add track contact delay time and re-organize LNCVs
+//#			new definitions
+//#				LNCV_ADR_FOUR
+//#				LNCV_ADR_TRACK_CONTACT_DELAY_TIME
+//#			changes in functions
+//#				CheckEEPROM()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	5		from: 17.11.2022
 //#
 //#	Implementation:
@@ -138,6 +150,8 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		WriteLNCV( LNCV_ADR_SIGNAL_VALID_WAIT_TIME, 100 );
 #endif
 
+		WriteLNCV( LNCV_ADR_TRACK_CONTACT_DELAY_TIME,	1000 );
+
 		//----------------------------------------------------------
 		//	... default fade times ...
 		//
@@ -153,11 +167,11 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		//		and address values into EEPROM
 		//
 #ifdef WRITE_TEST_VALUES
-		WriteLNCV( LNCV_ADR_TRACK_CONTACT,	1160 );
 		WriteLNCV( LNCV_ADR_NIGHTLIGHT,		1150 );
+		WriteLNCV( LNCV_ADR_TRACK_CONTACT,	1160 );
 #else
-		WriteLNCV( LNCV_ADR_TRACK_CONTACT,	0 );
 		WriteLNCV( LNCV_ADR_NIGHTLIGHT,		0 );
+		WriteLNCV( LNCV_ADR_TRACK_CONTACT,	0 );
 #endif
 
 		for( idx = 0 ; idx < NUMBER_LIGHTS ; idx++ )
@@ -174,6 +188,8 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		//----------------------------------------------------------
 		//	Clear all spare LNCVs
 		//
+		WriteLNCV( LNCV_ADR_FOUR, 0 );
+
 		for( idx = LNCV_ADR_SPARE ; idx < LNCV_ADR_LIGHT_INTENSITY_LED_A ; idx++ )
 		{
 			WriteLNCV( idx, 0 );
