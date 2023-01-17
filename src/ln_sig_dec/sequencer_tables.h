@@ -27,6 +27,16 @@
 //#	The sequences for the approach signal will cover the LEDs J to M
 //#		where LED J is bit 0 in the sequence table
 //#
+//#	The format of a control word is GGLLLLLL where
+//#		GG		are the two bits to build four control word groups
+//#		LLLLLL	are the bits to define which LED should be switched
+//#				or which command should be performed
+//#	The four groups are:
+//#		00	normal switching of LEDs
+//#		01	flashing of LEDs
+//#		10	not used
+//#		11	control codes, like SEQUENCE_APPROACH_ON or SEQUENCE_END
+//#
 //#	The first value in each sequence is the first change of
 //#		a signal aspect.
 //#	Each sequence will end with SEQUENCE_END.
@@ -41,6 +51,14 @@
 //#	 2	Hp2
 //#	 3	Sh1
 //#	 4	Kennlicht
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File Version:	6		from: 17.01.2023
+//#
+//#	Implementation:
+//#		-	create sequences for E-Sig and A-Sig
+//#		-	add some new control words for PAUSE etc.
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -106,7 +124,7 @@
 //
 //==========================================================================
 
-#define SIGNAL_ASPECTS			5
+#define SIGNAL_ASPECTS				5
 
 //----------------------------------------------------------------------
 //	signal aspects
@@ -118,11 +136,28 @@
 #define SIGNAL_ASPECT_KENNLICHT		4
 
 //----------------------------------------------------------------------
-//	definitions for sequence control
+//	definitions for the parts in a sequence control word
+//
+#define SEQUENCE_CONTROL_GROUPS		0xC0
+#define	SEQUENCE_LEDS				0x3F
+
+//----------------------------------------------------------------------
+//	definitions for sequencer control groups
+//
+#define SG_FADING_LEDS				0x00
+#define SG_FLASHING_LEDS			0x40
+#define SG_UNUSED					0x80
+#define SG_CONTROL_WORDS			0xC0
+
+//----------------------------------------------------------------------
+//	definitions for sequence control codes
 //
 #define SEQUENCE_END				0xFF
-#define SEQUENCE_APPROACH_ON		0xEF
-#define SEQUENCE_APPROACH_OFF		0xDF
+#define SEQUENCE_PAUSE				0xCF
+#define SEQUENCE_APPROACH_ON		0xC0
+#define SEQUENCE_APPROACH_OFF		0xC1
+#define SEQUENCE_SET_SIGNAL_ASPECT	0xC2
+#define SEQUENCE_SET_HP0			0xC3
 
 
 //==========================================================================
@@ -150,22 +185,60 @@ const uint8_t sNOP[] PROGMEM = { SEQUENCE_END };
 //------------------------------------------------------------------
 //	Main: from Hp0 to Hp1
 //
-const uint8_t Main_to_Hp1[] PROGMEM =
+const uint8_t Main_A_to_Hp1[] PROGMEM =
+{
+	SEQUENCE_APPROACH_ON,
+	0b00000010,
+	0b00000000,
+	SEQUENCE_PAUSE,
+	0b00000001,
+	SEQUENCE_PAUSE,
+	SEQUENCE_SET_SIGNAL_ASPECT,
+	SEQUENCE_END
+};
+
+const uint8_t Main_E_to_Hp1[] PROGMEM =
 {
 	SEQUENCE_APPROACH_ON,
 	0b00000000,
+	SEQUENCE_PAUSE,
+	0b00000100,
+	0b00000000,
+	SEQUENCE_PAUSE,
 	0b00000001,
+	SEQUENCE_PAUSE,
+	SEQUENCE_SET_SIGNAL_ASPECT,
 	SEQUENCE_END
 };
 
 //------------------------------------------------------------------
 //	Main: from Hp0 to Hp2
 //
-const uint8_t Main_to_Hp2[] PROGMEM =
+const uint8_t Main_A_to_Hp2[] PROGMEM =
+{
+	SEQUENCE_APPROACH_ON,
+	0b00000010,
+	0b00000000,
+	SEQUENCE_PAUSE,
+	0b00100000,
+	0b00100001,
+	SEQUENCE_PAUSE,
+	SEQUENCE_SET_SIGNAL_ASPECT,
+	SEQUENCE_END
+};
+
+const uint8_t Main_E_to_Hp2[] PROGMEM =
 {
 	SEQUENCE_APPROACH_ON,
 	0b00000000,
+	SEQUENCE_PAUSE,
+	0b00000100,
+	0b00000000,
+	SEQUENCE_PAUSE,
+	0b00100000,
 	0b00100001,
+	SEQUENCE_PAUSE,
+	SEQUENCE_SET_SIGNAL_ASPECT,
 	SEQUENCE_END
 };
 
@@ -175,55 +248,139 @@ const uint8_t Main_to_Hp2[] PROGMEM =
 const uint8_t Main_A_to_Sh1[] PROGMEM =
 {
 	0b00000010,
+	SEQUENCE_PAUSE,
 	0b00010010,
-	SEQUENCE_END
-};
-
-const uint8_t Main_E_to_Sh1[] PROGMEM =
-{
-	0b00000000,
-	0b00010100,
 	SEQUENCE_END
 };
 
 //------------------------------------------------------------------
 //	Main: from Hp0 to Kennlicht
 //
-const uint8_t Main_to_KL[] PROGMEM =
+const uint8_t Main_A_to_KL[] PROGMEM =
 {
+	SEQUENCE_APPROACH_ON,
+	0b00000010,
 	0b00000000,
+	SEQUENCE_PAUSE,
 	0b00001000,
+	SEQUENCE_PAUSE,
+	SEQUENCE_SET_SIGNAL_ASPECT,
+	SEQUENCE_END
+};
+
+const uint8_t Main_E_to_KL[] PROGMEM =
+{
+	SEQUENCE_APPROACH_ON,
+	0b00000000,
+	SEQUENCE_PAUSE,
+	0b00000100,
+	0b00000000,
+	SEQUENCE_PAUSE,
+	0b00001000,
+	SEQUENCE_PAUSE,
+	SEQUENCE_SET_SIGNAL_ASPECT,
 	SEQUENCE_END
 };
 
 
 
 //------------------------------------------------------------------
-//	Main: from xxx to Hp0
+//	Main: from Hp1 to Hp0
 //
-const uint8_t Main_A_to_Hp0[] PROGMEM =
+const uint8_t Main_A_from_Hp1[] PROGMEM =
 {
+	SEQUENCE_SET_HP0,
+	SEQUENCE_PAUSE,
 	0b00000000,
+	SEQUENCE_PAUSE,
+	0b00000010,
 	0b00000110,
 	SEQUENCE_APPROACH_OFF,
 	SEQUENCE_END
 };
 
-const uint8_t Main_E_to_Hp0[] PROGMEM =
+const uint8_t Main_E_from_Hp1[] PROGMEM =
 {
+	SEQUENCE_SET_HP0,
+	SEQUENCE_PAUSE,
 	0b00000000,
+	SEQUENCE_PAUSE,
+	0b00000100,
+	0b00000000,
+	SEQUENCE_PAUSE,
 	0b00000010,
 	SEQUENCE_APPROACH_OFF,
 	SEQUENCE_END
 };
 
 //------------------------------------------------------------------
-//	Main: from Sh1 or ZS1 to Hp0
+//	Main: from Hp2 to Hp0
+//
+const uint8_t Main_A_from_Hp2[] PROGMEM =
+{
+	SEQUENCE_SET_HP0,
+	SEQUENCE_PAUSE,
+	0b00100000,
+	0b00000000,
+	SEQUENCE_PAUSE,
+	0b00000010,
+	0b00000110,
+	SEQUENCE_APPROACH_OFF,
+	SEQUENCE_END
+};
+
+const uint8_t Main_E_from_Hp2[] PROGMEM =
+{
+	SEQUENCE_SET_HP0,
+	SEQUENCE_PAUSE,
+	0b00100000,
+	0b00000000,
+	SEQUENCE_PAUSE,
+	0b00000100,
+	0b00000000,
+	SEQUENCE_PAUSE,
+	0b00000010,
+	SEQUENCE_APPROACH_OFF,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	Main: from Sh1 to Hp0
 //
 const uint8_t Main_A_from_Sh1[] PROGMEM =
 {
 	0b00000010,
+	SEQUENCE_PAUSE,
 	0b00000110,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	Main: from KL to Hp0
+//
+const uint8_t Main_A_from_KL[] PROGMEM =
+{
+	SEQUENCE_SET_HP0,
+	SEQUENCE_PAUSE,
+	0b00000000,
+	SEQUENCE_PAUSE,
+	0b00000010,
+	0b00000110,
+	SEQUENCE_APPROACH_OFF,
+	SEQUENCE_END
+};
+
+const uint8_t Main_E_from_KL[] PROGMEM =
+{
+	SEQUENCE_SET_HP0,
+	SEQUENCE_PAUSE,
+	0b00000000,
+	SEQUENCE_PAUSE,
+	0b00000100,
+	0b00000000,
+	SEQUENCE_PAUSE,
+	0b00000010,
+	SEQUENCE_APPROACH_OFF,
 	SEQUENCE_END
 };
 
@@ -234,7 +391,12 @@ const uint8_t Main_A_from_Sh1[] PROGMEM =
 //
 const uint8_t Appr_to_Hp1[] PROGMEM =
 {
-	0b00000000,
+	0b00001000,
+	SEQUENCE_PAUSE,
+	0b00001001,
+	SEQUENCE_PAUSE,
+	0b00000001,
+	SEQUENCE_PAUSE,
 	0b00000101,
 	SEQUENCE_END
 };
@@ -244,7 +406,8 @@ const uint8_t Appr_to_Hp1[] PROGMEM =
 //
 const uint8_t Appr_to_Hp2[] PROGMEM =
 {
-	0b00000000,
+	0b00001000,
+	SEQUENCE_PAUSE,
 	0b00001001,
 	SEQUENCE_END
 };
@@ -254,7 +417,10 @@ const uint8_t Appr_to_Hp2[] PROGMEM =
 //
 const uint8_t Appr_to_Hp0[] PROGMEM =
 {
+	0b00000001,
 	0b00000000,
+	SEQUENCE_PAUSE,
+	0b00001000,
 	0b00001010,
 	SEQUENCE_END
 };
@@ -270,10 +436,10 @@ const uint8_t Appr_to_Hp0[] PROGMEM =
 const uint8_t* const A_Sig_Main_From_Hp0[] PROGMEM =
 {
 	sNOP,
-	Main_to_Hp1,
-	Main_to_Hp2,
+	Main_A_to_Hp1,
+	Main_A_to_Hp2,
 	Main_A_to_Sh1,
-	Main_to_KL
+	Main_A_to_KL
 };
 
 //------------------------------------------------------------------
@@ -282,10 +448,10 @@ const uint8_t* const A_Sig_Main_From_Hp0[] PROGMEM =
 const uint8_t* const A_Sig_Main_To_Hp0[] PROGMEM =
 {
 	sNOP,
-	Main_A_to_Hp0,
-	Main_A_to_Hp0,
+	Main_A_from_Hp1,
+	Main_A_from_Hp2,
 	Main_A_from_Sh1,
-	Main_A_to_Hp0
+	Main_A_from_KL
 };
 
 //------------------------------------------------------------------
@@ -294,11 +460,11 @@ const uint8_t* const A_Sig_Main_To_Hp0[] PROGMEM =
 const uint8_t* const E_Sig_Main_From_Hp0[] PROGMEM =
 {
 	sNOP,
-	Main_to_Hp1,
-	Main_to_Hp2,
-	Main_E_to_Sh1,
-	Main_to_KL
-} ;
+	Main_E_to_Hp1,
+	Main_E_to_Hp2,
+	sNOP,
+	Main_E_to_KL
+};
 
 //------------------------------------------------------------------
 //	E-Sig to Hp0
@@ -306,10 +472,10 @@ const uint8_t* const E_Sig_Main_From_Hp0[] PROGMEM =
 const uint8_t* const E_Sig_Main_To_Hp0[] PROGMEM =
 {
 	sNOP,
-	Main_E_to_Hp0,
-	Main_E_to_Hp0,
-	Main_E_to_Hp0,
-	Main_E_to_Hp0
+	Main_E_from_Hp1,
+	Main_E_from_Hp2,
+	sNOP,
+	Main_E_from_KL
 };
 
 
@@ -318,13 +484,21 @@ const uint8_t* const E_Sig_Main_To_Hp0[] PROGMEM =
 //
 const uint8_t* const Approach_From_Hp0[] PROGMEM =
 {
-	sNOP, Appr_to_Hp1, Appr_to_Hp2, sNOP, sNOP
-} ;
+	sNOP,
+	Appr_to_Hp1,
+	Appr_to_Hp2,
+	sNOP,
+	sNOP
+};
 
 //------------------------------------------------------------------
 //	Approach Signal to Hp0
 //
 const uint8_t* const Approach_To_Hp0[] PROGMEM =
 {
-	sNOP, Appr_to_Hp0, Appr_to_Hp0, sNOP, sNOP
+	sNOP,
+	Appr_to_Hp0,
+	Appr_to_Hp0,
+	sNOP,
+	sNOP
 } ;
