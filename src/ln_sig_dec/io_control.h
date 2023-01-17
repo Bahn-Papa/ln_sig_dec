@@ -198,6 +198,8 @@ class IO_ControlClass
 		uint32_t	m_ulCycleTime;
 		uint32_t	m_ulCycleStepTime;
 		uint32_t	m_ulContactTime;
+		uint16_t	m_ulDarkTime;
+		uint32_t	m_ulDarkTimer;
 		uint16_t	m_uiLedsOn;
 		uint16_t	m_uiFadeTimeUp;
 		uint16_t	m_uiFadeTimeDown;
