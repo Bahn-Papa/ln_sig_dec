@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		4
-#define VERSION_BUGFIX		7
+#define VERSION_BUGFIX		8
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,16 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.04.08		from: 17.01.2023
+//#
+//#	Implementation:
+//#		-	add new possibilities for the sequence control
+//#				pause		the sequence will pause for 200ms
+//#				flash LED	in addition to fade the LEDs of a signal
+//#							it is now possible to flash the LEDs
 //#
 //#-------------------------------------------------------------------------
 //#
