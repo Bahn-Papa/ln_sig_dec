@@ -28,6 +28,23 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	14		from: 18.01.2023
+//#
+//#	Implementation:
+//#		-	add pause times for 'dark' and 'flash'
+//#			change variables
+//#				from				to
+//#				m_ulDarkTimer		m_ulPauseTimer
+//#				m_ulDarkTime		m_usDarkTime
+//#			new variable
+//#				m_usFlashTime
+//#			changes in functions
+//#				Init()
+//#				ProcessTransitionMain()
+//#				ProcessTransitionApproach()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	13		from: 12.12.2022
 //#
 //#	Implementation:
@@ -384,8 +401,7 @@ void IO_ControlClass::Init( void )
 	m_ulCycleTime					= 0L;
 	m_ulCycleStepTime				= 0L;
 	m_ulContactTime					= 0L;
-	m_ulDarkTime					= 200;
-	m_ulDarkTimer					= 0L;
+	m_ulPauseTimer					= 0L;
 	m_uiLedsOn						= 0x0000;
 	m_uiFadeActive					= 0x0000;
 	m_uiFadeTimeUp					= 0;
@@ -403,6 +419,9 @@ void IO_ControlClass::Init( void )
 	m_bStateMachineActive			= false;
 
 	m_bContactOccupied				= false;
+
+	m_usDarkTime	= g_clLncvStorage.ReadLNCV( LNCV_ADR_DARK_TIME );
+	m_usFlashTime	= g_clLncvStorage.ReadLNCV( LNCV_ADR_FLASH_TIME );
 
 	bIsASig = SetSignalType();
 
@@ -491,15 +510,15 @@ void IO_ControlClass::Loop( void )
 	//----------------------------------------------------------
 	//	check if we should pause the handling
 	//
-	if( m_ulDarkTimer > 0 )
+	if( m_ulPauseTimer > 0 )
 	{
 		//--------------------------------------------------
 		//	if the pause time has elapsed
 		//	then switch off the timer
 		//
-		if( millis() > m_ulDarkTimer )
+		if( millis() > m_ulPauseTimer )
 		{
-			m_ulDarkTimer = 0L;
+			m_ulPauseTimer = 0L;
 		}
 	}
 	else
@@ -1066,7 +1085,7 @@ void IO_ControlClass::ProcessTransitionMain( void )
 					//--------------------------------------------------
 					//	make a pause in the sequence
 					//
-					m_ulDarkTimer = millis() + m_ulDarkTime;
+					m_ulPauseTimer = millis() + m_usDarkTime;
 					break;
 
 				case SEQUENCE_APPROACH_ON:
@@ -1137,7 +1156,7 @@ void IO_ControlClass::ProcessTransitionMain( void )
 						if( SG_FLASHING_LEDS == usControlGroup )
 						{
 							SwitchLed( idx, true );
-							m_ulDarkTimer = millis() + m_ulDarkTime;
+							m_ulPauseTimer = millis() + m_usFlashTime;
 						}
 						else
 						{
@@ -1149,7 +1168,7 @@ void IO_ControlClass::ProcessTransitionMain( void )
 						if( SG_FLASHING_LEDS == usControlGroup )
 						{
 							SwitchLed( idx, false );
-							m_ulDarkTimer = millis() + m_ulDarkTime;
+							m_ulPauseTimer = millis() + m_usFlashTime;
 						}
 						else
 						{
@@ -1217,7 +1236,7 @@ void IO_ControlClass::ProcessTransitionApproach( void )
 				//--------------------------------------------------
 				//	make a pause in the sequence
 				//
-				m_ulDarkTimer = millis() + m_ulDarkTime;
+				m_ulPauseTimer = millis() + m_usDarkTime;
 			}
 		}
 		else
@@ -1238,7 +1257,7 @@ void IO_ControlClass::ProcessTransitionApproach( void )
 						if( SG_FLASHING_LEDS == usControlGroup )
 						{
 							SwitchLed( idx, true );
-							m_ulDarkTimer = millis() + m_ulDarkTime;
+							m_ulPauseTimer = millis() + m_usFlashTime;
 						}
 						else
 						{
@@ -1250,7 +1269,7 @@ void IO_ControlClass::ProcessTransitionApproach( void )
 						if( SG_FLASHING_LEDS == usControlGroup )
 						{
 							SwitchLed( idx, false );
-							m_ulDarkTimer = millis() + m_ulDarkTime;
+							m_ulPauseTimer = millis() + m_usFlashTime;
 						}
 						else
 						{

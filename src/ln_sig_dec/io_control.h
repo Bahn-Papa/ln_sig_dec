@@ -10,6 +10,19 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	8		from: 18.01.2023
+//#
+//#	Implementation:
+//#		-	add pause times for 'dark' and 'flash'
+//#			change variables
+//#				from				to
+//#				m_ulDarkTimer		m_ulPauseTimer
+//#				m_ulDarkTime		m_usDarkTime
+//#			new variable
+//#				m_usFlashTime
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	7		from: 12.12.2022
 //#
 //#	Implementation:
@@ -198,8 +211,9 @@ class IO_ControlClass
 		uint32_t	m_ulCycleTime;
 		uint32_t	m_ulCycleStepTime;
 		uint32_t	m_ulContactTime;
-		uint16_t	m_ulDarkTime;
-		uint32_t	m_ulDarkTimer;
+		uint32_t	m_ulPauseTimer;
+		uint16_t	m_usDarkTime;
+		uint16_t	m_usFlashTime;
 		uint16_t	m_uiLedsOn;
 		uint16_t	m_uiFadeTimeUp;
 		uint16_t	m_uiFadeTimeDown;
