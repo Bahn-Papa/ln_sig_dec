@@ -12,6 +12,13 @@
 //#
 //#	File version:	7		from: 18.01.2023
 //#
+//#	Bug Fix:
+//#		-	new last LNCV address
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File version:	7		from: 18.01.2023
+//#
 //#	Implementation:
 //#		-	add dark time, flash time, approach signal dark and
 //#			ersatz signal flash
@@ -87,7 +94,7 @@
 //----------------------------------------------------------------------
 //	my artikle number
 #define ARTIKEL_NUMMER			1515
-#define LNCV_ADR_LAST_VALID		50
+#define LNCV_ADR_LAST_VALID		60
 
 
 //----------------------------------------------------------------------
