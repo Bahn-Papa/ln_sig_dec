@@ -10,6 +10,20 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	7		from: 18.01.2023
+//#
+//#	Implementation:
+//#		-	add dark time, flash time, approach signal dark and
+//#			ersatz signal flash
+//#			new definitions
+//#				LNCV_ADR_DARK_TIME
+//#				LNCV_ADR_FLASH_TIME
+//#				LNCV_ADR_APPROACH_DARK
+//#				LNCV_ADR_ERSATZ_SIGNAL_FLASH
+//#				LNCV_ADR_LAST_VALID
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	6		from: 14.12.2022
 //#
 //#	Implementation:
@@ -72,7 +86,8 @@
 
 //----------------------------------------------------------------------
 //	my artikle number
-#define ARTIKEL_NUMMER	1515
+#define ARTIKEL_NUMMER			1515
+#define LNCV_ADR_LAST_VALID		50
 
 
 //----------------------------------------------------------------------
@@ -99,13 +114,14 @@
 #define LNCV_ADR_ARTIKEL_NUMMER				1
 #define LNCV_ADR_VERSION					2
 #define LNCV_ADR_SIGNAL_TYPE				3
-#define LNCV_ADR_FOUR						4
-#define LNCV_ADR_NIGHTLIGHT					5
-#define LNCV_ADR_SIGNAL_VALID_WAIT_TIME		6
-#define LNCV_ADR_TRACK_CONTACT				7
-#define LNCV_ADR_TRACK_CONTACT_DELAY_TIME	8
+#define LNCV_ADR_NIGHTLIGHT					4
+#define LNCV_ADR_SIGNAL_VALID_WAIT_TIME		5
+#define LNCV_ADR_TRACK_CONTACT				6
+#define LNCV_ADR_TRACK_CONTACT_DELAY_TIME	7
+#define LNCV_ADR_DARK_TIME					8
+#define LNCV_ADR_FLASH_TIME					9
 
-#define LNCV_ADR_SPARE						9
+#define LNCV_ADR_SPARE						10
 
 
 //----------------------------------------------------------------------
@@ -168,6 +184,13 @@
 #define LNCV_ADR_LIGHT_L					42
 #define LNCV_ADR_LIGHT_M					43
 #define LNCV_ADR_LIGHT_N					44
+
+
+//----------------------------------------------------------------------
+//	address definitions for special purposes
+//
+#define LNCV_ADR_APPROACH_DARK				45
+#define LNCV_ADR_ERSATZ_SIGNAL_FLASH		46
 
 
 //----------------------------------------------------------------------

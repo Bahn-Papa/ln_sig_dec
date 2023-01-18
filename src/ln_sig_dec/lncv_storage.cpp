@@ -11,6 +11,22 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	7		from: 18.01.2023
+//#
+//#	Implementation:
+//#		-	add dark time, flash time, approach signal dark and
+//#			ersatz signal flash
+//#			new definitions
+//#				LNCV_ADR_DARK_TIME
+//#				LNCV_ADR_FLASH_TIME
+//#				LNCV_ADR_APPROACH_DARK
+//#				LNCV_ADR_ERSATZ_SIGNAL_FLASH
+//#				LNCV_ADR_LAST_VALID
+//#			changes in functions
+//#				CheckEEPROM()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	6		from: 14.12.2022
 //#
 //#	Implementation:
@@ -150,8 +166,6 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		WriteLNCV( LNCV_ADR_SIGNAL_VALID_WAIT_TIME, 100 );
 #endif
 
-		WriteLNCV( LNCV_ADR_TRACK_CONTACT_DELAY_TIME,	1000 );
-
 		//----------------------------------------------------------
 		//	... default fade times ...
 		//
@@ -163,6 +177,13 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		WriteLNCV( LNCV_ADR_FADE_TIME_DOWN_SLOW,	800 );
 
 		//----------------------------------------------------------
+		//	... other times ...
+		//
+		WriteLNCV( LNCV_ADR_TRACK_CONTACT_DELAY_TIME,	1000 );
+		WriteLNCV( LNCV_ADR_DARK_TIME,					 200 );
+		WriteLNCV( LNCV_ADR_FLASH_TIME,					  50 );
+
+		//----------------------------------------------------------
 		//	... and default light intensities
 		//		and address values into EEPROM
 		//
@@ -170,8 +191,10 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		WriteLNCV( LNCV_ADR_NIGHTLIGHT,		1150 );
 		WriteLNCV( LNCV_ADR_TRACK_CONTACT,	1160 );
 #else
-		WriteLNCV( LNCV_ADR_NIGHTLIGHT,		0 );
-		WriteLNCV( LNCV_ADR_TRACK_CONTACT,	0 );
+		WriteLNCV( LNCV_ADR_NIGHTLIGHT,			 0 );
+		WriteLNCV( LNCV_ADR_TRACK_CONTACT,		 0 );
+		WriteLNCV( LNCV_ADR_APPROACH_DARK,		 0 );
+		WriteLNCV( LNCV_ADR_ERSATZ_SIGNAL_FLASH, 0 );
 #endif
 
 		for( idx = 0 ; idx < NUMBER_LIGHTS ; idx++ )
@@ -188,9 +211,9 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		//----------------------------------------------------------
 		//	Clear all spare LNCVs
 		//
-		WriteLNCV( LNCV_ADR_FOUR, 0 );
+		WriteLNCV( LNCV_ADR_SPARE, 0 );
 
-		for( idx = LNCV_ADR_SPARE ; idx < LNCV_ADR_LIGHT_INTENSITY_LED_A ; idx++ )
+		for( idx = LNCV_ADR_ERSATZ_SIGNAL_FLASH + 1 ; idx <= LNCV_ADR_LAST_VALID ; idx++ )
 		{
 			WriteLNCV( idx, 0 );
 		}
@@ -259,8 +282,8 @@ uint16_t LncvStorageClass::GetFadeTimeDown( uint8_t idx )
 //
 bool LncvStorageClass::IsValidLNCVAddress( uint16_t Adresse )
 {
-//	if( (LNCV_ADR_MODULE_ADDRESS <= Adresse) && (LNCV_ADR_LIGHT_N >= Adresse) )
-	if( LNCV_ADR_LIGHT_N >= Adresse )
+//	if( (LNCV_ADR_MODULE_ADDRESS <= Adresse) && (LNCV_ADR_LAST_VALID >= Adresse) )
+	if( LNCV_ADR_LAST_VALID >= Adresse )
 	{
 		return( true );
 	}
