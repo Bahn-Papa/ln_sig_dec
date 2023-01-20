@@ -10,6 +10,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	4		from: 20.01.2023
+//#
+//#	Implementation:
+//#		-	add handling of extra signals
+//#			new variable
+//#				uint8_t m_usExtraSignals
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	3		from: 12.12.2022
 //#
 //#	Implementation:
@@ -102,9 +111,12 @@ class MyLoconetClass
 		uint8_t		m_usSignalType;
 		uint8_t		m_usSignalSelected;
 		uint8_t		m_usSignalAspect;
+		uint8_t		m_usExtraSignals;
 		bool		m_bIsProgMode;
 
 		void SetDeviceInfo( uint8_t idx, uint16_t uiInfo );
+		void AddSignalAspect( uint8_t usSelected, uint8_t usAspectMask );
+		void SetExtraSignal( uint8_t usLED, bool bIsGreen );
 		void SetSelectedSignalAspect( void );
 };
 

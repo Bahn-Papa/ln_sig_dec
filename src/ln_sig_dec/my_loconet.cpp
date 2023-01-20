@@ -7,6 +7,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	9		from: 20.01.2023
+//#
+//#	Implementation:
+//#		-	add handling of extra signals
+//#			new variable
+//#				uint8_t m_usExtraSignals
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	8		from: 18.01.2023
 //#
 //#	Implementation:
@@ -164,6 +173,7 @@ void MyLoconetClass::Init( void )
 	m_ulTimer					= 0L;
 	m_usSignalSelected			= 0;
 	m_usSignalAspect			= 0;
+	m_usExtraSignals			= 0x00;
 	m_bIsProgMode				= false;
 	m_usSignalType				= (uint8_t)g_clLncvStorage.ReadLNCV( LNCV_ADR_SIGNAL_TYPE );
 	m_uiSignalValidWaitTime		= g_clLncvStorage.ReadLNCV( LNCV_ADR_SIGNAL_VALID_WAIT_TIME );
@@ -284,90 +294,51 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 				//--------------------------------------------------
 				//	proces message for ...
 				//
-				if( NUMBER_LIGHTS > idx )
+				if( (NUMBER_LIGHTS > idx) && (SIGNAL_TYPE_59_A_SIG > m_usSignalType) )
 				{
-					if(		(SIGNAL_TYPE_59_A_SIG > m_usSignalType)
-						||	(IDX_ADR_LED_A == idx)
-						||	(IDX_ADR_LED_H == idx)
-						||	(IDX_ADR_LED_I == idx)
-						||	(IDX_ADR_LED_N == idx)		)
-					{
-						//------------------------------------------
-						//	... a direct controlled light device
-						//
-						g_clControl.HandleLed( idx, bIsGreen );
-					}
-					else
-					{
-						//------------------------------------------
-						//	... a signal aspect
-						//
-						//	the signal aspect is for ...
-						//
-						if( IDX_SIGNAL_APPROACH_BIT_0 > idx )
-						{
-							//--------------------------------------
-							//	... a main signal
-							//
-							usHelpSelect	= SIGNAL_SELECTED_MAIN;
-							usBitNo			= idx - IDX_SIGNAL_MAIN_BIT_0;
-						}
-						else
-						{
-							//--------------------------------------
-							//	...	an approach signal
-							//
-							usHelpSelect	= SIGNAL_SELECTED_APPROACH;
-							usBitNo			= idx - IDX_SIGNAL_APPROACH_BIT_0;
-						}
-
-						if( 0 < m_usSignalSelected )
-						{
-							//--------------------------------------
-							//	there was at least one message
-							//	for a signal aspect
-							//	so check if this message is for
-							//	the same signal aspect
-							//
-							if( m_usSignalSelected != usHelpSelect )
-							{
-								//----------------------------------
-								//	NO !!
-								//	so set the actual signal aspect
-								//	and start to collect a new one
-								//
-								SetSelectedSignalAspect();
-							}
-						}
-
-						if( bIsGreen )
-						{
-							//--------------------------------------
-							//	set the bit for the signal aspect
-							//
-							m_usSignalAspect |= (1 << usBitNo);
-						}
-
-						m_usSignalSelected	= usHelpSelect;
-						m_ulTimer			= millis() + m_uiSignalValidWaitTime;
-
-						g_clControl.SwitchLed( LED_GREEN, true );
-					}
+					//----------------------------------------------
+					//	... a direct controlled light device
+					//
+					g_clControl.HandleLed( idx, bIsGreen );
 				}
 				else
 				{
 					//----------------------------------------------
-					//	... other device
+					//	... a signal aspects or other devices
 					//
-					if( IDX_TRACK_CONTACT == idx )
+					switch( idx )
 					{
-						//
-						//	for the moment do nothing
-						//
-					}
-					else if( IDX_NIGHTLIGHT == idx )
-					{
-						g_clControl.SetNightLight( bIsGreen );
+						case LED_MAIN_ZUSATZANZEIGER:
+						case LED_ERSATZSIGNAL:
+						case LED_APPROACH_KENNLICHT:
+						case LED_APPROACH_ZUSATZANZEIGER:
+							SetExtraSignal( idx, bIsGreen );
+							break;
+
+						case IDX_SIGNAL_MAIN_BIT_0:
+						case IDX_SIGNAL_MAIN_BIT_1:
+						case IDX_SIGNAL_MAIN_BIT_2:
+						case IDX_SIGNAL_MAIN_BIT_3:
+							AddSignalAspect( SIGNAL_SELECTED_MAIN,
+											 (1 << (idx - IDX_SIGNAL_MAIN_BIT_0)) );
+							break;
+
+						case IDX_SIGNAL_APPROACH_BIT_0:
+						case IDX_SIGNAL_APPROACH_BIT_1:
+						case IDX_SIGNAL_APPROACH_BIT_2:
+						case IDX_SIGNAL_APPROACH_BIT_3:
+							AddSignalAspect( SIGNAL_SELECTED_APPROACH,
+											 (1 << (idx - IDX_SIGNAL_APPROACH_BIT_0)) );
+							break;
+
+						case IDX_NIGHTLIGHT:
+							g_clControl.SetNightLight( bIsGreen );
+							break;
+
+						case IDX_TRACK_CONTACT:
+						default:
+							//	do nothing
+							break;
 					}
 				}
 			}
@@ -420,6 +391,84 @@ void MyLoconetClass::SetDeviceInfo( uint8_t idx, uint16_t uiInfo )
 
 
 //**********************************************************************
+//	AddSignalAspect
+//----------------------------------------------------------------------
+//
+void MyLoconetClass::AddSignalAspect( uint8_t usSelected, uint8_t usAspectMask )
+{
+	if( 0 < m_usSignalSelected )
+	{
+		//----------------------------------------------------------
+		//	there was at least one message for a signal aspect
+		//	so check if this message is for the same signal aspect
+		//
+		if( m_usSignalSelected != usSelected )
+		{
+			//--------------------------------------------------
+			//	NO !!
+			//	so set the actual signal aspect
+			//	and start to collect a new one
+			//
+			SetSelectedSignalAspect();
+		}
+	}
+
+	//----------------------------------------------------------
+	//	'add' the bit for the signal aspect
+	//
+	m_usSignalAspect	|= usAspectMask;
+
+	m_usSignalSelected	 = usSelected;
+	m_ulTimer			 = millis() + m_uiSignalValidWaitTime;
+
+	g_clControl.SwitchLed( LED_GREEN, true );
+}
+
+
+//**********************************************************************
+//	SetExtraSignal
+//----------------------------------------------------------------------
+//
+void MyLoconetClass::SetExtraSignal( uint8_t usLED, bool bIsGreen )
+{
+	if( 0 == m_ulTimer )
+	{
+		//----------------------------------------------------------
+		//	there is no signal aspect pending,
+		//	so handle extra signal direct
+		//
+		g_clControl.HandleLed( idx, bIsGreen )
+	}
+	else if( bIsGreen )
+	{
+		//----------------------------------------------------------
+		//	there is a signal aspect pending,
+		//	so remember which extra signals should be switched on
+		//	during the handling of the signal aspect
+		//
+		switch( usLED )
+		{
+			case LED_MAIN_ZUSATZANZEIGER:
+				m_usExtraSignals |= (1 << EXTRA_SIGNAL_ZUSATZANZEIGE);
+				break;
+
+			case LED_ERSATZSIGNAL:
+				m_usExtraSignals |= (1 << EXTRA_SIGNAL_ERSATZSIGNAL);
+				break;
+
+			case LED_APPROACH_KENNLICHT:
+				m_usExtraSignals |= (1 << EXTRA_SIGNAL_KENNLICHT);
+				break;
+
+			case LED_APPROACH_ZUSATZANZEIGER:
+				m_usExtraSignals |= (1 << EXTRA_SIGNAL_ANZEIGE);
+				break;
+		}
+	}
+}
+
+
+//**********************************************************************
 //	SetSelectedSignalAspect
 //----------------------------------------------------------------------
 //
@@ -427,17 +476,18 @@ void MyLoconetClass::SetSelectedSignalAspect( void )
 {
 	if( SIGNAL_SELECTED_MAIN == m_usSignalSelected )
 	{
-		g_clControl.HandleSignalAspectMain( m_usSignalAspect );
+		g_clControl.HandleSignalAspectMain( m_usSignalAspect, m_usExtraSignals );
 	}
 	else
 	{
-		g_clControl.HandleSignalAspectApproach( m_usSignalAspect );
+		g_clControl.HandleSignalAspectApproach( m_usSignalAspect, m_usExtraSignals );
 	}
 
 	g_clControl.SwitchLed( LED_GREEN, false );
 
 	m_usSignalSelected	= 0;
 	m_usSignalAspect	= 0;
+	m_usExtraSignals	= 0;
 	m_ulTimer			= 0L;
 }
 
