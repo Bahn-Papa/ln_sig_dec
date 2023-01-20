@@ -10,10 +10,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File version:	7		from: 18.01.2023
+//#	File version:	8		from: 18.01.2023
 //#
-//#	Bug Fix:
+//#	Implementation:
 //#		-	new last LNCV address
+//#		-	add Ersatz signal flash time
+//#			new definitions
+//#				LNCV_ADR_ERSATZ_SIGNAL_FLASH_TIME
+//#				IDX_APPROACH_DARK
+//#				IDX_ERSATZ_SIGNAL_FLASH
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -94,6 +99,7 @@
 //----------------------------------------------------------------------
 //	my artikle number
 #define ARTIKEL_NUMMER			1515
+
 #define LNCV_ADR_LAST_VALID		60
 
 
@@ -127,8 +133,7 @@
 #define LNCV_ADR_TRACK_CONTACT_DELAY_TIME	7
 #define LNCV_ADR_DARK_TIME					8
 #define LNCV_ADR_FLASH_TIME					9
-
-#define LNCV_ADR_SPARE						10
+#define LNCV_ADR_ERSATZ_SIGNAL_FLASH_TIME	10
 
 
 //----------------------------------------------------------------------
@@ -206,10 +211,12 @@
 //	14 lights to control	=>		14 addresses
 //	track contact			=>		 1 address
 //	select nightlight		=>		 1 address
-//						TOTAL OF	16 addresses
+//	approach dark			=>		 1 address
+//	Ersatz signal flash		=>		 1 address
+//						TOTAL OF	18 addresses
 //
 #define NUMBER_LIGHTS			14
-#define	DEVICE_COUNT			(NUMBER_LIGHTS + 2)
+#define	DEVICE_COUNT			(NUMBER_LIGHTS + 4)
 
 
 //----------------------------------------------------------------------
@@ -246,6 +253,8 @@
 #define IDX_ADR_LED_N				13
 #define IDX_TRACK_CONTACT			(NUMBER_LIGHTS)
 #define IDX_NIGHTLIGHT				(NUMBER_LIGHTS + 1)
+#define IDX_APPROACH_DARK			(NUMBER_LIGHTS + 2)
+#define IDX_ERSATZ_SIGNAL_FLASH		(NUMBER_LIGHTS + 3)
 
 
 ////////////////////////////////////////////////////////////////////////

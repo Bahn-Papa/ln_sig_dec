@@ -11,6 +11,20 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	8		from: 18.01.2023
+//#
+//#	Implementation:
+//#		-	new last LNCV address
+//#		-	add Ersatz signal flash time
+//#			new definitions
+//#				LNCV_ADR_ERSATZ_SIGNAL_FLASH_TIME
+//#				IDX_APPROACH_DARK
+//#				IDX_ERSATZ_SIGNAL_FLASH
+//#			changes in functions
+//#				CheckEEPROM()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	7		from: 18.01.2023
 //#
 //#	Implementation:
@@ -182,6 +196,7 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		WriteLNCV( LNCV_ADR_TRACK_CONTACT_DELAY_TIME,	1000 );
 		WriteLNCV( LNCV_ADR_DARK_TIME,					 200 );
 		WriteLNCV( LNCV_ADR_FLASH_TIME,					  50 );
+		WriteLNCV( LNCV_ADR_ERSATZ_SIGNAL_FLASH_TIME,	1000 );
 
 		//----------------------------------------------------------
 		//	... and default light intensities
@@ -211,8 +226,6 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		//----------------------------------------------------------
 		//	Clear all spare LNCVs
 		//
-		WriteLNCV( LNCV_ADR_SPARE, 0 );
-
 		for( idx = LNCV_ADR_ERSATZ_SIGNAL_FLASH + 1 ; idx <= LNCV_ADR_LAST_VALID ; idx++ )
 		{
 			WriteLNCV( idx, 0 );

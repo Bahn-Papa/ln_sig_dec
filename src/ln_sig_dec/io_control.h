@@ -6,7 +6,12 @@
 //#		IO_ControlClass
 //#
 //#	This class operates the ports of the Atmel chip.
-//#	here only LEDs are controlled by the help of the PWM library
+//#	here only LEDs are controlled.
+//#														re	li
+//#		LED		ws	ge	gr	ge	gr	KlZ	ES	ge	ws	KL	rt	rt	gr	ZA
+//#				 N	 M	 L	 K	 J	 I	 H	 G	 F	 E	 D	 C	 B	 A
+//#		Bit		13	12	11	10	 9	 8	 7	 6	 5	 4	 3	 2	 1	 0
+//#		LNCV	44	43	42	41	40	39	38	37	36	35	34	33	32	31
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -164,6 +169,29 @@
 #define	LED_BLUE			15
 #define LED_GREEN			14
 
+#define LED_MAIN_ZUSATZANZEIGER			LED_A
+#define LED_MAIN_GREEN					LED_B
+#define LED_MAIN_RED_LEFT				LED_C
+#define LED_MAIN_RED_RIGHT				LED_D
+#define LED_MAIN_KENNLICHT				LED_E
+#define LED_MAIN_SH1					LED_F
+#define LED_MAIN_YELLOW					LED_G
+#define LED_ERSATZSIGNAL				LED_H
+#define LED_APPROACH_KENNLICHT			LED_I
+#define LED_APPROACH_GREEN_TOP			LED_J
+#define LED_APPROACH_YELLOW_TOP			LED_K
+#define LED_APPROACH_GREEN_BOTTOM		LED_L
+#define LED_APPROACH_YELLOW_BOTTOM		LED_M
+#define LED_APPROACH_ZUSATZANZEIGER		LED_N
+
+//----------------------------------------------------------------------
+//	extra signal numbers
+//
+#define EXTRA_SIGNAL_ZUSATZANZEIGE		0
+#define EXTRA_SIGNAL_ERSATZSIGNAL		1
+#define EXTRA_SIGNAL_KENNLICHT			2
+#define EXTRA_SIGNAL_ANZEIGE			3
+
 
 //==========================================================================
 //
@@ -187,6 +215,7 @@ class IO_ControlClass
 		void Loop( void );
 
 		void SetNightLight( bool bNightLightOn );
+		void SetExtraSignal( uint8_t number );
 
 		void HandleLed( uint8_t usLedNo, bool bOn );
 		void HandleSignalAspectMain( uint8_t usSignalAspect );
@@ -212,8 +241,10 @@ class IO_ControlClass
 		uint32_t	m_ulCycleStepTime;
 		uint32_t	m_ulContactTime;
 		uint32_t	m_ulPauseTimer;
+		uint32_t	m_ulErsatzSignalTimer;
 		uint16_t	m_usDarkTime;
 		uint16_t	m_usFlashTime;
+		uint16_t	m_usErsatzSignalFlashTime;
 		uint16_t	m_uiLedsOn;
 		uint16_t	m_uiFadeTimeUp;
 		uint16_t	m_uiFadeTimeDown;

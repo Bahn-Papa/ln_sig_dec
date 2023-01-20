@@ -355,6 +355,17 @@ volatile uint8_t * g_arPorts[ TOTAL_LEDS ] =
 //
 PWMChannel_t	g_arChannel[ SIGNAL_LEDS ];
 
+//----------------------------------------------------------------------
+//	index array to get the right LED number
+//
+uint8_t		g_arLedIndex[] =
+	{
+		LED_MAIN_ZUSATZANZEIGER,
+		LED_ERSATZSIGNAL,
+		LED_APPROACH_KENNLICHT,
+		LED_APPROACH_ZUSATZANZEIGER
+	};
+
 
 //==========================================================================
 //

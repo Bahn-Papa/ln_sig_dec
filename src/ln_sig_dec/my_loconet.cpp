@@ -7,6 +7,17 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	8		from: 18.01.2023
+//#
+//#	Implementation:
+//#		-	add two new devices: approach signal dark
+//#			and Ersatz signal flash
+//#			change in functions
+//#				Init()
+//#				LoconetReceived()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	7		from: 12.12.2022
 //#
 //#	Implementation:
@@ -175,6 +186,12 @@ void MyLoconetClass::Init( void )
 	uiHelper = g_clLncvStorage.ReadLNCV( LNCV_ADR_NIGHTLIGHT );
 	SetDeviceInfo( IDX_NIGHTLIGHT, uiHelper );
 
+	uiHelper = g_clLncvStorage.ReadLNCV( LNCV_ADR_APPROACH_DARK );
+	SetDeviceInfo( IDX_APPROACH_DARK, uiHelper );
+
+	uiHelper = g_clLncvStorage.ReadLNCV( LNCV_ADR_ERSATZ_SIGNAL_FLASH );
+	SetDeviceInfo( IDX_ERSATZ_SIGNAL_FLASH, uiHelper );
+
 	//--------------------------------------------------------------
 	//	start communication
 	//
@@ -223,13 +240,12 @@ void MyLoconetClass::CheckForMessageAndProcess( void )
 void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, uint8_t /* output */ )
 {
 	device_t*	pDevice;
-	bool		bFound		= false;
 	bool		bIsGreen	= (dir != DIR_RED);
 	uint8_t		usHelpSelect;
 	uint8_t		usBitNo;
 	uint8_t		idx;
 
-	for( idx = 0 ; !bFound && (idx < DEVICE_COUNT) ; idx++ )
+	for( idx = 0 ; DEVICE_COUNT > idx ; idx++ )
 	{
 		pDevice = &(m_arDevices[ idx ]);
 
@@ -256,7 +272,6 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 				//	Okay, address and message type are correct
 				//	so process the message ...
 				//
-				bFound = true;
 
 				//--------------------------------------------------
 				//	Check if 'dir' should be inverted
