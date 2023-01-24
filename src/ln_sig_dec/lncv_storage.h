@@ -126,14 +126,14 @@
 #define LNCV_ADR_MODULE_ADDRESS				0
 #define LNCV_ADR_ARTIKEL_NUMMER				1
 #define LNCV_ADR_VERSION					2
-#define LNCV_ADR_SIGNAL_TYPE				3
-#define LNCV_ADR_NIGHTLIGHT					4
+#define LNCV_ADR_CONFIG						3
+#define LNCV_ADR_SIGNAL_TYPE				4
 #define LNCV_ADR_SIGNAL_VALID_WAIT_TIME		5
-#define LNCV_ADR_TRACK_CONTACT				6
-#define LNCV_ADR_TRACK_CONTACT_DELAY_TIME	7
+#define LNCV_ADR_ERSATZ_SIGNAL_FLASH_TIME	6
+#define LNCV_ADR_ERSATZ_SIGNAL_OFF_TIME		7
 #define LNCV_ADR_DARK_TIME					8
 #define LNCV_ADR_FLASH_TIME					9
-#define LNCV_ADR_ERSATZ_SIGNAL_FLASH_TIME	10
+#define LNCV_ADR_TRACK_CONTACT_DELAY_TIME	10
 
 
 //----------------------------------------------------------------------
@@ -201,18 +201,20 @@
 //----------------------------------------------------------------------
 //	address definitions for special purposes
 //
-#define LNCV_ADR_APPROACH_DARK				45
-#define LNCV_ADR_ERSATZ_SIGNAL_FLASH		46
+#define LNCV_ADR_ERSATZ_SIGNAL_FLASH		45
+#define LNCV_ADR_APPROACH_DARK				46
+#define LNCV_ADR_NIGHTLIGHT					47
+#define LNCV_ADR_TRACK_CONTACT				48
 
 
 //----------------------------------------------------------------------
 //	number of device addresses
 //
 //	14 lights to control	=>		14 addresses
-//	track contact			=>		 1 address
-//	select nightlight		=>		 1 address
-//	approach dark			=>		 1 address
 //	Ersatz signal flash		=>		 1 address
+//	approach dark			=>		 1 address
+//	select nightlight		=>		 1 address
+//	track contact			=>		 1 address
 //						TOTAL OF	18 addresses
 //
 #define NUMBER_LIGHTS			14
@@ -251,10 +253,10 @@
 #define IDX_ADR_LED_L				11
 #define IDX_ADR_LED_M				12
 #define IDX_ADR_LED_N				13
-#define IDX_TRACK_CONTACT			(NUMBER_LIGHTS)
-#define IDX_NIGHTLIGHT				(NUMBER_LIGHTS + 1)
-#define IDX_APPROACH_DARK			(NUMBER_LIGHTS + 2)
-#define IDX_ERSATZ_SIGNAL_FLASH		(NUMBER_LIGHTS + 3)
+#define IDX_ERSATZ_SIGNAL_FLASH		(NUMBER_LIGHTS)
+#define IDX_APPROACH_DARK			(NUMBER_LIGHTS + 1)
+#define IDX_NIGHTLIGHT				(NUMBER_LIGHTS + 2)
+#define IDX_TRACK_CONTACT			(NUMBER_LIGHTS + 3)
 
 
 ////////////////////////////////////////////////////////////////////////

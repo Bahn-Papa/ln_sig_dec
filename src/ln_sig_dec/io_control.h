@@ -192,6 +192,8 @@
 #define EXTRA_SIGNAL_KENNLICHT			2
 #define EXTRA_SIGNAL_ANZEIGE			3
 
+#define EXTRA_SIGNAL_COUNT				4
+
 
 //==========================================================================
 //
@@ -215,11 +217,20 @@ class IO_ControlClass
 		void Loop( void );
 
 		void SetNightLight( bool bNightLightOn );
-		void SetExtraSignal( uint8_t number );
+
+		inline void SetApproachDark( bool bDark )
+		{
+			m_bApproachDark = bDark;
+		}
+
+		inline void SetErsatzSignalFlash( bool bOn )
+		{
+			m_bErsatzSignalFlash = bOn;
+		}
 
 		void HandleLed( uint8_t usLedNo, bool bOn );
-		void HandleSignalAspectMain( uint8_t usSignalAspect );
-		void HandleSignalAspectApproach( uint8_t usSignalAspect );
+		void HandleSignalAspectMain( uint8_t usSignalAspect, uint8_t usExtraSignals );
+		void HandleSignalAspectApproach( uint8_t usSignalAspect, uint8_t usExtraSignals );
 
 		void SwitchLed( uint8_t usLedNo, bool bOn );
 
@@ -251,12 +262,14 @@ class IO_ControlClass
 		uint16_t	m_uiFadeActive;
 		uint8_t		m_usSignalType;
 		uint8_t		m_usSignalAspectMain;
-		uint8_t		m_usSignalAspectMainBuffer;
 		uint8_t		m_usSignalAspectApproach;
-		uint8_t		m_usSignalAspectApproachBuffer;
+		uint8_t		m_usExtraSignals;
 		uint8_t		m_usState;
 		uint8_t		m_usOldState;
 		bool		m_bNightLight;
+		bool		m_bApproachDark;
+		bool		m_bErsatzSignalFlash;
+		bool		m_bMainSignalPresent;
 		bool		m_bApproachSignalPresent;
 		bool		m_bTransitionActiveMain;
 		bool		m_bTransitionActiveApproach;
@@ -267,6 +280,8 @@ class IO_ControlClass
 		void		CalculateFadeRates( void );
 		uint8_t *	GetFirstStepMain( uint8_t usFromAspect, uint8_t usToAspect );
 		void		StartAspectTransitionApproach( uint8_t usAspectFrom, uint8_t usAspectTo );
+		void		SwitchExtraSignalsOn( void );
+		void		SwitchExtraSignalsOff( void );
 		void		ProcessTransitionMain( void );
 		void		ProcessTransitionApproach( void );
 		void		ProcessStateMachine( void );

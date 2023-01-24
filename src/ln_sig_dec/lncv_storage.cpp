@@ -197,19 +197,22 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		WriteLNCV( LNCV_ADR_DARK_TIME,					 200 );
 		WriteLNCV( LNCV_ADR_FLASH_TIME,					  50 );
 		WriteLNCV( LNCV_ADR_ERSATZ_SIGNAL_FLASH_TIME,	1000 );
+		WriteLNCV( LNCV_ADR_ERSATZ_SIGNAL_OFF_TIME,		  90 );
 
 		//----------------------------------------------------------
 		//	... and default light intensities
 		//		and address values into EEPROM
 		//
 #ifdef WRITE_TEST_VALUES
-		WriteLNCV( LNCV_ADR_NIGHTLIGHT,		1150 );
-		WriteLNCV( LNCV_ADR_TRACK_CONTACT,	1160 );
+		WriteLNCV( LNCV_ADR_ERSATZ_SIGNAL_FLASH, 1150 );
+		WriteLNCV( LNCV_ADR_APPROACH_DARK,		 1160 );
+		WriteLNCV( LNCV_ADR_NIGHTLIGHT,			 1170 );
+		WriteLNCV( LNCV_ADR_TRACK_CONTACT,		 1180 );
 #else
+		WriteLNCV( LNCV_ADR_ERSATZ_SIGNAL_FLASH, 0 );
+		WriteLNCV( LNCV_ADR_APPROACH_DARK,		 0 );
 		WriteLNCV( LNCV_ADR_NIGHTLIGHT,			 0 );
 		WriteLNCV( LNCV_ADR_TRACK_CONTACT,		 0 );
-		WriteLNCV( LNCV_ADR_APPROACH_DARK,		 0 );
-		WriteLNCV( LNCV_ADR_ERSATZ_SIGNAL_FLASH, 0 );
 #endif
 
 		for( idx = 0 ; idx < NUMBER_LIGHTS ; idx++ )
@@ -226,7 +229,7 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		//----------------------------------------------------------
 		//	Clear all spare LNCVs
 		//
-		for( idx = LNCV_ADR_ERSATZ_SIGNAL_FLASH + 1 ; idx <= LNCV_ADR_LAST_VALID ; idx++ )
+		for( idx = LNCV_ADR_TRACK_CONTACT + 1 ; idx <= LNCV_ADR_LAST_VALID ; idx++ )
 		{
 			WriteLNCV( idx, 0 );
 		}
@@ -242,9 +245,6 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 //**********************************************************************
 //	Init
 //----------------------------------------------------------------------
-//	This function will read the saved
-//		-	configuration information
-//	from the EEPROM.
 //
 void LncvStorageClass::Init( void )
 {

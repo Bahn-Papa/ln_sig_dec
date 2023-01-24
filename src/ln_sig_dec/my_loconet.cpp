@@ -308,13 +308,6 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 					//
 					switch( idx )
 					{
-						case LED_MAIN_ZUSATZANZEIGER:
-						case LED_ERSATZSIGNAL:
-						case LED_APPROACH_KENNLICHT:
-						case LED_APPROACH_ZUSATZANZEIGER:
-							SetExtraSignal( idx, bIsGreen );
-							break;
-
 						case IDX_SIGNAL_MAIN_BIT_0:
 						case IDX_SIGNAL_MAIN_BIT_1:
 						case IDX_SIGNAL_MAIN_BIT_2:
@@ -331,8 +324,23 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 											 (1 << (idx - IDX_SIGNAL_APPROACH_BIT_0)) );
 							break;
 
+						case LED_MAIN_ZUSATZANZEIGER:
+						case LED_ERSATZSIGNAL:
+						case LED_APPROACH_KENNLICHT:
+						case LED_APPROACH_ZUSATZANZEIGER:
+							SetExtraSignal( idx, bIsGreen );
+							break;
+
 						case IDX_NIGHTLIGHT:
 							g_clControl.SetNightLight( bIsGreen );
+							break;
+
+						case IDX_APPROACH_DARK:
+							g_clControl.SetApproachDark( bIsGreen );
+							break;
+
+						case IDX_ERSATZ_SIGNAL_FLASH:
+							g_clControl.SetErsatzSignalFlash( bIsGreen );
 							break;
 
 						case IDX_TRACK_CONTACT:
@@ -437,7 +445,7 @@ void MyLoconetClass::SetExtraSignal( uint8_t usLED, bool bIsGreen )
 		//	there is no signal aspect pending,
 		//	so handle extra signal direct
 		//
-		g_clControl.HandleLed( idx, bIsGreen )
+		g_clControl.HandleLed( usLED, bIsGreen );
 	}
 	else if( bIsGreen )
 	{

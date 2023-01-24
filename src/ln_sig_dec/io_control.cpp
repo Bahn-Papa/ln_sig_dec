@@ -418,12 +418,13 @@ void IO_ControlClass::Init( void )
 	m_uiFadeTimeUp					= 0;
 	m_uiFadeTimeDown				= 0;
 	m_usSignalAspectMain			= SIGNAL_ASPECT_HP0;
-	m_usSignalAspectMainBuffer		= SIGNAL_ASPECT_HP0;
 	m_usSignalAspectApproach		= SIGNAL_ASPECT_HP0;
-	m_usSignalAspectApproachBuffer	= SIGNAL_ASPECT_HP0;
+	m_usExtraSignals				= 0x00;
 	m_usState						= STATE_APPROACH_OFF;
 	m_usOldState					= m_usState;
 	m_bNightLight					= false;
+	m_bApproachDark					= false;
+	m_bErsatzSignalFlash			= false;
 	m_bApproachSignalPresent		= false;
 	m_bTransitionActiveMain			= false;
 	m_bTransitionActiveApproach		= false;
@@ -431,8 +432,9 @@ void IO_ControlClass::Init( void )
 
 	m_bContactOccupied				= false;
 
-	m_usDarkTime	= g_clLncvStorage.ReadLNCV( LNCV_ADR_DARK_TIME );
-	m_usFlashTime	= g_clLncvStorage.ReadLNCV( LNCV_ADR_FLASH_TIME );
+	m_usDarkTime				= g_clLncvStorage.ReadLNCV( LNCV_ADR_DARK_TIME );
+	m_usFlashTime				= g_clLncvStorage.ReadLNCV( LNCV_ADR_FLASH_TIME );
+	m_usErsatzSignalFlashTime	= g_clLncvStorage.ReadLNCV( LNCV_ADR_ERSATZ_SIGNAL_FLASH_TIME );
 
 	bIsASig = SetSignalType();
 
@@ -452,6 +454,22 @@ void IO_ControlClass::Init( void )
 	{
 		m_bApproachSignalPresent = true;
 	}
+
+	//----------------------------------------------------------
+	//	hello flash
+	//
+	SwitchLed( LED_GREEN, true  );
+	delay( 300 );
+	SwitchLed( LED_GREEN, false );
+	SwitchLed( LED_BLUE,  true  );
+	delay( 300 );
+	SwitchLed( LED_BLUE,  false );
+	SwitchLed( LED_GREEN, true  );
+	delay( 300 );
+	SwitchLed( LED_GREEN, false );
+	SwitchLed( LED_BLUE,  true  );
+	delay( 300 );
+	SwitchLed( LED_BLUE,  false );
 
 	delay( 100 );
 
@@ -643,9 +661,9 @@ void IO_ControlClass::HandleLed( uint8_t usLedNo, bool bOn )
 //	HandleSignalAspectMain
 //------------------------------------------------------------------
 //
-void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect )
+void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect, uint8_t usExtraSignals )
 {
-	if( SIGNAL_ASPECTS > usSignalAspect )
+	if( !m_bTransitionActiveMain && (SIGNAL_ASPECTS > usSignalAspect) )
 	{
 		//------------------------------------------------------
 		//	first check if the new transition is allowed
@@ -657,24 +675,15 @@ void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect )
 			||	((SIGNAL_ASPECT_HP0 != m_usSignalAspectMain) && (SIGNAL_ASPECT_HP0 == usSignalAspect)) )
 		{
 			//--------------------------------------------------
-			//	store new signal aspect in a buffer just in
-			//	case a signal aspect transition is active
-			//
-			if( m_usSignalAspectMainBuffer != usSignalAspect )
-			{
-				m_usSignalAspectMainBuffer = usSignalAspect;
-			}
-			
-			//--------------------------------------------------
-			//	if no signal aspect transition is active then
+			//	if we get a new signal aspect then
 			//		start the transition
 			//		store new signal aspect
 			//
-			if(		!m_bTransitionActiveMain
-				&&	(m_usSignalAspectMain != usSignalAspect) )
+			if( m_usSignalAspectMain != usSignalAspect )
 			{
 				m_pusStepMain			= GetFirstStepMain( m_usSignalAspectMain, usSignalAspect );
 				m_usSignalAspectMain	= usSignalAspect;
+				m_usExtraSignals		= usExtraSignals;
 				m_bTransitionActiveMain	= true;
 
 				SwitchLed( LED_GREEN, true );
@@ -688,9 +697,11 @@ void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect )
 //	HandleSignalAspectApproach
 //------------------------------------------------------------------
 //
-void IO_ControlClass::HandleSignalAspectApproach( uint8_t usSignalAspect )
+void IO_ControlClass::HandleSignalAspectApproach( uint8_t usSignalAspect, uint8_t usExtraSignals )
 {
-	if( m_bApproachSignalPresent && (SIGNAL_ASPECTS > usSignalAspect) )
+	if(		m_bApproachSignalPresent
+		&& !m_bTransitionActiveApproach
+		&& (SIGNAL_ASPECTS > usSignalAspect) )
 	{
 		//------------------------------------------------------
 		//	first check if the new transition is allowed
@@ -707,31 +718,22 @@ void IO_ControlClass::HandleSignalAspectApproach( uint8_t usSignalAspect )
 				//	the approach signal is switched OFF
 				//	so just set the new signal aspect
 				//
-				m_usSignalAspectApproach		= usSignalAspect;
-				m_usSignalAspectApproachBuffer	= usSignalAspect;
+				m_usSignalAspectApproach	= usSignalAspect;
+				m_usExtraSignals			= usExtraSignals;
 			}
 			else
 			{
 				//--------------------------------------------------
-				//	store new signal aspect in a buffer just in
-				//	case a signal aspect transition is active
-				//
-				if( m_usSignalAspectApproachBuffer != usSignalAspect )
-				{
-					m_usSignalAspectApproachBuffer = usSignalAspect;
-				}
-				
-				//--------------------------------------------------
-				//	if no signal aspect transition is active then
+				//	if we got a new signal aspect then
 				//		start the transition
 				//		store new signal aspect
 				//
-				if(		!m_bTransitionActiveApproach
-					&&	(m_usSignalAspectApproach != usSignalAspect) )
+				if( m_usSignalAspectApproach != usSignalAspect )
 				{
 					StartAspectTransitionApproach( m_usSignalAspectApproach, usSignalAspect );
 
-					m_usSignalAspectApproach = usSignalAspect;
+					m_usSignalAspectApproach	= usSignalAspect;
+					m_usExtraSignals			= usExtraSignals;
 				}
 			}
 		}
@@ -1049,6 +1051,41 @@ uint8_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usToA
 
 
 //******************************************************************
+//	SwitchExtraSignalsOn
+//------------------------------------------------------------------
+//	This function will switch on the selected Extra signals
+//
+void IO_ControlClass::SwitchExtraSignalsOn( void )
+{
+	uint8_t		usMask = 0x01;
+	
+	for( uint8_t idx = 0 ; EXTRA_SIGNAL_COUNT > idx ; idx++ )
+	{
+		if( m_usExtraSignals & usMask )
+		{
+			HandleLed( g_arLedIndex[ idx ], true );
+		}
+
+		usMask <<= 1;
+	}
+}
+
+
+//******************************************************************
+//	SwitchExtraSignalsOff
+//------------------------------------------------------------------
+//	This function will switch off all Extra signals
+//
+void IO_ControlClass::SwitchExtraSignalsOff( void )
+{
+	for( uint8_t idx = 0 ; EXTRA_SIGNAL_COUNT > idx ; idx++ )
+	{
+		HandleLed( g_arLedIndex[ idx ], false );
+	}
+}
+
+
+//******************************************************************
 //	ProcessTransitionMain
 //------------------------------------------------------------------
 //	This function will process the steps of
@@ -1081,15 +1118,6 @@ void IO_ControlClass::ProcessTransitionMain( void )
 					m_bTransitionActiveMain = false;
 
 					SwitchLed( LED_GREEN, false );
-
-					//--------------------------------------------------
-					//	check if we got a new signal aspect in between
-					//	if so, start a new transition
-					//
-					if( m_usSignalAspectMain != m_usSignalAspectMainBuffer )
-					{
-						HandleSignalAspectMain( m_usSignalAspectMainBuffer );
-					}
 					break;
 
 				case SEQUENCE_PAUSE:
@@ -1103,7 +1131,9 @@ void IO_ControlClass::ProcessTransitionMain( void )
 					//--------------------------------------------------
 					//	the approach signal should be switched ON
 					//
-					if( m_bApproachSignalPresent && (STATE_APPROACH_OFF == m_usState) )
+					if(		m_bApproachSignalPresent
+						&& !m_bApproachDark
+						&& (STATE_APPROACH_OFF == m_usState) )
 					{
 						m_usState				= STATE_SWITCH_ON_LOWER;
 						m_bStateMachineActive	= true;
@@ -1115,7 +1145,9 @@ void IO_ControlClass::ProcessTransitionMain( void )
 					//	check if the approach signal should show
 					//	a signal aspect
 					//
-					if( m_bApproachSignalPresent && (STATE_APPROACH_ON == m_usState) )
+					if(		m_bApproachSignalPresent
+						&& !m_bApproachDark
+						&& (STATE_APPROACH_ON == m_usState) )
 					{
 						if( SIGNAL_ASPECT_HP0 != m_usSignalAspectApproach )
 						{
@@ -1128,7 +1160,9 @@ void IO_ControlClass::ProcessTransitionMain( void )
 					//--------------------------------------------------
 					//	check if the approach signal should show Hp0
 					//
-					if( m_bApproachSignalPresent && (STATE_APPROACH_ON == m_usState) )
+					if(		m_bApproachSignalPresent
+						&& !m_bApproachDark
+						&& (STATE_APPROACH_ON == m_usState) )
 					{
 						if( SIGNAL_ASPECT_HP0 != m_usSignalAspectApproach )
 						{
@@ -1141,11 +1175,23 @@ void IO_ControlClass::ProcessTransitionMain( void )
 					//--------------------------------------------------
 					//	the approach signal should be switched OFF
 					//
-					if( m_bApproachSignalPresent && (STATE_APPROACH_ON == m_usState) )
+					if(		m_bApproachSignalPresent
+						&& !m_bApproachDark
+						&& (STATE_APPROACH_ON == m_usState) )
 					{
 						m_usState				= STATE_SWITCH_OFF_UPPER;
 						m_bStateMachineActive	= true;
 					}
+
+					m_bApproachDark = false;
+					break;
+
+				case SEQUENCE_ADDITION_SIGNAL_ON:
+					SwitchExtraSignalsOn();
+					break;
+
+				case SEQUENCE_ADDITION_SIGNAL_OFF:
+					SwitchExtraSignalsOff();
 					break;
 			}
 		}
@@ -1220,34 +1266,39 @@ void IO_ControlClass::ProcessTransitionApproach( void )
 
 		if( SG_CONTROL_WORDS == usControlGroup )
 		{
-			if( SEQUENCE_END == usAspect )
+			switch( usAspect )
 			{
-				//--------------------------------------------------
-				//	the end of the sequence is reached
-				//	so stop the transition
-				//
-				m_bTransitionActiveApproach = false;
+				case SEQUENCE_END:
+					//----------------------------------------------
+					//	the end of the sequence is reached
+					//	so stop the transition
+					//
+					m_bTransitionActiveApproach = false;
 
-				if( !m_bTransitionActiveMain )
-				{
-					SwitchLed( LED_GREEN, false );
-				}
+					if( !m_bTransitionActiveMain )
+					{
+						SwitchLed( LED_GREEN, false );
+					}
+					break;
 
-				//--------------------------------------------------
-				//	check if we got a new signal aspect in between
-				//	if so, start a new transition
-				//
-				if( m_usSignalAspectApproach != m_usSignalAspectApproachBuffer )
-				{
-					StartAspectTransitionApproach( m_usSignalAspectApproach, m_usSignalAspectApproachBuffer );
-				}
-			}
-			else if( SEQUENCE_PAUSE == usAspect )
-			{
-				//--------------------------------------------------
-				//	make a pause in the sequence
-				//
-				m_ulPauseTimer = millis() + m_usDarkTime;
+				case SEQUENCE_PAUSE:
+					//--------------------------------------------------
+					//	make a pause in the sequence
+					//
+					m_ulPauseTimer = millis() + m_usDarkTime;
+					break;
+
+				case SEQUENCE_ADDITION_SIGNAL_ON:
+					SwitchExtraSignalsOn();
+					break;
+
+				case SEQUENCE_ADDITION_SIGNAL_OFF:
+					SwitchExtraSignalsOff();
+					break;
+
+				default:
+					//	do nothing
+					break;
 			}
 		}
 		else
