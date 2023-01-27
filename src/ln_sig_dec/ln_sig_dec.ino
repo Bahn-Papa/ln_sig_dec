@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		4
-#define VERSION_BUGFIX		8
+#define VERSION_BUGFIX		9
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,13 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.04.09		from: 27.01.2023
+//#
+//#	Implementation:
+//#		-	add flashing of Ersatzsignal
 //#
 //#-------------------------------------------------------------------------
 //#

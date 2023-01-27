@@ -35,9 +35,9 @@
 //#			change variables
 //#				from				to
 //#				m_ulDarkTimer		m_ulPauseTimer
-//#				m_ulDarkTime		m_usDarkTime
+//#				m_ulDarkTime		m_uiDarkTime
 //#			new variable
-//#				m_usFlashTime
+//#				m_uiFlashTime
 //#			changes in functions
 //#				Init()
 //#				ProcessTransitionMain()
@@ -241,11 +241,11 @@
 #define SIGNAL_MAIN_LEDS			0x007E
 #define SIGNAL_APPROACH_LEDS		0x1E00
 
-#define MAIN_LEDS_IDX_START			1
+#define MAIN_LEDS_IDX_START			IDX_SIGNAL_MAIN_BIT_0
 #define MAIN_LEDS_IDX_COUNT			6
 #define MAIN_LEDS_IDX_STOP			(MAIN_LEDS_IDX_START + MAIN_LEDS_IDX_COUNT)
 
-#define APPROACH_LEDS_IDX_START		9
+#define APPROACH_LEDS_IDX_START		IDX_SIGNAL_APPROACH_BIT_0
 #define APPROACH_LEDS_IDX_COUNT		4
 #define APPROACH_LEDS_IDX_STOP		(APPROACH_LEDS_IDX_START + APPROACH_LEDS_IDX_COUNT)
 
@@ -281,6 +281,8 @@
 //
 #define PWM_CYCLE_TIME			20400
 #define PWM_STEP_TIME			(PWM_CYCLE_TIME / 255)
+
+#define FLASH_COUNTER_TIME		1000
 
 //----------------------------------------------------------------------
 //	Light intensity masks
@@ -363,8 +365,14 @@ uint8_t		g_arLedIndex[] =
 		LED_MAIN_ZUSATZANZEIGER,
 		LED_ERSATZSIGNAL,
 		LED_APPROACH_KENNLICHT,
-		LED_APPROACH_ZUSATZANZEIGER
+		LED_APPROACH_ZUSATZANZEIGER,
+		LED_ERSATZSIGNAL_FLASH
 	};
+
+//----------------------------------------------------------------------
+//	timer for one second
+//
+uint32_t	g_ulTimerTick;
 
 
 //==========================================================================
@@ -413,6 +421,8 @@ void IO_ControlClass::Init( void )
 	m_ulCycleStepTime				= 0L;
 	m_ulContactTime					= 0L;
 	m_ulPauseTimer					= 0L;
+	m_ulErsatzSignalFlashTimer		= 0L;
+	m_uiErsatzSignalOffTimer		= 0;
 	m_uiLedsOn						= 0x0000;
 	m_uiFadeActive					= 0x0000;
 	m_uiFadeTimeUp					= 0;
@@ -432,9 +442,9 @@ void IO_ControlClass::Init( void )
 
 	m_bContactOccupied				= false;
 
-	m_usDarkTime				= g_clLncvStorage.ReadLNCV( LNCV_ADR_DARK_TIME );
-	m_usFlashTime				= g_clLncvStorage.ReadLNCV( LNCV_ADR_FLASH_TIME );
-	m_usErsatzSignalFlashTime	= g_clLncvStorage.ReadLNCV( LNCV_ADR_ERSATZ_SIGNAL_FLASH_TIME );
+	m_uiDarkTime				= g_clLncvStorage.ReadLNCV( LNCV_ADR_DARK_TIME );
+	m_uiFlashTime				= g_clLncvStorage.ReadLNCV( LNCV_ADR_FLASH_TIME );
+	m_uiErsatzSignalFlashTime	= g_clLncvStorage.ReadLNCV( LNCV_ADR_ERSATZ_SIGNAL_FLASH_TIME );
 
 	bIsASig = SetSignalType();
 
@@ -533,6 +543,40 @@ void IO_ControlClass::Loop( void )
 	}
 
 	//----------------------------------------------------------
+	//	handle Ersatzsignal flashing
+	//
+	if( m_bErsatzSignalFlash )
+	{
+		if( millis() > m_ulErsatzSignalFlashTimer )
+		{
+			m_ulErsatzSignalFlashTimer = millis() + m_uiErsatzSignalFlashTime;
+			
+			if( m_uiLedsOn & (1 << LED_ERSATZSIGNAL) )
+			{
+				HandleLed( LED_ERSATZSIGNAL, false );
+			}
+			else
+			{
+				HandleLed( LED_ERSATZSIGNAL, true );
+			}
+		}
+	}
+
+	//----------------------------------------------------------
+	//	handle Ersatzsignal OFF Timer
+	//
+	if( (0 < g_ulTimerTick) && (millis() > g_ulTimerTick) )
+	{
+		g_ulTimerTick += FLASH_COUNTER_TIME;
+		m_uiErsatzSignalOffTimer--;
+
+		if( 0 == m_uiErsatzSignalOffTimer )
+		{
+			SetErsatzSignalFlash( false );
+		}
+	}
+
+	//----------------------------------------------------------
 	//	handle state machine and transitions
 	//
 
@@ -594,6 +638,28 @@ void IO_ControlClass::SetNightLight( bool bOn )
 
 
 //******************************************************************
+//	SetErsatzSignalFlash
+//------------------------------------------------------------------
+//
+void IO_ControlClass::SetErsatzSignalFlash( bool bOn )
+{
+	if( bOn )
+	{
+		m_ulErsatzSignalFlashTimer	= millis() + m_uiErsatzSignalFlashTime;
+	}
+	else
+	{
+		m_ulErsatzSignalFlashTimer	= 0L;
+		m_uiErsatzSignalOffTimer	= 0;
+	}
+
+	HandleLed( LED_ERSATZSIGNAL, bOn );
+
+	m_bErsatzSignalFlash = bOn;
+}
+
+
+//******************************************************************
 //	HandleLed
 //------------------------------------------------------------------
 //
@@ -618,6 +684,12 @@ void IO_ControlClass::HandleLed( uint8_t usLedNo, bool bOn )
 			if( IsWordBitClear( m_uiLedsOn, usLedNo ) )
 			{
 				SetWordBit( m_uiLedsOn, usLedNo );
+
+				if( (LED_ERSATZSIGNAL == usLedNo) && !m_bErsatzSignalFlash )
+				{
+					m_uiErsatzSignalOffTimer	= g_clLncvStorage.ReadLNCV( LNCV_ADR_ERSATZ_SIGNAL_OFF_TIME );
+					g_ulTimerTick				= millis() + FLASH_COUNTER_TIME;
+				}
 
 				pChannel->m_fTarget = (float)PWM_STEP_TIME * usBrightness;
 
@@ -1057,13 +1129,23 @@ uint8_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usToA
 //
 void IO_ControlClass::SwitchExtraSignalsOn( void )
 {
-	uint8_t		usMask = 0x01;
-	
+	uint8_t		usMask	= 0x01;
+	uint8_t		usLedNo;
+
 	for( uint8_t idx = 0 ; EXTRA_SIGNAL_COUNT > idx ; idx++ )
 	{
 		if( m_usExtraSignals & usMask )
 		{
-			HandleLed( g_arLedIndex[ idx ], true );
+			usLedNo = g_arLedIndex[ idx ];
+
+			if( LED_ERSATZSIGNAL_FLASH == usLedNo )
+			{
+				SetErsatzSignalFlash( true );
+			}
+			else
+			{
+				HandleLed( usLedNo, true );
+			}
 		}
 
 		usMask <<= 1;
@@ -1078,7 +1160,9 @@ void IO_ControlClass::SwitchExtraSignalsOn( void )
 //
 void IO_ControlClass::SwitchExtraSignalsOff( void )
 {
-	for( uint8_t idx = 0 ; EXTRA_SIGNAL_COUNT > idx ; idx++ )
+	SetErsatzSignalFlash( false );
+
+	for( uint8_t idx = 0 ; EXTRA_SIGNAL_ERSATZSIGNAL_FLASH > idx ; idx++ )
 	{
 		HandleLed( g_arLedIndex[ idx ], false );
 	}
@@ -1124,7 +1208,7 @@ void IO_ControlClass::ProcessTransitionMain( void )
 					//--------------------------------------------------
 					//	make a pause in the sequence
 					//
-					m_ulPauseTimer = millis() + m_usDarkTime;
+					m_ulPauseTimer = millis() + m_uiDarkTime;
 					break;
 
 				case SEQUENCE_APPROACH_ON:
@@ -1213,7 +1297,7 @@ void IO_ControlClass::ProcessTransitionMain( void )
 						if( SG_FLASHING_LEDS == usControlGroup )
 						{
 							SwitchLed( idx, true );
-							m_ulPauseTimer = millis() + m_usFlashTime;
+							m_ulPauseTimer = millis() + m_uiFlashTime;
 						}
 						else
 						{
@@ -1225,7 +1309,7 @@ void IO_ControlClass::ProcessTransitionMain( void )
 						if( SG_FLASHING_LEDS == usControlGroup )
 						{
 							SwitchLed( idx, false );
-							m_ulPauseTimer = millis() + m_usFlashTime;
+							m_ulPauseTimer = millis() + m_uiFlashTime;
 						}
 						else
 						{
@@ -1285,7 +1369,7 @@ void IO_ControlClass::ProcessTransitionApproach( void )
 					//--------------------------------------------------
 					//	make a pause in the sequence
 					//
-					m_ulPauseTimer = millis() + m_usDarkTime;
+					m_ulPauseTimer = millis() + m_uiDarkTime;
 					break;
 
 				case SEQUENCE_ADDITION_SIGNAL_ON:
@@ -1319,7 +1403,7 @@ void IO_ControlClass::ProcessTransitionApproach( void )
 						if( SG_FLASHING_LEDS == usControlGroup )
 						{
 							SwitchLed( idx, true );
-							m_ulPauseTimer = millis() + m_usFlashTime;
+							m_ulPauseTimer = millis() + m_uiFlashTime;
 						}
 						else
 						{
@@ -1331,7 +1415,7 @@ void IO_ControlClass::ProcessTransitionApproach( void )
 						if( SG_FLASHING_LEDS == usControlGroup )
 						{
 							SwitchLed( idx, false );
-							m_ulPauseTimer = millis() + m_usFlashTime;
+							m_ulPauseTimer = millis() + m_uiFlashTime;
 						}
 						else
 						{

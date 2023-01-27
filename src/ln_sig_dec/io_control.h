@@ -22,9 +22,9 @@
 //#			change variables
 //#				from				to
 //#				m_ulDarkTimer		m_ulPauseTimer
-//#				m_ulDarkTime		m_usDarkTime
+//#				m_ulDarkTime		m_uiDarkTime
 //#			new variable
-//#				m_usFlashTime
+//#				m_uiFlashTime
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -183,16 +183,18 @@
 #define LED_APPROACH_GREEN_BOTTOM		LED_L
 #define LED_APPROACH_YELLOW_BOTTOM		LED_M
 #define LED_APPROACH_ZUSATZANZEIGER		LED_N
+#define LED_ERSATZSIGNAL_FLASH			(LED_N + 1)
 
 //----------------------------------------------------------------------
 //	extra signal numbers
 //
-#define EXTRA_SIGNAL_ZUSATZANZEIGE		0
-#define EXTRA_SIGNAL_ERSATZSIGNAL		1
-#define EXTRA_SIGNAL_KENNLICHT			2
-#define EXTRA_SIGNAL_ANZEIGE			3
+#define EXTRA_SIGNAL_ZUSATZANZEIGE			0
+#define EXTRA_SIGNAL_ERSATZSIGNAL			1
+#define EXTRA_SIGNAL_KENNLICHT				2
+#define EXTRA_SIGNAL_ANZEIGE				3
+#define EXTRA_SIGNAL_ERSATZSIGNAL_FLASH		4
 
-#define EXTRA_SIGNAL_COUNT				4
+#define EXTRA_SIGNAL_COUNT					5
 
 
 //==========================================================================
@@ -217,15 +219,11 @@ class IO_ControlClass
 		void Loop( void );
 
 		void SetNightLight( bool bNightLightOn );
+		void SetErsatzSignalFlash( bool bOn );
 
 		inline void SetApproachDark( bool bDark )
 		{
 			m_bApproachDark = bDark;
-		}
-
-		inline void SetErsatzSignalFlash( bool bOn )
-		{
-			m_bErsatzSignalFlash = bOn;
 		}
 
 		void HandleLed( uint8_t usLedNo, bool bOn );
@@ -252,10 +250,11 @@ class IO_ControlClass
 		uint32_t	m_ulCycleStepTime;
 		uint32_t	m_ulContactTime;
 		uint32_t	m_ulPauseTimer;
-		uint32_t	m_ulErsatzSignalTimer;
-		uint16_t	m_usDarkTime;
-		uint16_t	m_usFlashTime;
-		uint16_t	m_usErsatzSignalFlashTime;
+		uint32_t	m_ulErsatzSignalFlashTimer;
+		uint16_t	m_uiErsatzSignalOffTimer;
+		uint16_t	m_uiDarkTime;
+		uint16_t	m_uiFlashTime;
+		uint16_t	m_uiErsatzSignalFlashTime;
 		uint16_t	m_uiLedsOn;
 		uint16_t	m_uiFadeTimeUp;
 		uint16_t	m_uiFadeTimeDown;
