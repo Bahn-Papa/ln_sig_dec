@@ -10,6 +10,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	5		from: 01.02.2023
+//#
+//#	Bug Fix:
+//#		-	could not switch off signal aspect
+//#			change in function
+//#				AddSignalAspect()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	4		from: 20.01.2023
 //#
 //#	Implementation:
@@ -115,7 +124,7 @@ class MyLoconetClass
 		bool		m_bIsProgMode;
 
 		void SetDeviceInfo( uint8_t idx, uint16_t uiInfo );
-		void AddSignalAspect( uint8_t usSelected, uint8_t usAspectMask );
+		void AddSignalAspect( uint8_t usSelected, bool bIsGreen, uint8_t usAspectMask );
 		void SetExtraSignal( uint8_t usLED, bool bIsGreen );
 		void SetSelectedSignalAspect( void );
 };

@@ -7,6 +7,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	10		from: 01.02.2023
+//#
+//#	Bug Fix:
+//#		-	could not switch off signal aspect
+//#			change in function
+//#				AddSignalAspect()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	9		from: 20.01.2023
 //#
 //#	Implementation:
@@ -286,7 +295,7 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 				//--------------------------------------------------
 				//	Check if 'dir' should be inverted
 				//
-				if( pDevice->m_bFlags & DEVICE_IS_INVERT )
+				if( 0 == (pDevice->m_bFlags & DEVICE_IS_INVERT) )
 				{
 					bIsGreen = !bIsGreen;
 				}
@@ -312,7 +321,7 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 						case IDX_SIGNAL_MAIN_BIT_1:
 						case IDX_SIGNAL_MAIN_BIT_2:
 						case IDX_SIGNAL_MAIN_BIT_3:
-							AddSignalAspect( SIGNAL_SELECTED_MAIN,
+							AddSignalAspect( SIGNAL_SELECTED_MAIN, bIsGreen,
 											 (1 << (idx - IDX_SIGNAL_MAIN_BIT_0)) );
 							break;
 
@@ -320,7 +329,7 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 						case IDX_SIGNAL_APPROACH_BIT_1:
 						case IDX_SIGNAL_APPROACH_BIT_2:
 						case IDX_SIGNAL_APPROACH_BIT_3:
-							AddSignalAspect( SIGNAL_SELECTED_APPROACH,
+							AddSignalAspect( SIGNAL_SELECTED_APPROACH, bIsGreen,
 											 (1 << (idx - IDX_SIGNAL_APPROACH_BIT_0)) );
 							break;
 
@@ -385,13 +394,12 @@ void MyLoconetClass::SendTrackContactMessage( bool bOccupied )
 //
 void MyLoconetClass::SetDeviceInfo( uint8_t idx, uint16_t uiInfo )
 {
-	uint16_t	helper	= uiInfo;
-	uint16_t	address	= helper / 10;
+	uint16_t	address	= uiInfo / 10;
 
-	helper -= (address * 10);
+	uiInfo -= (address * 10);
 
 	m_arDevices[ idx ].m_uiAddress	= address;
-	m_arDevices[ idx ].m_bFlags		= (uint8_t)helper;
+	m_arDevices[ idx ].m_bFlags		= (uint8_t)uiInfo;
 }
 
 
@@ -399,7 +407,7 @@ void MyLoconetClass::SetDeviceInfo( uint8_t idx, uint16_t uiInfo )
 //	AddSignalAspect
 //----------------------------------------------------------------------
 //
-void MyLoconetClass::AddSignalAspect( uint8_t usSelected, uint8_t usAspectMask )
+void MyLoconetClass::AddSignalAspect( uint8_t usSelected, bool bIsGreen, uint8_t usAspectMask )
 {
 	if( 0 < m_usSignalSelected )
 	{
@@ -421,7 +429,10 @@ void MyLoconetClass::AddSignalAspect( uint8_t usSelected, uint8_t usAspectMask )
 	//----------------------------------------------------------
 	//	'add' the bit for the signal aspect
 	//
-	m_usSignalAspect	|= usAspectMask;
+	if( bIsGreen )
+	{
+		m_usSignalAspect	|= usAspectMask;
+	}
 
 	m_usSignalSelected	 = usSelected;
 	m_ulTimer			 = millis() + m_uiSignalValidWaitTime;
