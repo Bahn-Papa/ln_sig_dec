@@ -15,6 +15,21 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	9		from: 02.02.2023
+//#
+//#	Implementation:
+//#		-	change the way of processing the sequences
+//#			now you can:
+//#				wait for fade finished
+//#				pause for dark time
+//#				pause for flash time
+//#				pause for time in the next sequence byte * 10
+//#			with this it is possible to overlap fades
+//#			new variable
+//#				m_bWaitForFadeFinished
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	8		from: 18.01.2023
 //#
 //#	Implementation:
@@ -274,6 +289,7 @@ class IO_ControlClass
 		bool		m_bTransitionActiveApproach;
 		bool		m_bStateMachineActive;
 		bool		m_bContactOccupied;
+		bool		m_bWaitForFadeFinished;
 
 		bool		SetSignalType( void );
 		void		CalculateFadeRates( void );

@@ -15,8 +15,8 @@
 #include "compile_options.h"
 
 #define VERSION_MAIN		PLATINE_VERSION
-#define	VERSION_MINOR		4
-#define VERSION_BUGFIX		10
+#define	VERSION_MINOR		5
+#define VERSION_BUGFIX		0
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,13 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.05.00		from: 02.02.2023
+//#
+//#	Implementation:
+//#		-	new possibilities in the sequences
 //#
 //#-------------------------------------------------------------------------
 //#
