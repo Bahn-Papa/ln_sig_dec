@@ -28,6 +28,18 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	16		from: 07.02.2023
+//#
+//#	Implementation:
+//#		-	update the handling of Ersatzsignal flash and
+//#			extra signals ON/OFF
+//#			change in functions
+//#				Loop()
+//#				SwitchExtraSignalsOn()
+//#				SwitchExtraSignalsOff()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	15		from: 02.02.2023
 //#
 //#	Implementation:
@@ -571,15 +583,18 @@ void IO_ControlClass::Loop( void )
 	{
 		if( millis() > m_ulErsatzSignalFlashTimer )
 		{
-			m_ulErsatzSignalFlashTimer = millis() + m_uiErsatzSignalFlashTime;
-			
-			if( m_uiLedsOn & (1 << LED_ERSATZSIGNAL) )
+			if( IsFadeFinished( LED_ERSATZSIGNAL ) )
 			{
-				HandleLed( LED_ERSATZSIGNAL, false );
-			}
-			else
-			{
-				HandleLed( LED_ERSATZSIGNAL, true );
+				m_ulErsatzSignalFlashTimer = millis() + m_uiErsatzSignalFlashTime;
+				
+				if( m_uiLedsOn & (1 << LED_ERSATZSIGNAL) )
+				{
+					HandleLed( LED_ERSATZSIGNAL, false );
+				}
+				else
+				{
+					HandleLed( LED_ERSATZSIGNAL, true );
+				}
 			}
 		}
 	}
@@ -1179,6 +1194,8 @@ void IO_ControlClass::SwitchExtraSignalsOn( void )
 			{
 				HandleLed( usLedNo, true );
 			}
+
+			m_bWaitForFadeFinished = true;
 		}
 
 		usMask <<= 1;
@@ -1199,6 +1216,8 @@ void IO_ControlClass::SwitchExtraSignalsOff( void )
 	{
 		HandleLed( g_arLedIndex[ idx ], false );
 	}
+
+	m_bWaitForFadeFinished = true;
 }
 
 
