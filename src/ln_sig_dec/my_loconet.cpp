@@ -7,6 +7,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	11		from: 06.03.2023
+//#
+//#	Bug Fix:
+//#		-	problem after change of module address fixed
+//#			change in function
+//#				notifyLNCVwrite()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	10		from: 01.02.2023
 //#
 //#	Bug Fix:
@@ -673,6 +682,11 @@ int8_t notifyLNCVwrite( uint16_t ArtNr, uint16_t Address, uint16_t Value )
 				&&	(LNCV_ADR_ARTIKEL_NUMMER != Address) )
 			{
 				g_clLncvStorage.WriteLNCV( Address, Value );
+
+				if( LNCV_ADR_MODULE_ADDRESS == Address )
+				{
+					g_uiModuleAddress = Value;
+				}
 			}
 
 			retval = LNCV_LACK_OK;
