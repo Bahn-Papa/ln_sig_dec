@@ -28,6 +28,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	17		from: 16.03.2023
+//#
+//#	Bug Fix:
+//#		-	switching between night and day
+//#			change in function
+//#				SetNightLight()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	16		from: 07.02.2023
 //#
 //#	Implementation:
@@ -488,6 +497,9 @@ void IO_ControlClass::Init( void )
 
 		g_arChannel[ idx ].m_usBrightnessDay	= (uint8_t)((uiHelper & MASK_INTENSITY_DAY) >> 8);
 		g_arChannel[ idx ].m_usBrightnessNight	= (uint8_t)( uiHelper & MASK_INTENSITY_NIGHT);
+//		g_arChannel[ idx ].m_usBrightnessNight	= (uint8_t)(uiHelper);
+//		uiHelper >>= 8;
+//		g_arChannel[ idx ].m_usBrightnessDay	= (uint8_t)(uiHelper);
 		g_arChannel[ idx ].m_fTarget = 0.0;
 		g_arChannel[ idx ].m_fActual = 0.0;
 	}
@@ -671,16 +683,52 @@ void IO_ControlClass::SetNightLight( bool bOn )
 	if( m_bNightLight != bOn )
 	{
 		m_bNightLight = bOn;
-		
+
 		CalculateFadeRates();
 		
+		//------------------------------------------------------
+		//	set all LEDs that are on to the new light intensity
+		//
 		for( uint8_t idx = 0 ; SIGNAL_LEDS > idx ; idx++ )
 		{
-			if( 0.0 != g_arChannel[ idx ].m_fTarget )
+			if( IsWordBitSet( m_uiLedsOn, idx ) )
 			{
-				HandleLed( idx, true );
+				SwitchLed( idx, true );
 			}
 		}
+
+/*
+		if( bOn )
+		{
+			//--------------------------------------------------
+			//	switch from day to night
+			//
+			for( uint8_t idx = 0 ; SIGNAL_LEDS > idx ; idx++ )
+			{
+				if( IsWordBitSet( m_uiLedsOn, idx ) )
+				{
+					pChannel->m_fTarget = (float)PWM_STEP_TIME * pChannel->m_usBrightnessNight;
+				}
+			}
+
+			CalculateFadeRates();
+		}
+		else
+		{
+			//--------------------------------------------------
+			//	switch from night to day
+			//
+			CalculateFadeRates();
+			
+			for( uint8_t idx = 0 ; SIGNAL_LEDS > idx ; idx++ )
+			{
+				if( IsWordBitSet( m_uiLedsOn, idx ) )
+				{
+					pChannel->m_fTarget = (float)PWM_STEP_TIME * pChannel->m_usBrightnessDay;
+				}
+			}
+		}
+*/
 	}
 }
 
