@@ -15,6 +15,21 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	10		from: 17.03.2023
+//#
+//#	Implementation:
+//#		-	move definitions from 'lncv_storage.h' to here
+//#				-	signal selected
+//#				-	index for signal aspects
+//#		-	change the way a signal aspect change is called
+//#			new function
+//#				HandleSignalAspect()
+//#			move function from public to private
+//#				HandleSignalAspectMain()
+//#				HandleSignalAspectApproach()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	9		from: 02.02.2023
 //#
 //#	Implementation:
@@ -211,6 +226,39 @@
 
 #define EXTRA_SIGNAL_COUNT					5
 
+//----------------------------------------------------------------------
+//	selected signals
+//
+#define SIGNAL_SELECTED_MAIN		7
+#define SIGNAL_SELECTED_APPROACH	8
+
+#define SIGNAL_SELECTED_RANGIER_1	0
+#define SIGNAL_SELECTED_RANGIER_2	1
+#define SIGNAL_SELECTED_RANGIER_3	2
+#define SIGNAL_SELECTED_RANGIER_4	3
+
+//----------------------------------------------------------------------
+//	index for signal aspects
+//
+#define IDX_SIGNAL_MAIN_BIT_0			1
+#define IDX_SIGNAL_MAIN_BIT_1			2
+#define IDX_SIGNAL_MAIN_BIT_2			3
+#define IDX_SIGNAL_MAIN_BIT_3			4
+
+#define IDX_SIGNAL_APPROACH_BIT_0		9
+#define IDX_SIGNAL_APPROACH_BIT_1		10
+#define IDX_SIGNAL_APPROACH_BIT_2		11
+#define IDX_SIGNAL_APPROACH_BIT_3		12
+
+#define IDX_RANGIER_SIGNAL_1_BIT_0		0
+#define IDX_RANGIER_SIGNAL_1_BIT_1		1
+#define IDX_RANGIER_SIGNAL_2_BIT_0		2
+#define IDX_RANGIER_SIGNAL_2_BIT_1		3
+#define IDX_RANGIER_SIGNAL_3_BIT_0		4
+#define IDX_RANGIER_SIGNAL_3_BIT_1		5
+#define IDX_RANGIER_SIGNAL_4_BIT_0		6
+#define IDX_RANGIER_SIGNAL_4_BIT_1		7
+
 
 //==========================================================================
 //
@@ -242,8 +290,9 @@ class IO_ControlClass
 		}
 
 		void HandleLed( uint8_t usLedNo, bool bOn );
-		void HandleSignalAspectMain( uint8_t usSignalAspect, uint8_t usExtraSignals );
-		void HandleSignalAspectApproach( uint8_t usSignalAspect, uint8_t usExtraSignals );
+		void HandleSignalAspect(	uint8_t usSelectedSignal,
+									uint8_t usSignalAspect,
+									uint8_t usExtraSignals		);
 
 		void SwitchLed( uint8_t usLedNo, bool bOn );
 
@@ -293,6 +342,8 @@ class IO_ControlClass
 
 		bool		SetSignalType( void );
 		void		CalculateFadeRates( void );
+		void		HandleSignalAspectMain( uint8_t usSignalAspect, uint8_t usExtraSignals );
+		void		HandleSignalAspectApproach( uint8_t usSignalAspect, uint8_t usExtraSignals );
 		uint8_t *	GetFirstStepMain( uint8_t usFromAspect, uint8_t usToAspect );
 		void		StartAspectTransitionApproach( uint8_t usAspectFrom, uint8_t usAspectTo );
 		void		SwitchExtraSignalsOn( void );

@@ -28,6 +28,18 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	18		from: 17.03.2023
+//#
+//#	Implementation:
+//#		-	change the way a signal aspect change is called
+//#			new function
+//#				HandleSignalAspect()
+//#			move function from public to private
+//#				HandleSignalAspectMain()
+//#				HandleSignalAspectApproach()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	17		from: 16.03.2023
 //#
 //#	Bug Fix:
@@ -821,6 +833,30 @@ void IO_ControlClass::HandleLed( uint8_t usLedNo, bool bOn )
 				}
 			}
 		}
+	}
+}
+
+
+//******************************************************************
+//	HandleSignalAspect
+//------------------------------------------------------------------
+//
+void IO_ControlClass::HandleSignalAspect(	uint8_t usSelectedSignal,
+											uint8_t usSignalAspect,
+											uint8_t usExtraSignals		)
+{
+	switch( usSelectedSignal )
+	{
+		case SIGNAL_SELECTED_MAIN:
+			HandleSignalAspectMain( usSignalAspect, usExtraSignals );
+			break;
+
+		case SIGNAL_SELECTED_APPROACH:
+			HandleSignalAspectApproach( usSignalAspect, usExtraSignals );
+			break;
+
+		case SIGNAL_SELECTED_RANGIER_1:
+			break;
 	}
 }
 

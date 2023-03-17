@@ -7,6 +7,18 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	12		from: 17.03.2023
+//#
+//#	Implementation:
+//#		-	change the way a signal aspect change is called
+//#			change in function
+//#				SetSelectedSignalAspect()
+//#		-	add handling of rangier signals
+//#			change in function
+//#				LoconetReceived()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	11		from: 06.03.2023
 //#
 //#	Bug Fix:
@@ -136,9 +148,6 @@
 #define DIR_THROWN					0
 #define DIR_GREEN					1
 #define DIR_CLOSED					1
-
-#define SIGNAL_SELECTED_MAIN		1
-#define SIGNAL_SELECTED_APPROACH	2
 
 #define DEVICE_IS_INVERT			0x01
 #define DEVICE_IS_SENSOR			0x02
@@ -312,7 +321,47 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 				//--------------------------------------------------
 				//	proces message for ...
 				//
-				if( (NUMBER_LIGHTS > idx) && (SIGNAL_TYPE_59_A_SIG > m_usSignalType) )
+				if( SIGNAL_TYPE_FOUR_RANGIER_SIG == m_usSignalType )
+				{
+					//----------------------------------------------
+					//	... a signal aspect for a rangier signal
+					//
+					switch( idx )
+					{
+						case IDX_RANGIER_SIGNAL_1_BIT_0:
+							AddSignalAspect( SIGNAL_SELECTED_RANGIER_1, bIsGreen, 0x01 );
+							break;
+
+						case IDX_RANGIER_SIGNAL_1_BIT_1:
+							AddSignalAspect( SIGNAL_SELECTED_RANGIER_1, bIsGreen, 0x02 );
+							break;
+
+						case IDX_RANGIER_SIGNAL_2_BIT_0:
+							AddSignalAspect( SIGNAL_SELECTED_RANGIER_2, bIsGreen, 0x01 );
+							break;
+
+						case IDX_RANGIER_SIGNAL_2_BIT_1:
+							AddSignalAspect( SIGNAL_SELECTED_RANGIER_2, bIsGreen, 0x02 );
+							break;
+
+						case IDX_RANGIER_SIGNAL_3_BIT_0:
+							AddSignalAspect( SIGNAL_SELECTED_RANGIER_3, bIsGreen, 0x01 );
+							break;
+
+						case IDX_RANGIER_SIGNAL_3_BIT_1:
+							AddSignalAspect( SIGNAL_SELECTED_RANGIER_3, bIsGreen, 0x02 );
+							break;
+
+						case IDX_RANGIER_SIGNAL_4_BIT_0:
+							AddSignalAspect( SIGNAL_SELECTED_RANGIER_4, bIsGreen, 0x01 );
+							break;
+
+						case IDX_RANGIER_SIGNAL_4_BIT_1:
+							AddSignalAspect( SIGNAL_SELECTED_RANGIER_4, bIsGreen, 0x02 );
+							break;
+					}
+				}
+				else if( (NUMBER_LIGHTS > idx) && (SIGNAL_TYPE_59_A_SIG > m_usSignalType) )
 				{
 					//----------------------------------------------
 					//	... a direct controlled light device
@@ -322,7 +371,7 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 				else
 				{
 					//----------------------------------------------
-					//	... a signal aspects or other devices
+					//	... a signal aspect or other devices
 					//
 					switch( idx )
 					{
@@ -510,15 +559,9 @@ void MyLoconetClass::SetExtraSignal( uint8_t usLED, bool bIsGreen )
 //
 void MyLoconetClass::SetSelectedSignalAspect( void )
 {
-	if( SIGNAL_SELECTED_MAIN == m_usSignalSelected )
-	{
-		g_clControl.HandleSignalAspectMain( m_usSignalAspect, m_usExtraSignals );
-	}
-	else
-	{
-		g_clControl.HandleSignalAspectApproach( m_usSignalAspect, m_usExtraSignals );
-	}
-
+	g_clControl.HandleSignalAspect(	m_usSignalSelected,
+									m_usSignalAspect,
+									m_usExtraSignals	);
 	g_clControl.SwitchLed( LED_GREEN, false );
 
 	m_usSignalSelected	= 0;

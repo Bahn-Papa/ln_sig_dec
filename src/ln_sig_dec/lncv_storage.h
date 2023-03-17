@@ -10,6 +10,24 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	10		from: 17.03.2023
+//#
+//#	Implementation:
+//#		-	move definitions from here to 'lncv_storage.h'
+//#			-	signal selected
+//#			-	index for signal aspects
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File version:	9		from: 16.03.2023
+//#
+//#	Implementation:
+//#		-	new signal type: 4 rangier signals
+//#			new definition
+//#				SIGNAL_TYPE_FOUR_RANGIER_SIG
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	8		from: 18.01.2023
 //#
 //#	Implementation:
@@ -118,6 +136,7 @@
 #define SIGNAL_TYPE_COMPACT_E_SIG			9
 #define SIGNAL_TYPE_KS_A_SIG				10
 #define SIGNAL_TYPE_KS_E_SIG				11
+#define SIGNAL_TYPE_FOUR_RANGIER_SIG		12
 
 
 //----------------------------------------------------------------------
@@ -219,20 +238,6 @@
 //
 #define NUMBER_LIGHTS			14
 #define	DEVICE_COUNT			(NUMBER_LIGHTS + 4)
-
-
-//----------------------------------------------------------------------
-//	index for signal aspects
-//
-#define IDX_SIGNAL_MAIN_BIT_0			1
-#define IDX_SIGNAL_MAIN_BIT_1			2
-#define IDX_SIGNAL_MAIN_BIT_2			3
-#define IDX_SIGNAL_MAIN_BIT_3			4
-
-#define IDX_SIGNAL_APPROACH_BIT_0		9
-#define IDX_SIGNAL_APPROACH_BIT_1		10
-#define IDX_SIGNAL_APPROACH_BIT_2		11
-#define IDX_SIGNAL_APPROACH_BIT_3		12
 
 
 //----------------------------------------------------------------------
