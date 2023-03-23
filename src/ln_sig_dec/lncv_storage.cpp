@@ -11,6 +11,14 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	9		from: 23.03.2023
+//#
+//#	Implementation:
+//#		-	adapt test values
+//#		-	move flag WRITE_TEST_VALUES to compile_options.h
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	8		from: 18.01.2023
 //#
 //#	Implementation:
@@ -109,6 +117,7 @@
 #include <Arduino.h>
 
 #include "lncv_storage.h"
+#include "compile_options.h"
 
 
 //==========================================================================
@@ -116,8 +125,6 @@
 //		D E F I N I T I O N S
 //
 //==========================================================================
-
-//#define WRITE_TEST_VALUES		1
 
 
 //==========================================================================
@@ -172,8 +179,8 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 
 #ifdef WRITE_TEST_VALUES
 		WriteLNCV( LNCV_ADR_MODULE_ADDRESS,	100 );
-		WriteLNCV( LNCV_ADR_SIGNAL_TYPE, SIGNAL_TYPE_59_E_SIG );
-		WriteLNCV( LNCV_ADR_SIGNAL_VALID_WAIT_TIME, 5000 );
+		WriteLNCV( LNCV_ADR_SIGNAL_TYPE, SIGNAL_TYPE_59_A_SIG );
+		WriteLNCV( LNCV_ADR_SIGNAL_VALID_WAIT_TIME, 3000 );
 #else
 		WriteLNCV( LNCV_ADR_MODULE_ADDRESS,	1 );
 		WriteLNCV( LNCV_ADR_SIGNAL_TYPE, SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE );
@@ -204,10 +211,10 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		//		and address values into EEPROM
 		//
 #ifdef WRITE_TEST_VALUES
-		WriteLNCV( LNCV_ADR_ERSATZ_SIGNAL_FLASH, 1150 );
-		WriteLNCV( LNCV_ADR_APPROACH_DARK,		 1160 );
-		WriteLNCV( LNCV_ADR_NIGHTLIGHT,			 1170 );
-		WriteLNCV( LNCV_ADR_TRACK_CONTACT,		 1180 );
+		WriteLNCV( LNCV_ADR_ERSATZ_SIGNAL_FLASH, 1151 );
+		WriteLNCV( LNCV_ADR_APPROACH_DARK,		 1161 );
+		WriteLNCV( LNCV_ADR_NIGHTLIGHT,			 1171 );
+		WriteLNCV( LNCV_ADR_TRACK_CONTACT,		 1181 );
 #else
 		WriteLNCV( LNCV_ADR_ERSATZ_SIGNAL_FLASH, 0 );
 		WriteLNCV( LNCV_ADR_APPROACH_DARK,		 0 );
@@ -219,7 +226,7 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		{
 #ifdef WRITE_TEST_VALUES
 			WriteLNCV( LNCV_ADR_LIGHT_INTENSITY_LED_A + idx, 0xFF7F );
-			WriteLNCV( LNCV_ADR_LIGHT_A + idx, 1010 + (10 * idx) );
+			WriteLNCV( LNCV_ADR_LIGHT_A + idx, 1011 + (10 * idx) );
 #else
 			WriteLNCV( LNCV_ADR_LIGHT_INTENSITY_LED_A + idx, 0xFF7F );
 			WriteLNCV( LNCV_ADR_LIGHT_A + idx, 0 );
