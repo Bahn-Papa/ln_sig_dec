@@ -63,6 +63,20 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	9		from: 23.03.2023
+//#
+//#	Implementation:
+//#		-	add new sequences for rangier signal
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File Version:	8		from: 19.03.2023
+//#
+//#	Implementation:
+//#		-	add new sequences for approach signal ON and OFF
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	7		from: 02.02.2023
 //#
 //#	Implementation:
@@ -191,6 +205,63 @@
 //	The no operation (NOP) sequence
 //
 const uint8_t sNOP[] PROGMEM = { SEQUENCE_END };
+
+
+//**********************************************************************
+//	sequences to switch the approach signal ON or OFF
+//
+const uint8_t ApproachOn[] PROGMEM =
+{
+	0b00000010,
+	SEQUENCE_PAUSE,
+	10,
+	0b00001010,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_END
+};
+
+const uint8_t ApproachOff[] PROGMEM =
+{
+	0b00001000,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	0b00000000,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_END
+};
+
+
+//**********************************************************************
+//	rangier signal aspect sequences
+//
+const uint8_t Rangier_to_Sh0[] PROGMEM =
+{
+	0b00000000,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_PAUSE_DARK,
+	0b00000001,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_END
+};
+
+const uint8_t Rangier_to_Sh1[] PROGMEM =
+{
+	0b00000000,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_PAUSE_DARK,
+	0b00000110,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_END
+};
+
+const uint8_t Rangier_to_ShKe[] PROGMEM =
+{
+	0b00000000,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_PAUSE_DARK,
+	0b00000010,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_END
+};
 
 
 //**********************************************************************

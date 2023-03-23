@@ -15,8 +15,8 @@
 #include "compile_options.h"
 
 #define VERSION_MAIN		PLATINE_VERSION
-#define	VERSION_MINOR		5
-#define VERSION_BUGFIX		2
+#define	VERSION_MINOR		6
+#define VERSION_BUGFIX		0
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,14 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.06.00		from: 23.03.2023
+//#
+//#	Implementation:
+//#		-	introducing transitions to easy implement the control of
+//#			different amount of signals
 //#
 //#-------------------------------------------------------------------------
 //#

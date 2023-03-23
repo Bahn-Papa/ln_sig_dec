@@ -28,7 +28,20 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	18		from: 17.03.2023
+//#	File Version:	19		from: 23.03.2023
+//#
+//#	Implementation:
+//#		-	change the handling of transitions
+//#			now there is a class 'transition' to be able to handle
+//#			more than one transition at the same time
+//#			Lots of new functions the get access to some internal values
+//#			Some functions were deleted because they moved into the new
+//#			class 'transition'
+//#			some local variables were delete also
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File Version:	18		from: 19.03.2023
 //#
 //#	Implementation:
 //#		-	change the way a signal aspect change is called
@@ -284,6 +297,7 @@
 #include "lncv_storage.h"
 #include "macros.h"
 #include "sequencer_tables.h"
+#include "time_values.h"
 
 
 //==========================================================================
@@ -292,20 +306,9 @@
 //
 //==========================================================================
 
-#define SIGNAL_MAIN_LEDS			0x007E
-#define SIGNAL_APPROACH_LEDS		0x1E00
-
-#define MAIN_LEDS_IDX_START			IDX_SIGNAL_MAIN_BIT_0
-#define MAIN_LEDS_IDX_COUNT			6
-#define MAIN_LEDS_IDX_STOP			(MAIN_LEDS_IDX_START + MAIN_LEDS_IDX_COUNT)
-
-#define APPROACH_LEDS_IDX_START		IDX_SIGNAL_APPROACH_BIT_0
-#define APPROACH_LEDS_IDX_COUNT		4
-#define APPROACH_LEDS_IDX_STOP		(APPROACH_LEDS_IDX_START + APPROACH_LEDS_IDX_COUNT)
-
-#define	LEDS_PORTB					0x30
-#define LEDS_PORTC					0x3F
-#define LEDS_PORTD					0xFF
+#define	LEDS_PORTB		0x30
+#define LEDS_PORTC		0x3F
+#define LEDS_PORTD		0xFF
 
 //----------------------------------------------------------------------
 //	Track contact definitions
@@ -364,6 +367,9 @@ typedef struct
 //==========================================================================
 
 IO_ControlClass	g_clControl	= IO_ControlClass();
+
+time_values_t	g_stTimeValues;
+
 
 //----------------------------------------------------------------------
 //	LED assignment
@@ -468,13 +474,15 @@ void IO_ControlClass::Init( void )
 	uint16_t	uiHelper;
 	bool		bIsASig;
 
-	m_pusStepMain					= NULL;
-	m_pusStepApproach				= NULL;
+	for( uint8_t idx = 0 ; RANGIER_SIGNAL_COUNT > idx ; idx++ )
+	{
+		m_arpclTransition[ idx ] = NULL;
+	}
+
 	m_ulLastCycleStartTime			= 0L;
 	m_ulCycleTime					= 0L;
 	m_ulCycleStepTime				= 0L;
 	m_ulContactTime					= 0L;
-	m_ulPauseTimer					= 0L;
 	m_ulErsatzSignalFlashTimer		= 0L;
 	m_uiErsatzSignalOffTimer		= 0;
 	m_uiLedsOn						= 0x0000;
@@ -484,22 +492,17 @@ void IO_ControlClass::Init( void )
 	m_usSignalAspectMain			= SIGNAL_ASPECT_HP0;
 	m_usSignalAspectApproach		= SIGNAL_ASPECT_HP0;
 	m_usExtraSignals				= 0x00;
-	m_usState						= STATE_APPROACH_OFF;
-	m_usOldState					= m_usState;
 	m_bNightLight					= false;
 	m_bApproachDark					= false;
 	m_bErsatzSignalFlash			= false;
+	m_bMainSignalPresent			= false;
 	m_bApproachSignalPresent		= false;
-	m_bTransitionActiveMain			= false;
-	m_bTransitionActiveApproach		= false;
-	m_bStateMachineActive			= false;
-	m_bWaitForFadeFinished			= false;
 
 	m_bContactOccupied				= false;
 
-	m_uiDarkTime				= g_clLncvStorage.ReadLNCV( LNCV_ADR_DARK_TIME );
-	m_uiFlashTime				= g_clLncvStorage.ReadLNCV( LNCV_ADR_FLASH_TIME );
-	m_uiErsatzSignalFlashTime	= g_clLncvStorage.ReadLNCV( LNCV_ADR_ERSATZ_SIGNAL_FLASH_TIME );
+	g_stTimeValues.uiDarkTime				= g_clLncvStorage.ReadLNCV( LNCV_ADR_DARK_TIME );
+	g_stTimeValues.uiFlashTime				= g_clLncvStorage.ReadLNCV( LNCV_ADR_FLASH_TIME );
+	g_stTimeValues.uiErsatzSignalFlashTime	= g_clLncvStorage.ReadLNCV( LNCV_ADR_ERSATZ_SIGNAL_FLASH_TIME );
 
 	bIsASig = SetSignalType();
 
@@ -509,14 +512,16 @@ void IO_ControlClass::Init( void )
 
 		g_arChannel[ idx ].m_usBrightnessDay	= (uint8_t)((uiHelper & MASK_INTENSITY_DAY) >> 8);
 		g_arChannel[ idx ].m_usBrightnessNight	= (uint8_t)( uiHelper & MASK_INTENSITY_NIGHT);
-//		g_arChannel[ idx ].m_usBrightnessNight	= (uint8_t)(uiHelper);
-//		uiHelper >>= 8;
-//		g_arChannel[ idx ].m_usBrightnessDay	= (uint8_t)(uiHelper);
 		g_arChannel[ idx ].m_fTarget = 0.0;
 		g_arChannel[ idx ].m_fActual = 0.0;
 	}
 
 	CalculateFadeRates();
+
+	if( 0 != g_clLncvStorage.ReadLNCV( LNCV_ADR_LIGHT_B ) )
+	{
+		m_bMainSignalPresent = true;
+	}
 
 	if( 0 != g_clLncvStorage.ReadLNCV( LNCV_ADR_LIGHT_J ) )
 	{
@@ -547,13 +552,23 @@ void IO_ControlClass::Init( void )
 	m_bContactOccupied = READ_CONTACT;
 
 	//----------------------------------------------------------
-	//	set signal to show Hp0
+	//	set signal(s) to show Hp0
 	//
-	SwitchLed( LED_C, true );
-
-	if( bIsASig )
+	if( SIGNAL_TYPE_FOUR_RANGIER_SIG == m_usSignalType )
 	{
+		SwitchLed( LED_A, true );
 		SwitchLed( LED_D, true );
+		SwitchLed( LED_G, true );
+		SwitchLED( LED_J, true );
+	}
+	else
+	{
+		SwitchLed( LED_C, true );
+
+		if( bIsASig )
+		{
+			SwitchLed( LED_D, true );
+		}
 	}
 }
 
@@ -564,6 +579,9 @@ void IO_ControlClass::Init( void )
 //
 void IO_ControlClass::Loop( void )
 {
+	TransitionClass	*	pclTransition;
+	uint32_t			ulMillis		= millis();
+
 	ProcessBrightnessAndFade();
 
 	//----------------------------------------------------------
@@ -575,7 +593,7 @@ void IO_ControlClass::Loop( void )
 		//	the debounce timer is active,
 		//	so check if it is elapsed...
 		//
-		if( millis() > m_ulContactTime )
+		if( ulMillis > m_ulContactTime )
 		{
 			//---------------------------------------------
 			//	the timer is elapsed
@@ -597,7 +615,7 @@ void IO_ControlClass::Loop( void )
 		//	track contact state is different than before
 		//	so start debounce timer
 		//
-		m_ulContactTime = millis() + TRACK_CONTACT_WAIT_TIME;
+		m_ulContactTime = ulMillis + TRACK_CONTACT_WAIT_TIME;
 	}
 
 	//----------------------------------------------------------
@@ -605,11 +623,11 @@ void IO_ControlClass::Loop( void )
 	//
 	if( m_bErsatzSignalFlash )
 	{
-		if( millis() > m_ulErsatzSignalFlashTimer )
+		if( ulMillis > m_ulErsatzSignalFlashTimer )
 		{
-			if( IsFadeFinished( LED_ERSATZSIGNAL ) )
+			if( IsFadeFinished( (uint8_t)LED_ERSATZSIGNAL ) )
 			{
-				m_ulErsatzSignalFlashTimer = millis() + m_uiErsatzSignalFlashTime;
+				m_ulErsatzSignalFlashTimer = ulMillis + g_stTimeValues.uiErsatzSignalFlashTime;
 				
 				if( m_uiLedsOn & (1 << LED_ERSATZSIGNAL) )
 				{
@@ -626,7 +644,7 @@ void IO_ControlClass::Loop( void )
 	//----------------------------------------------------------
 	//	handle Ersatzsignal OFF Timer
 	//
-	if( (0 < g_ulTimerTick) && (millis() > g_ulTimerTick) )
+	if( (0 < g_ulTimerTick) && (ulMillis > g_ulTimerTick) )
 	{
 		g_ulTimerTick += FLASH_COUNTER_TIME;
 		m_uiErsatzSignalOffTimer--;
@@ -638,49 +656,20 @@ void IO_ControlClass::Loop( void )
 	}
 
 	//----------------------------------------------------------
-	//	handle state machine and transitions
+	//	handle transitions
 	//
+	for( uint8_t idx = 0 ; RANGIER_SIGNAL_COUNT > idx ; idx++ )
+	{
+		pclTransition = m_arpclTransition[ idx ];
 
-	//----------------------------------------------------------
-	//	check if we should pause the handling
-	//
-	if( m_ulPauseTimer > 0 )
-	{
-		//--------------------------------------------------
-		//	if the pause time has elapsed
-		//	then switch off the timer
-		//
-		if( millis() > m_ulPauseTimer )
+		if( NULL != pclTransition )
 		{
-			m_ulPauseTimer = 0L;
-		}
-	}
-	else if( m_bWaitForFadeFinished )
-	{
-		//--------------------------------------------------
-		//	wait until all fade actions are finished
-		//
-		if( IsFadeFinished() )
-		{
-			m_bWaitForFadeFinished = false;
-		}
-	}
-	else
-	{
-		//--------------------------------------------------
-		//	now process state machine and transitions
-		//
-		if( m_bStateMachineActive )
-		{
-			ProcessStateMachine();
-		}
-		else if( m_bTransitionActiveApproach )
-		{
-			ProcessTransitionApproach();
-		}
-		else if( m_bTransitionActiveMain )
-		{
-			ProcessTransitionMain();
+			if( pclTransition->Loop( ulMillis ) )
+			{
+				delete pclTransition;
+
+				m_arpclTransition[ idx ] = NULL;
+			}
 		}
 	}
 }
@@ -708,39 +697,6 @@ void IO_ControlClass::SetNightLight( bool bOn )
 				SwitchLed( idx, true );
 			}
 		}
-
-/*
-		if( bOn )
-		{
-			//--------------------------------------------------
-			//	switch from day to night
-			//
-			for( uint8_t idx = 0 ; SIGNAL_LEDS > idx ; idx++ )
-			{
-				if( IsWordBitSet( m_uiLedsOn, idx ) )
-				{
-					pChannel->m_fTarget = (float)PWM_STEP_TIME * pChannel->m_usBrightnessNight;
-				}
-			}
-
-			CalculateFadeRates();
-		}
-		else
-		{
-			//--------------------------------------------------
-			//	switch from night to day
-			//
-			CalculateFadeRates();
-			
-			for( uint8_t idx = 0 ; SIGNAL_LEDS > idx ; idx++ )
-			{
-				if( IsWordBitSet( m_uiLedsOn, idx ) )
-				{
-					pChannel->m_fTarget = (float)PWM_STEP_TIME * pChannel->m_usBrightnessDay;
-				}
-			}
-		}
-*/
 	}
 }
 
@@ -753,7 +709,7 @@ void IO_ControlClass::SetErsatzSignalFlash( bool bOn )
 {
 	if( bOn )
 	{
-		m_ulErsatzSignalFlashTimer	= millis() + m_uiErsatzSignalFlashTime;
+		m_ulErsatzSignalFlashTimer	= millis() + g_stTimeValues.uiErsatzSignalFlashTime;
 	}
 	else
 	{
@@ -867,7 +823,9 @@ void IO_ControlClass::HandleSignalAspect(	uint8_t usSelectedSignal,
 //
 void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect, uint8_t usExtraSignals )
 {
-	if( !m_bTransitionActiveMain && (SIGNAL_ASPECTS > usSignalAspect) )
+	uint8_t *pusStep;
+
+	if( (NULL == m_arpclTransition[ 0 ]) && (SIGNAL_ASPECTS > usSignalAspect) )
 	{
 		//------------------------------------------------------
 		//	first check if the new transition is allowed
@@ -885,10 +843,14 @@ void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect, uint8_t us
 			//
 			if( m_usSignalAspectMain != usSignalAspect )
 			{
-				m_pusStepMain			= GetFirstStepMain( m_usSignalAspectMain, usSignalAspect );
+				pusStep = GetFirstStepMain( m_usSignalAspectMain, usSignalAspect );
+
+				m_arpclTransition[ 0 ]	= new TransitionClass(	pusStep,
+																MAIN_LEDS,
+																MAIN_LEDS_IDX_START,
+																MAIN_LEDS_IDX_STOP		);
 				m_usSignalAspectMain	= usSignalAspect;
 				m_usExtraSignals		= usExtraSignals;
-				m_bTransitionActiveMain	= true;
 
 				SwitchLed( LED_GREEN, true );
 			}
@@ -904,7 +866,7 @@ void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect, uint8_t us
 void IO_ControlClass::HandleSignalAspectApproach( uint8_t usSignalAspect, uint8_t usExtraSignals )
 {
 	if(		m_bApproachSignalPresent
-		&& !m_bTransitionActiveApproach
+		&& (NULL == m_arpclTransition[ 0 ])
 		&& (SIGNAL_ASPECTS > usSignalAspect) )
 	{
 		//------------------------------------------------------
@@ -916,7 +878,7 @@ void IO_ControlClass::HandleSignalAspectApproach( uint8_t usSignalAspect, uint8_
 		if(		((SIGNAL_ASPECT_HP0 == m_usSignalAspectApproach) && (SIGNAL_ASPECT_HP0 != usSignalAspect))
 			||	((SIGNAL_ASPECT_HP0 != m_usSignalAspectApproach) && (SIGNAL_ASPECT_HP0 == usSignalAspect)) )
 		{
-			if( STATE_APPROACH_OFF == m_usState )
+			if( IsLedsOff( APPROACH_LEDS ) )
 			{
 				//----------------------------------------------
 				//	the approach signal is switched OFF
@@ -934,8 +896,11 @@ void IO_ControlClass::HandleSignalAspectApproach( uint8_t usSignalAspect, uint8_
 				//
 				if( m_usSignalAspectApproach != usSignalAspect )
 				{
-					StartAspectTransitionApproach( m_usSignalAspectApproach, usSignalAspect );
-
+					m_arpclTransition[ 0 ] = new TransitionClass( GetFirstStepApproach(	m_usSignalAspectApproach,
+																						usSignalAspect ),
+																	APPROACH_LEDS,
+																	APPROACH_LEDS_IDX_START,
+																	APPROACH_LEDS_IDX_STOP		);
 					m_usSignalAspectApproach	= usSignalAspect;
 					m_usExtraSignals			= usExtraSignals;
 				}
@@ -1002,21 +967,6 @@ void IO_ControlClass::SwitchLed( uint8_t usLedNo, bool bOn )
 //	IsFadeFinished
 //------------------------------------------------------------------
 //
-bool IO_ControlClass::IsFadeFinished( void )
-{
-	if( 0 == m_uiFadeActive )
-	{
-		return( true );
-	}
-	
-	return( false );
-}
-
-
-//******************************************************************
-//	IsFadeFinished
-//------------------------------------------------------------------
-//
 bool IO_ControlClass::IsFadeFinished( uint8_t usLedNo )
 {
 	if( SIGNAL_LEDS > usLedNo )
@@ -1028,67 +978,6 @@ bool IO_ControlClass::IsFadeFinished( uint8_t usLedNo )
 	}
 
 	return( false );
-}
-
-
-//******************************************************************
-//	StartAspectTransitionApproach
-//------------------------------------------------------------------
-//
-void IO_ControlClass::StartAspectTransitionApproach( uint8_t usAspectFrom, uint8_t usAspectTo )
-{
-	m_pusStepApproach = sNOP;
-
-	if( SIGNAL_ASPECT_HP0 == usAspectFrom )
-	{
-		switch( m_usSignalType )
-		{
-			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
-			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
-			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
-			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
-			case SIGNAL_TYPE_59_A_SIG:
-			case SIGNAL_TYPE_59_E_SIG:
-			case SIGNAL_TYPE_60_A_SIG:
-			case SIGNAL_TYPE_60_E_SIG:
-			case SIGNAL_TYPE_COMPACT_A_SIG:
-			case SIGNAL_TYPE_COMPACT_E_SIG:
-			case SIGNAL_TYPE_KS_A_SIG:
-			case SIGNAL_TYPE_KS_E_SIG:
-				m_pusStepApproach = pgm_read_word( &Approach_From_Hp0[ usAspectTo ] );
-				break;
-
-			default:
-				break;
-		}
-	}
-	else if( SIGNAL_ASPECT_HP0 == usAspectTo )
-	{
-		switch( m_usSignalType )
-		{
-			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
-			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
-			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
-			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
-			case SIGNAL_TYPE_59_A_SIG:
-			case SIGNAL_TYPE_59_E_SIG:
-			case SIGNAL_TYPE_60_A_SIG:
-			case SIGNAL_TYPE_60_E_SIG:
-			case SIGNAL_TYPE_COMPACT_A_SIG:
-			case SIGNAL_TYPE_COMPACT_E_SIG:
-			case SIGNAL_TYPE_KS_A_SIG:
-			case SIGNAL_TYPE_KS_E_SIG:
-				m_pusStepApproach = pgm_read_word( &Approach_To_Hp0[ usAspectFrom ] );
-				break;
-
-			default:
-				break;
-		}
-	}
-
-	m_bTransitionActiveApproach	= true;
-
-	SwitchLed( LED_GREEN, true );
 }
 
 
@@ -1255,6 +1144,65 @@ uint8_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usToA
 
 
 //******************************************************************
+//	GetFirstStepApproach
+//------------------------------------------------------------------
+//
+uint8_t * IO_ControlClass::GetFirstStepApproach( uint8_t usAspectFrom, uint8_t usAspectTo )
+{
+	uint8_t *	pFirstStep	= sNOP;
+
+	if( SIGNAL_ASPECT_HP0 == usAspectFrom )
+	{
+		switch( m_usSignalType )
+		{
+			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
+			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
+			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
+			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
+			case SIGNAL_TYPE_59_A_SIG:
+			case SIGNAL_TYPE_59_E_SIG:
+			case SIGNAL_TYPE_60_A_SIG:
+			case SIGNAL_TYPE_60_E_SIG:
+			case SIGNAL_TYPE_COMPACT_A_SIG:
+			case SIGNAL_TYPE_COMPACT_E_SIG:
+			case SIGNAL_TYPE_KS_A_SIG:
+			case SIGNAL_TYPE_KS_E_SIG:
+				pFirstStep = pgm_read_word( &Approach_From_Hp0[ usAspectTo ] );
+				break;
+
+			default:
+				break;
+		}
+	}
+	else if( SIGNAL_ASPECT_HP0 == usAspectTo )
+	{
+		switch( m_usSignalType )
+		{
+			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
+			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
+			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
+			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
+			case SIGNAL_TYPE_59_A_SIG:
+			case SIGNAL_TYPE_59_E_SIG:
+			case SIGNAL_TYPE_60_A_SIG:
+			case SIGNAL_TYPE_60_E_SIG:
+			case SIGNAL_TYPE_COMPACT_A_SIG:
+			case SIGNAL_TYPE_COMPACT_E_SIG:
+			case SIGNAL_TYPE_KS_A_SIG:
+			case SIGNAL_TYPE_KS_E_SIG:
+				pFirstStep = pgm_read_word( &Approach_To_Hp0[ usAspectFrom ] );
+				break;
+
+			default:
+				break;
+		}
+	}
+
+	return( pFirstStep );
+}
+
+
+//******************************************************************
 //	SwitchExtraSignalsOn
 //------------------------------------------------------------------
 //	This function will switch on the selected Extra signals
@@ -1278,8 +1226,6 @@ void IO_ControlClass::SwitchExtraSignalsOn( void )
 			{
 				HandleLed( usLedNo, true );
 			}
-
-			m_bWaitForFadeFinished = true;
 		}
 
 		usMask <<= 1;
@@ -1299,410 +1245,6 @@ void IO_ControlClass::SwitchExtraSignalsOff( void )
 	for( uint8_t idx = 0 ; EXTRA_SIGNAL_ERSATZSIGNAL_FLASH > idx ; idx++ )
 	{
 		HandleLed( g_arLedIndex[ idx ], false );
-	}
-
-	m_bWaitForFadeFinished = true;
-}
-
-
-//******************************************************************
-//	ProcessTransitionMain
-//------------------------------------------------------------------
-//	This function will process the steps of
-//	a signal aspect transition for the main signal
-//
-void IO_ControlClass::ProcessTransitionMain( void )
-{
-	uint16_t	uiPauseTime;
-	uint8_t		usAspect;
-	uint8_t		usControlGroup;
-	uint8_t		usDiff;
-	uint8_t		usMask		= 0x01;
-
-	usAspect = pgm_read_byte( m_pusStepMain );
-
-	m_pusStepMain++;
-
-	usControlGroup = usAspect & SEQUENCE_CONTROL_GROUPS;
-
-	if( SG_CONTROL_WORDS == usControlGroup )
-	{
-		switch( usAspect )
-		{
-			case SEQUENCE_END:
-				//--------------------------------------------------
-				//	the end of the sequence is reached
-				//	so stop the transition
-				//
-				m_bTransitionActiveMain = false;
-
-				SwitchLed( LED_GREEN, false );
-				break;
-
-			case SEQUENCE_WAIT_FOR_FADE_FINISHED:
-				//--------------------------------------------------
-				//	wait until all fade actions are finished
-				//
-				m_bWaitForFadeFinished = true;
-				break;
-
-			case SEQUENCE_PAUSE:
-				//--------------------------------------------------
-				//	make a pause in the sequence
-				//
-				uiPauseTime		= pgm_read_byte( m_pusStepMain ) * 10;
-				m_ulPauseTimer	= millis() + uiPauseTime;
-				m_pusStepMain++;
-				break;
-
-			case SEQUENCE_PAUSE_DARK:
-				//--------------------------------------------------
-				//	make a pause in the sequence with the length
-				//	of 'DarkTime'
-				//
-				m_ulPauseTimer	= millis() + m_uiDarkTime;
-				break;
-
-			case SEQUENCE_PAUSE_FLASH:
-				//--------------------------------------------------
-				//	make a pause in the sequence with the length
-				//	of 'FlashTime'
-				//
-				m_ulPauseTimer	= millis() + m_uiFlashTime;
-				break;
-
-			case SEQUENCE_APPROACH_ON:
-				//--------------------------------------------------
-				//	the approach signal should be switched ON
-				//
-				if(		m_bApproachSignalPresent
-					&& !m_bApproachDark
-					&& (STATE_APPROACH_OFF == m_usState) )
-				{
-					m_usState				= STATE_SWITCH_ON_LOWER;
-					m_bStateMachineActive	= true;
-				}
-				break;
-
-			case SEQUENCE_SET_SIGNAL_ASPECT:
-				//--------------------------------------------------
-				//	check if the approach signal should show
-				//	a signal aspect
-				//
-				if(		m_bApproachSignalPresent
-					&& !m_bApproachDark
-					&& (STATE_APPROACH_ON == m_usState) )
-				{
-					if( SIGNAL_ASPECT_HP0 != m_usSignalAspectApproach )
-					{
-						StartAspectTransitionApproach( SIGNAL_ASPECT_HP0, m_usSignalAspectApproach );
-					}
-				}
-				break;
-
-			case SEQUENCE_SET_HP0:
-				//--------------------------------------------------
-				//	check if the approach signal should show Hp0
-				//
-				if(		m_bApproachSignalPresent
-					&& !m_bApproachDark
-					&& (STATE_APPROACH_ON == m_usState) )
-				{
-					if( SIGNAL_ASPECT_HP0 != m_usSignalAspectApproach )
-					{
-						StartAspectTransitionApproach( m_usSignalAspectApproach, SIGNAL_ASPECT_HP0 );
-					}
-				}
-				break;
-
-			case SEQUENCE_APPROACH_OFF:
-				//--------------------------------------------------
-				//	the approach signal should be switched OFF
-				//
-				if(		m_bApproachSignalPresent
-					&& !m_bApproachDark
-					&& (STATE_APPROACH_ON == m_usState) )
-				{
-					m_usState				= STATE_SWITCH_OFF_UPPER;
-					m_bStateMachineActive	= true;
-				}
-
-				m_bApproachDark = false;
-				break;
-
-			case SEQUENCE_ADDITION_SIGNAL_ON:
-				SwitchExtraSignalsOn();
-				break;
-
-			case SEQUENCE_ADDITION_SIGNAL_OFF:
-				SwitchExtraSignalsOff();
-				break;
-		}
-	}
-	else
-	{
-		//--------------------------------------------------
-		//	check wich LEDs of the main signal
-		//	should go OFF and wich should go ON
-		//
-		usDiff  = (uint8_t)((m_uiLedsOn & SIGNAL_MAIN_LEDS) >> MAIN_LEDS_IDX_START);
-		usDiff ^= (usAspect & SEQUENCE_LEDS);
-
-		for( uint8_t idx = MAIN_LEDS_IDX_START ; (MAIN_LEDS_IDX_STOP > idx) && (usDiff != 0) ; idx++ )
-		{
-			if( usDiff & usMask )
-			{
-				if( usAspect & usMask )
-				{
-					if( SG_FLASHING_LEDS == usControlGroup )
-					{
-						SwitchLed( idx, true );
-						m_ulPauseTimer = millis() + m_uiFlashTime;
-					}
-					else
-					{
-						HandleLed( idx, true );
-					}
-				}
-				else
-				{
-					if( SG_FLASHING_LEDS == usControlGroup )
-					{
-						SwitchLed( idx, false );
-						m_ulPauseTimer = millis() + m_uiFlashTime;
-					}
-					else
-					{
-						HandleLed( idx, false );
-					}
-				}
-
-				usDiff &= ~usMask;
-			}
-
-			usMask <<= 1;
-		}
-	}
-}
-
-
-//******************************************************************
-//	ProcessTransitionApproach
-//------------------------------------------------------------------
-//	This function will process the steps of
-//	a signal aspect transition for the approach signal
-//
-void IO_ControlClass::ProcessTransitionApproach( void )
-{
-	uint16_t	uiPauseTime;
-	uint8_t		usAspect;
-	uint8_t		usControlGroup;
-	uint8_t		usDiff;
-	uint8_t		usMask		= 0x01;
-
-	usAspect = pgm_read_byte( m_pusStepApproach );
-
-	m_pusStepApproach++;
-
-	usControlGroup = usAspect & SEQUENCE_CONTROL_GROUPS;
-
-	if( SG_CONTROL_WORDS == usControlGroup )
-	{
-		switch( usAspect )
-		{
-			case SEQUENCE_END:
-				//----------------------------------------------
-				//	the end of the sequence is reached
-				//	so stop the transition
-				//
-				m_bTransitionActiveApproach = false;
-
-				if( !m_bTransitionActiveMain )
-				{
-					SwitchLed( LED_GREEN, false );
-				}
-				break;
-
-			case SEQUENCE_WAIT_FOR_FADE_FINISHED:
-				//--------------------------------------------------
-				//	wait until all fade actions are finished
-				//
-				m_bWaitForFadeFinished = true;
-				break;
-
-			case SEQUENCE_PAUSE:
-				//--------------------------------------------------
-				//	make a pause in the sequence
-				//
-				uiPauseTime		= pgm_read_byte( m_pusStepApproach ) * 10;
-				m_ulPauseTimer	= millis() + uiPauseTime;
-				m_pusStepApproach++;
-				break;
-
-			case SEQUENCE_PAUSE_DARK:
-				//--------------------------------------------------
-				//	make a pause in the sequence with the length
-				//	of 'DarkTime'
-				//
-				m_ulPauseTimer	= millis() + m_uiDarkTime;
-				break;
-
-			case SEQUENCE_PAUSE_FLASH:
-				//--------------------------------------------------
-				//	make a pause in the sequence with the length
-				//	of 'FlashTime'
-				//
-				m_ulPauseTimer	= millis() + m_uiFlashTime;
-				break;
-
-			case SEQUENCE_ADDITION_SIGNAL_ON:
-				SwitchExtraSignalsOn();
-				break;
-
-			case SEQUENCE_ADDITION_SIGNAL_OFF:
-				SwitchExtraSignalsOff();
-				break;
-
-			default:
-				//	do nothing
-				break;
-		}
-	}
-	else
-	{
-		//--------------------------------------------------
-		//	check wich LEDs of the approach signal
-		//	should go OFF and wich should go ON
-		//
-		usDiff  = (uint8_t)((m_uiLedsOn & SIGNAL_APPROACH_LEDS) >> APPROACH_LEDS_IDX_START);
-		usDiff ^= usAspect;
-
-		for( uint8_t idx = APPROACH_LEDS_IDX_START ; (APPROACH_LEDS_IDX_STOP > idx) && (usDiff != 0) ; idx++ )
-		{
-			if( usDiff & usMask )
-			{
-				if( usAspect & usMask )
-				{
-					if( SG_FLASHING_LEDS == usControlGroup )
-					{
-						SwitchLed( idx, true );
-						m_ulPauseTimer = millis() + m_uiFlashTime;
-					}
-					else
-					{
-						HandleLed( idx, true );
-					}
-				}
-				else
-				{
-					if( SG_FLASHING_LEDS == usControlGroup )
-					{
-						SwitchLed( idx, false );
-						m_ulPauseTimer = millis() + m_uiFlashTime;
-					}
-					else
-					{
-						HandleLed( idx, false );
-					}
-				}
-
-				usDiff &= ~usMask;
-			}
-
-			usMask <<= 1;
-		}
-	}
-}
-
-
-//******************************************************************
-//	ProcessStateMachine
-//------------------------------------------------------------------
-//	This function will process the state machine to switch the
-//	approach signal ON or OFF
-//
-void IO_ControlClass::ProcessStateMachine( void )
-{
-	switch( m_usState )
-	{
-		//------------------------------------------------------
-		//
-		case STATE_APPROACH_ON:
-		case STATE_APPROACH_OFF:
-			if( m_usState != m_usOldState )
-			{
-				m_usOldState			= m_usState;
-				m_bStateMachineActive	= false;
-			}
-			break;
-
-		//------------------------------------------------------
-		//
-		case STATE_SWITCH_ON_LOWER:
-			if( m_usState != m_usOldState )
-			{
-				m_usOldState = m_usState;
-
-				//------------------------------------------
-				//	set signal aspect Hp0 lower light
-				//
-				HandleLed( LED_M, true );
-
-				m_ulPauseTimer = millis() + 100;
-
-				m_usState = STATE_SWITCH_ON_UPPER;
-			}
-			break;
-
-		//------------------------------------------------------
-		//
-		case STATE_SWITCH_ON_UPPER:
-			if( m_usState != m_usOldState )
-			{
-				m_usOldState = m_usState;
-
-				//------------------------------------------
-				//	set signal aspect Hp0 upper light
-				//
-				HandleLed( LED_K, true );
-
-				m_bWaitForFadeFinished	= true;
-				m_usState				= STATE_APPROACH_ON;
-			}
-			break;
-
-		//------------------------------------------------------
-		//
-		case STATE_SWITCH_OFF_UPPER:
-			if( m_usState != m_usOldState )
-			{
-				m_usOldState = m_usState;
-
-				HandleLed( LED_K, false );
-
-				m_bWaitForFadeFinished	= true;
-				m_usState				= STATE_SWITCH_OFF_LOWER;
-			}
-			break;
-
-		//------------------------------------------------------
-		//
-		case STATE_SWITCH_OFF_LOWER:
-			if( m_usState != m_usOldState )
-			{
-				m_usOldState = m_usState;
-
-				HandleLed( LED_M, false );
-
-				m_bWaitForFadeFinished	= true;
-				m_usState				= STATE_APPROACH_OFF;
-			}
-			break;
-
-		//------------------------------------------------------
-		//
-		default:
-			break;
 	}
 }
 

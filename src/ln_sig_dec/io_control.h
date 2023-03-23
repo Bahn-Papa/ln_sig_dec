@@ -15,7 +15,20 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	10		from: 17.03.2023
+//#	File Version:	11		from: 23.03.2023
+//#
+//#	Implementation:
+//#		-	change the handling of transitions
+//#			now there is a class 'transition' to be able to handle
+//#			more than one transition at the same time
+//#			Lots of new functions the get access to some internal values
+//#			Some functions were deleted because they moved into the new
+//#			class 'transition'
+//#			some local variables were delete also
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File Version:	10		from: 19.03.2023
 //#
 //#	Implementation:
 //#		-	move definitions from 'lncv_storage.h' to here
@@ -171,6 +184,8 @@
 //
 //==========================================================================
 
+#include "transition.h"
+
 
 //==========================================================================
 //
@@ -218,6 +233,8 @@
 //----------------------------------------------------------------------
 //	extra signal numbers
 //
+#define EXTRA_SIGNAL_LEDS					0x2181
+
 #define EXTRA_SIGNAL_ZUSATZANZEIGE			0
 #define EXTRA_SIGNAL_ERSATZSIGNAL			1
 #define EXTRA_SIGNAL_KENNLICHT				2
@@ -237,27 +254,75 @@
 #define SIGNAL_SELECTED_RANGIER_3	2
 #define SIGNAL_SELECTED_RANGIER_4	3
 
+#define RANGIER_SIGNAL_COUNT		4
+
 //----------------------------------------------------------------------
 //	index for signal aspects
 //
+
+//----	main signal  -----------------------------------------------
+#define MAIN_LEDS						0x007E
+
 #define IDX_SIGNAL_MAIN_BIT_0			1
 #define IDX_SIGNAL_MAIN_BIT_1			2
 #define IDX_SIGNAL_MAIN_BIT_2			3
 #define IDX_SIGNAL_MAIN_BIT_3			4
+
+#define MAIN_LEDS_IDX_START				IDX_SIGNAL_MAIN_BIT_0
+#define MAIN_LEDS_IDX_COUNT				6
+#define MAIN_LEDS_IDX_STOP				(MAIN_LEDS_IDX_START + MAIN_LEDS_IDX_COUNT)
+
+//----	approach signal  -------------------------------------------
+#define APPROACH_LEDS					0x1E00
 
 #define IDX_SIGNAL_APPROACH_BIT_0		9
 #define IDX_SIGNAL_APPROACH_BIT_1		10
 #define IDX_SIGNAL_APPROACH_BIT_2		11
 #define IDX_SIGNAL_APPROACH_BIT_3		12
 
+#define APPROACH_LEDS_IDX_START			IDX_SIGNAL_APPROACH_BIT_0
+#define APPROACH_LEDS_IDX_COUNT			4
+#define APPROACH_LEDS_IDX_STOP			(APPROACH_LEDS_IDX_START + APPROACH_LEDS_IDX_COUNT)
+
+//----	rangier signal 1  ------------------------------------------
+#define RANGIER_1_LEDS					0x0007
+
 #define IDX_RANGIER_SIGNAL_1_BIT_0		0
 #define IDX_RANGIER_SIGNAL_1_BIT_1		1
+
+#define RANGIER_1_LEDS_IDX_START		IDX_RANGIER_SIGNAL_1_BIT_0
+#define RANGIER_1_LEDS_IDX_COUNT		3
+#define RANGIER_1_LEDS_IDX_STOP			(RANGIER_1_LEDS_IDX_START + RANGIER_1_LEDS_IDX_COUNT)
+
+//----	rangier signal 2  ------------------------------------------
+#define RANGIER_2_LEDS					0x0038
+
 #define IDX_RANGIER_SIGNAL_2_BIT_0		2
 #define IDX_RANGIER_SIGNAL_2_BIT_1		3
+
+#define RANGIER_2_LEDS_IDX_START		IDX_RANGIER_SIGNAL_2_BIT_0
+#define RANGIER_2_LEDS_IDX_COUNT		3
+#define RANGIER_2_LEDS_IDX_STOP			(RANGIER_2_LEDS_IDX_START + RANGIER_2_LEDS_IDX_COUNT)
+
+//----	rangier signal 3  ------------------------------------------
+#define RANGIER_3_LEDS					0x01C0
+
 #define IDX_RANGIER_SIGNAL_3_BIT_0		4
 #define IDX_RANGIER_SIGNAL_3_BIT_1		5
+
+#define RANGIER_3_LEDS_IDX_START		IDX_RANGIER_SIGNAL_3_BIT_0
+#define RANGIER_3_LEDS_IDX_COUNT		3
+#define RANGIER_3_LEDS_IDX_STOP			(RANGIER_3_LEDS_IDX_START + RANGIER_3_LEDS_IDX_COUNT)
+
+//----	rangier signal 4  ------------------------------------------
+#define RANGIER_4_LEDS					0x0E00
+
 #define IDX_RANGIER_SIGNAL_4_BIT_0		6
 #define IDX_RANGIER_SIGNAL_4_BIT_1		7
+
+#define RANGIER_4_LEDS_IDX_START		IDX_RANGIER_SIGNAL_4_BIT_0
+#define RANGIER_4_LEDS_IDX_COUNT		3
+#define RANGIER_4_LEDS_IDX_STOP			(RANGIER_4_LEDS_IDX_START + RANGIER_4_LEDS_IDX_COUNT)
 
 
 //==========================================================================
@@ -287,38 +352,82 @@ class IO_ControlClass
 		inline void SetApproachDark( bool bDark )
 		{
 			m_bApproachDark = bDark;
-		}
+		};
+
+		void SwitchLed( uint8_t usLedNo, bool bOn );
+		void SwitchExtraSignalsOn( void );
+		void SwitchExtraSignalsOff( void );
 
 		void HandleLed( uint8_t usLedNo, bool bOn );
 		void HandleSignalAspect(	uint8_t usSelectedSignal,
 									uint8_t usSignalAspect,
 									uint8_t usExtraSignals		);
 
-		void SwitchLed( uint8_t usLedNo, bool bOn );
+		inline uint16_t GetLedsOn( void )
+		{
+			return( m_uiLedsOn );
+		};
 
-		bool IsFadeFinished( void );
+		inline uint8_t GetSignalAspectMain( void )
+		{
+			return( m_usSignalAspectMain );
+		};
+
+		inline uint8_t GetSignalAspectApproach( void )
+		{
+			return( m_usSignalAspectApproach );
+		};
+
+		uint8_t *	GetFirstStepMain( uint8_t usFromAspect, uint8_t usToAspect );
+		uint8_t *	GetFirstStepApproach( uint8_t usAspectFrom, uint8_t usAspectTo );
+
+		inline bool IsApproachSignalPresent( void )
+		{
+			return( m_bApproachSignalPresent );
+		};
+
+		inline bool IsApproachDark( void )
+		{
+			return( m_bApproachDark );
+		};
+
+		inline bool IsFadeFinished( void )
+		{
+			return( 0x0000 == m_uiFadeActive );
+		};
+
 		bool IsFadeFinished( uint8_t usLedNo );
+
+		inline bool IsFadeFinished( uint16_t uiLedMask )
+		{
+			return( 0x0000 == (m_uiFadeActive & uiLedMask) );
+		};
 
 		inline bool IsContactOccupied( void )
 		{
 			return( m_bContactOccupied );
-		}
+		};
+
+		inline bool IsOneLedOn( uint16_t uiLedMask )
+		{
+			return( 0x0000 != (m_uiLedsOn & uiLedMask) );
+		};
+
+		inline bool IsLedsOff( uint16_t uiLedMask )
+		{
+			return( 0x0000 == (m_uiLedsOn & uiLedMask) );
+		};
 
 
 	private:
-		uint8_t *	m_pusStepMain;
-		uint8_t *	m_pusStepApproach;
+		TransitionClass *	m_arpclTransition[ RANGIER_SIGNAL_COUNT ];
 
 		uint32_t	m_ulLastCycleStartTime;
 		uint32_t	m_ulCycleTime;
 		uint32_t	m_ulCycleStepTime;
 		uint32_t	m_ulContactTime;
-		uint32_t	m_ulPauseTimer;
 		uint32_t	m_ulErsatzSignalFlashTimer;
 		uint16_t	m_uiErsatzSignalOffTimer;
-		uint16_t	m_uiDarkTime;
-		uint16_t	m_uiFlashTime;
-		uint16_t	m_uiErsatzSignalFlashTime;
 		uint16_t	m_uiLedsOn;
 		uint16_t	m_uiFadeTimeUp;
 		uint16_t	m_uiFadeTimeDown;
@@ -327,30 +436,17 @@ class IO_ControlClass
 		uint8_t		m_usSignalAspectMain;
 		uint8_t		m_usSignalAspectApproach;
 		uint8_t		m_usExtraSignals;
-		uint8_t		m_usState;
-		uint8_t		m_usOldState;
 		bool		m_bNightLight;
 		bool		m_bApproachDark;
 		bool		m_bErsatzSignalFlash;
 		bool		m_bMainSignalPresent;
 		bool		m_bApproachSignalPresent;
-		bool		m_bTransitionActiveMain;
-		bool		m_bTransitionActiveApproach;
-		bool		m_bStateMachineActive;
 		bool		m_bContactOccupied;
-		bool		m_bWaitForFadeFinished;
 
 		bool		SetSignalType( void );
 		void		CalculateFadeRates( void );
 		void		HandleSignalAspectMain( uint8_t usSignalAspect, uint8_t usExtraSignals );
 		void		HandleSignalAspectApproach( uint8_t usSignalAspect, uint8_t usExtraSignals );
-		uint8_t *	GetFirstStepMain( uint8_t usFromAspect, uint8_t usToAspect );
-		void		StartAspectTransitionApproach( uint8_t usAspectFrom, uint8_t usAspectTo );
-		void		SwitchExtraSignalsOn( void );
-		void		SwitchExtraSignalsOff( void );
-		void		ProcessTransitionMain( void );
-		void		ProcessTransitionApproach( void );
-		void		ProcessStateMachine( void );
 		void		ProcessBrightnessAndFade( void );
 };
 
