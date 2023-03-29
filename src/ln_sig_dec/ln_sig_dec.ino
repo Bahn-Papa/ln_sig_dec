@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		6
-#define VERSION_BUGFIX		0
+#define VERSION_BUGFIX		1
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,13 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.06.01		from: 24.03.2023
+//#
+//#	Implementation:
+//#		-	add handling for rangier signal aspects
 //#
 //#-------------------------------------------------------------------------
 //#

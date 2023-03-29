@@ -28,6 +28,19 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	20		from: 24.03.2023
+//#
+//#	Implementation:
+//#		-	add handling for rangier signal aspects
+//#			new variable
+//#				m_arusRangierAspect
+//#			new function
+//#				HandleRangierAspect()
+//#			changes in function
+//#				HandleSignalAspect()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	19		from: 23.03.2023
 //#
 //#	Implementation:
@@ -476,7 +489,8 @@ void IO_ControlClass::Init( void )
 
 	for( uint8_t idx = 0 ; RANGIER_SIGNAL_COUNT > idx ; idx++ )
 	{
-		m_arpclTransition[ idx ] = NULL;
+		m_arpclTransition[ idx ]	= NULL;
+		m_arusRangierAspect[ idx ]	= RANGIER_ASPECT_SH0;
 	}
 
 	m_ulLastCycleStartTime			= 0L;
@@ -559,7 +573,7 @@ void IO_ControlClass::Init( void )
 		SwitchLed( LED_A, true );
 		SwitchLed( LED_D, true );
 		SwitchLed( LED_G, true );
-		SwitchLED( LED_J, true );
+		SwitchLed( LED_J, true );
 	}
 	else
 	{
@@ -812,6 +826,10 @@ void IO_ControlClass::HandleSignalAspect(	uint8_t usSelectedSignal,
 			break;
 
 		case SIGNAL_SELECTED_RANGIER_1:
+		case SIGNAL_SELECTED_RANGIER_2:
+		case SIGNAL_SELECTED_RANGIER_3:
+		case SIGNAL_SELECTED_RANGIER_4:
+			HandleRangierAspect( usSelectedSignal, usSignalAspect );
 			break;
 	}
 }
@@ -906,6 +924,45 @@ void IO_ControlClass::HandleSignalAspectApproach( uint8_t usSignalAspect, uint8_
 				}
 			}
 		}
+	}
+}
+
+
+//******************************************************************
+//	HandleRangierAspect
+//------------------------------------------------------------------
+//
+void IO_ControlClass::HandleRangierAspect( uint8_t usSelectedSignal, uint8_t usSignalAspect )
+{
+	uint16_t	uiLedMask;
+	uint8_t		usStartIdx;
+	uint8_t		usStopIdx;
+
+	if(		(NULL == m_arpclTransition[ usSelectedSignal ])
+		&&	(RANGIER_ASPECTS > usSignalAspect)
+		&&	(usSignalAspect != m_arusRangierAspect[ usSelectedSignal ])	)
+	{
+		usStartIdx	= RANGIER_1_LEDS_IDX_COUNT * usSelectedSignal;
+		usStopIdx	= usStartIdx + RANGIER_1_LEDS_IDX_COUNT;
+		uiLedMask	= RANGIER_1_LEDS << usStartIdx;
+
+		if( RANGIER_ASPECT_SH0 != m_arusRangierAspect[ usSelectedSignal ] )
+		{
+			m_arpclTransition[ usSelectedSignal ] =
+				new TransitionClass( (uint8_t *)&Rangier_to_Sh0, uiLedMask, usStartIdx, usStopIdx );
+		}
+		else if( RANGIER_ASPECT_SH1 == usSignalAspect )
+		{
+			m_arpclTransition[ usSelectedSignal ] =
+				new TransitionClass( (uint8_t *)&Rangier_to_Sh1, uiLedMask, usStartIdx, usStopIdx );
+		}
+		else
+		{
+			m_arpclTransition[ usSelectedSignal ] =
+				new TransitionClass( (uint8_t *)&Rangier_to_ShKe, uiLedMask, usStartIdx, usStopIdx );
+		}
+
+		m_arusRangierAspect[ usSelectedSignal ] = usSignalAspect;
 	}
 }
 

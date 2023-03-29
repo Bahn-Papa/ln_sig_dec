@@ -63,6 +63,13 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	10		from: 24.03.2023
+//#
+//#	Implementation:
+//#		-	add new definitions for rangier signal aspects
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	9		from: 23.03.2023
 //#
 //#	Implementation:
@@ -155,6 +162,7 @@
 //==========================================================================
 
 #define SIGNAL_ASPECTS				5
+#define RANGIER_ASPECTS				3
 
 //----------------------------------------------------------------------
 //	signal aspects
@@ -164,6 +172,13 @@
 #define SIGNAL_ASPECT_HP2			2
 #define SIGNAL_ASPECT_SH1			3
 #define SIGNAL_ASPECT_KENNLICHT		4
+
+//----------------------------------------------------------------------
+//	signal aspects
+//
+#define RANGIER_ASPECT_SH0			0
+#define RANGIER_ASPECT_SH1			1
+#define RANGIER_ASPECT_SHKE			2
 
 //----------------------------------------------------------------------
 //	definitions for the parts in a sequence control word

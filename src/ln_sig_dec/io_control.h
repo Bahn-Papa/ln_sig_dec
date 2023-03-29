@@ -15,6 +15,17 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	12		from: 24.03.2023
+//#
+//#	Implementation:
+//#		-	add handling for rangier signal aspects
+//#			new variable
+//#				m_arusRangierAspect
+//#			new function
+//#				HandleRangierAspect()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	11		from: 23.03.2023
 //#
 //#	Implementation:
@@ -290,7 +301,7 @@
 #define IDX_RANGIER_SIGNAL_1_BIT_0		0
 #define IDX_RANGIER_SIGNAL_1_BIT_1		1
 
-#define RANGIER_1_LEDS_IDX_START		IDX_RANGIER_SIGNAL_1_BIT_0
+#define RANGIER_1_LEDS_IDX_START		LED_A
 #define RANGIER_1_LEDS_IDX_COUNT		3
 #define RANGIER_1_LEDS_IDX_STOP			(RANGIER_1_LEDS_IDX_START + RANGIER_1_LEDS_IDX_COUNT)
 
@@ -300,7 +311,7 @@
 #define IDX_RANGIER_SIGNAL_2_BIT_0		2
 #define IDX_RANGIER_SIGNAL_2_BIT_1		3
 
-#define RANGIER_2_LEDS_IDX_START		IDX_RANGIER_SIGNAL_2_BIT_0
+#define RANGIER_2_LEDS_IDX_START		LED_D
 #define RANGIER_2_LEDS_IDX_COUNT		3
 #define RANGIER_2_LEDS_IDX_STOP			(RANGIER_2_LEDS_IDX_START + RANGIER_2_LEDS_IDX_COUNT)
 
@@ -310,7 +321,7 @@
 #define IDX_RANGIER_SIGNAL_3_BIT_0		4
 #define IDX_RANGIER_SIGNAL_3_BIT_1		5
 
-#define RANGIER_3_LEDS_IDX_START		IDX_RANGIER_SIGNAL_3_BIT_0
+#define RANGIER_3_LEDS_IDX_START		LED_G
 #define RANGIER_3_LEDS_IDX_COUNT		3
 #define RANGIER_3_LEDS_IDX_STOP			(RANGIER_3_LEDS_IDX_START + RANGIER_3_LEDS_IDX_COUNT)
 
@@ -320,7 +331,7 @@
 #define IDX_RANGIER_SIGNAL_4_BIT_0		6
 #define IDX_RANGIER_SIGNAL_4_BIT_1		7
 
-#define RANGIER_4_LEDS_IDX_START		IDX_RANGIER_SIGNAL_4_BIT_0
+#define RANGIER_4_LEDS_IDX_START		LED_J
 #define RANGIER_4_LEDS_IDX_COUNT		3
 #define RANGIER_4_LEDS_IDX_STOP			(RANGIER_4_LEDS_IDX_START + RANGIER_4_LEDS_IDX_COUNT)
 
@@ -422,6 +433,7 @@ class IO_ControlClass
 	private:
 		TransitionClass *	m_arpclTransition[ RANGIER_SIGNAL_COUNT ];
 
+		uint8_t		m_arusRangierAspect[ RANGIER_SIGNAL_COUNT ];
 		uint32_t	m_ulLastCycleStartTime;
 		uint32_t	m_ulCycleTime;
 		uint32_t	m_ulCycleStepTime;
@@ -447,6 +459,7 @@ class IO_ControlClass
 		void		CalculateFadeRates( void );
 		void		HandleSignalAspectMain( uint8_t usSignalAspect, uint8_t usExtraSignals );
 		void		HandleSignalAspectApproach( uint8_t usSignalAspect, uint8_t usExtraSignals );
+		void		HandleRangierAspect( uint8_t usSelectedSignal, uint8_t usSignalAspect );
 		void		ProcessBrightnessAndFade( void );
 };
 
