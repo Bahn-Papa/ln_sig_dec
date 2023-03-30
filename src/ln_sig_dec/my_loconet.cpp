@@ -7,6 +7,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	13		from: 30.03.2023
+//#
+//#	Implementation:
+//#		-	add handling for a 5th rangier signal
+//#			changes in function
+//#				LoconetReceived()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	12		from: 17.03.2023
 //#
 //#	Implementation:
@@ -358,6 +367,10 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 
 						case IDX_RANGIER_SIGNAL_4_BIT_1:
 							AddSignalAspect( SIGNAL_SELECTED_RANGIER_4, bIsGreen, 0x02 );
+							break;
+
+						case IDX_RANGIER_SIGNAL_5_BIT_0:
+							AddSignalAspect( SIGNAL_SELECTED_RANGIER_5, bIsGreen, 0x01 );
 							break;
 					}
 				}

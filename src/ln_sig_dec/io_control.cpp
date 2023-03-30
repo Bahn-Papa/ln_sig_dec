@@ -28,6 +28,17 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	21		from: 30.03.2023
+//#
+//#	Implementation:
+//#		-	add handling for a 5th rangier signal
+//#			changes in functions
+//#				Init()
+//#				HandleSignalAspect()
+//#				HandleRangierAspect()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	20		from: 24.03.2023
 //#
 //#	Implementation:
@@ -574,6 +585,7 @@ void IO_ControlClass::Init( void )
 		SwitchLed( LED_D, true );
 		SwitchLed( LED_G, true );
 		SwitchLed( LED_J, true );
+		SwitchLed( LED_M, true );
 	}
 	else
 	{
@@ -829,6 +841,7 @@ void IO_ControlClass::HandleSignalAspect(	uint8_t usSelectedSignal,
 		case SIGNAL_SELECTED_RANGIER_2:
 		case SIGNAL_SELECTED_RANGIER_3:
 		case SIGNAL_SELECTED_RANGIER_4:
+		case SIGNAL_SELECTED_RANGIER_5:
 			HandleRangierAspect( usSelectedSignal, usSignalAspect );
 			break;
 	}
@@ -942,9 +955,18 @@ void IO_ControlClass::HandleRangierAspect( uint8_t usSelectedSignal, uint8_t usS
 		&&	(RANGIER_ASPECTS > usSignalAspect)
 		&&	(usSignalAspect != m_arusRangierAspect[ usSelectedSignal ])	)
 	{
-		usStartIdx	= RANGIER_1_LEDS_IDX_COUNT * usSelectedSignal;
-		usStopIdx	= usStartIdx + RANGIER_1_LEDS_IDX_COUNT;
-		uiLedMask	= RANGIER_1_LEDS << usStartIdx;
+		if( SIGNAL_SELECTED_RANGIER_5 == usSelectedSignal )
+		{
+			usStartIdx	= RANGIER_5_LEDS_IDX_START;
+			usStopIdx	= RANGIER_5_LEDS_IDX_STOP;
+			uiLedMask	= RANGIER_5_LEDS;
+		}
+		else
+		{
+			usStartIdx	= RANGIER_1_LEDS_IDX_COUNT * usSelectedSignal;
+			usStopIdx	= usStartIdx + RANGIER_1_LEDS_IDX_COUNT;
+			uiLedMask	= RANGIER_1_LEDS << usStartIdx;
+		}
 
 		if( RANGIER_ASPECT_SH0 != m_arusRangierAspect[ usSelectedSignal ] )
 		{
@@ -956,7 +978,7 @@ void IO_ControlClass::HandleRangierAspect( uint8_t usSelectedSignal, uint8_t usS
 			m_arpclTransition[ usSelectedSignal ] =
 				new TransitionClass( (uint8_t *)&Rangier_to_Sh1, uiLedMask, usStartIdx, usStopIdx );
 		}
-		else
+		else if( SIGNAL_SELECTED_RANGIER_5 != usSelectedSignal )
 		{
 			m_arpclTransition[ usSelectedSignal ] =
 				new TransitionClass( (uint8_t *)&Rangier_to_ShKe, uiLedMask, usStartIdx, usStopIdx );

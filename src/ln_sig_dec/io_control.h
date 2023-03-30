@@ -15,6 +15,13 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	13		from: 30.03.2023
+//#
+//#	Implementation:
+//#		-	add handling for a 5th rangier signal
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	12		from: 24.03.2023
 //#
 //#	Implementation:
@@ -264,8 +271,9 @@
 #define SIGNAL_SELECTED_RANGIER_2	1
 #define SIGNAL_SELECTED_RANGIER_3	2
 #define SIGNAL_SELECTED_RANGIER_4	3
+#define SIGNAL_SELECTED_RANGIER_5	4
 
-#define RANGIER_SIGNAL_COUNT		4
+#define RANGIER_SIGNAL_COUNT		5
 
 //----------------------------------------------------------------------
 //	index for signal aspects
@@ -334,6 +342,16 @@
 #define RANGIER_4_LEDS_IDX_START		LED_J
 #define RANGIER_4_LEDS_IDX_COUNT		3
 #define RANGIER_4_LEDS_IDX_STOP			(RANGIER_4_LEDS_IDX_START + RANGIER_4_LEDS_IDX_COUNT)
+
+//----	rangier signal 5  ------------------------------------------
+#define RANGIER_5_LEDS					0x3000
+
+#define IDX_RANGIER_SIGNAL_5_BIT_0		8
+#define IDX_RANGIER_SIGNAL_5_BIT_1		9
+
+#define RANGIER_5_LEDS_IDX_START		LED_M
+#define RANGIER_5_LEDS_IDX_COUNT		2
+#define RANGIER_5_LEDS_IDX_STOP			(RANGIER_5_LEDS_IDX_START + RANGIER_5_LEDS_IDX_COUNT)
 
 
 //==========================================================================
