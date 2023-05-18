@@ -28,6 +28,13 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	22		from: 18.05.2023
+//#
+//#	Bug Fix:
+//#		-	change input pin for track contact from PB2 to PB3
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	21		from: 30.03.2023
 //#
 //#	Implementation:
@@ -337,7 +344,7 @@
 //----------------------------------------------------------------------
 //	Track contact definitions
 //
-#define	TRACK_BIT					PB2
+#define	TRACK_BIT					PB3
 #define TRACK_PIN					PINB
 
 #define TRACK_CONTACT_WAIT_TIME		100
