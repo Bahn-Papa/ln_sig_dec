@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		6
-#define VERSION_BUGFIX		3
+#define VERSION_BUGFIX		4
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,13 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.06.04		from: 04.06.2023
+//#
+//#	Bug Fix:
+//#		-	do not go into prog mode when a discover msg was detected
 //#
 //#-------------------------------------------------------------------------
 //#
