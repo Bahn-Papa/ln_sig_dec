@@ -28,6 +28,17 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	23		from: 08.06.2023
+//#
+//#	Implementation:
+//#		-	add handling if no main signal is present
+//#			changes in functions
+//#				Init()
+//#				HandleSignalAspect()
+//#				HandleSignalAspectApproach()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	22		from: 18.05.2023
 //#
 //#	Bug Fix:
@@ -594,13 +605,23 @@ void IO_ControlClass::Init( void )
 		SwitchLed( LED_J, true );
 		SwitchLed( LED_M, true );
 	}
-	else
+	else if( m_bMainSignalPresent )
 	{
-		SwitchLed( LED_C, true );
+		SwitchLed( LED_MAIN_RED_LEFT, true );
 
 		if( bIsASig )
 		{
-			SwitchLed( LED_D, true );
+			SwitchLed( LED_MAIN_RED_RIGHT, true );
+		}
+	}
+	else
+	{
+		SwitchLed( LED_APPROACH_YELLOW_TOP,		true );
+		SwitchLed( LED_APPROACH_YELLOW_BOTTOM,	true );
+
+		if( 0 == g_clLncvStorage.ReadLNCV( LNCV_ADR_LIGHT_I ) )
+		{
+			SwitchLed( LED_APPROACH_KENNLICHT, true );
 		}
 	}
 }
@@ -837,11 +858,17 @@ void IO_ControlClass::HandleSignalAspect(	uint8_t usSelectedSignal,
 	switch( usSelectedSignal )
 	{
 		case SIGNAL_SELECTED_MAIN:
-			HandleSignalAspectMain( usSignalAspect, usExtraSignals );
+			if( m_bMainSignalPresent )
+			{
+				HandleSignalAspectMain( usSignalAspect, usExtraSignals );
+			}
 			break;
 
 		case SIGNAL_SELECTED_APPROACH:
-			HandleSignalAspectApproach( usSignalAspect, usExtraSignals );
+			if( m_bApproachSignalPresent )
+			{
+				HandleSignalAspectApproach( usSignalAspect, usExtraSignals );
+			}
 			break;
 
 		case SIGNAL_SELECTED_RANGIER_1:
@@ -903,9 +930,7 @@ void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect, uint8_t us
 //
 void IO_ControlClass::HandleSignalAspectApproach( uint8_t usSignalAspect, uint8_t usExtraSignals )
 {
-	if(		m_bApproachSignalPresent
-		&& (NULL == m_arpclTransition[ 0 ])
-		&& (SIGNAL_ASPECTS > usSignalAspect) )
+	if( (NULL == m_arpclTransition[ 0 ]) && (SIGNAL_ASPECTS > usSignalAspect) )
 	{
 		//------------------------------------------------------
 		//	first check if the new transition is allowed
