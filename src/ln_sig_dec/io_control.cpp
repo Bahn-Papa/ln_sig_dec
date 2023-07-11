@@ -28,6 +28,20 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	24		from: 11.07.2023
+//#
+//#	Implementation:
+//#		-	improve handling when two transitions should be handled at
+//#			the same time
+//#			changed functions
+//#				Loop()
+//#				HandleSignalAspectMain()
+//#				HandleSignalAspectApproach()
+//#			new function
+//#				ProcessTransition()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	23		from: 08.06.2023
 //#
 //#	Implementation:
@@ -633,8 +647,8 @@ void IO_ControlClass::Init( void )
 //
 void IO_ControlClass::Loop( void )
 {
-	TransitionClass	*	pclTransition;
-	uint32_t			ulMillis		= millis();
+	uint32_t	ulMillis = millis();
+
 
 	ProcessBrightnessAndFade();
 
@@ -712,19 +726,17 @@ void IO_ControlClass::Loop( void )
 	//----------------------------------------------------------
 	//	handle transitions
 	//
-	for( uint8_t idx = 0 ; RANGIER_SIGNAL_COUNT > idx ; idx++ )
+	if( SIGNAL_TYPE_FOUR_RANGIER_SIG == m_usSignalType )
 	{
-		pclTransition = m_arpclTransition[ idx ];
-
-		if( NULL != pclTransition )
+		for( uint8_t idx = 0 ; RANGIER_SIGNAL_COUNT > idx ; idx++ )
 		{
-			if( pclTransition->Loop( ulMillis ) )
-			{
-				delete pclTransition;
-
-				m_arpclTransition[ idx ] = NULL;
-			}
+			ProcessTransition( idx, ulMillis );
 		}
+	}
+	else if( ProcessTransition( 0, ulMillis ) )
+	{
+		m_arpclTransition[ 0 ]	= m_arpclTransition[ 1 ];
+		m_arpclTransition[ 1 ]	= NULL;
 	}
 }
 
@@ -888,9 +900,11 @@ void IO_ControlClass::HandleSignalAspect(	uint8_t usSelectedSignal,
 //
 void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect, uint8_t usExtraSignals )
 {
-	uint8_t *pusStep;
+	TransitionClass	*	pclTransition;
+	uint8_t *			pusStep;
 
-	if( (NULL == m_arpclTransition[ 0 ]) && (SIGNAL_ASPECTS > usSignalAspect) )
+
+	if( SIGNAL_ASPECTS > usSignalAspect )
 	{
 		//------------------------------------------------------
 		//	first check if the new transition is allowed
@@ -906,14 +920,22 @@ void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect, uint8_t us
 			//		start the transition
 			//		store new signal aspect
 			//
-			if( m_usSignalAspectMain != usSignalAspect )
+			if( (NULL == m_arpclTransition[ 0 ]) || (NULL == m_arpclTransition[ 1 ]) )
 			{
 				pusStep = GetFirstStepMain( m_usSignalAspectMain, usSignalAspect );
 
-				m_arpclTransition[ 0 ]	= new TransitionClass(	pusStep,
-																MAIN_LEDS,
-																MAIN_LEDS_IDX_START,
-																MAIN_LEDS_IDX_STOP		);
+				pclTransition	= new TransitionClass(	pusStep, MAIN_LEDS,
+														MAIN_LEDS_IDX_START, MAIN_LEDS_IDX_STOP );
+
+				if( NULL == m_arpclTransition[ 0 ] )
+				{
+					m_arpclTransition[ 0 ]	= pclTransition;
+				}
+				else
+				{
+					m_arpclTransition[ 1 ]	= pclTransition;
+				}
+
 				m_usSignalAspectMain	= usSignalAspect;
 				m_usExtraSignals		= usExtraSignals;
 
@@ -930,7 +952,11 @@ void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect, uint8_t us
 //
 void IO_ControlClass::HandleSignalAspectApproach( uint8_t usSignalAspect, uint8_t usExtraSignals )
 {
-	if( (NULL == m_arpclTransition[ 0 ]) && (SIGNAL_ASPECTS > usSignalAspect) )
+	TransitionClass	*	pclTransition;
+	uint8_t *			pusStep;
+
+
+	if( SIGNAL_ASPECTS > usSignalAspect )
 	{
 		//------------------------------------------------------
 		//	first check if the new transition is allowed
@@ -950,23 +976,30 @@ void IO_ControlClass::HandleSignalAspectApproach( uint8_t usSignalAspect, uint8_
 				m_usSignalAspectApproach	= usSignalAspect;
 				m_usExtraSignals			= usExtraSignals;
 			}
-			else
+			else if( (NULL == m_arpclTransition[ 0 ]) || (NULL == m_arpclTransition[ 1 ]) )
 			{
 				//--------------------------------------------------
 				//	if we got a new signal aspect then
 				//		start the transition
 				//		store new signal aspect
 				//
-				if( m_usSignalAspectApproach != usSignalAspect )
+				pusStep			= GetFirstStepApproach( m_usSignalAspectApproach, usSignalAspect );
+				pclTransition	= new TransitionClass(	pusStep, APPROACH_LEDS,
+														APPROACH_LEDS_IDX_START, APPROACH_LEDS_IDX_STOP );
+
+				if( NULL == m_arpclTransition[ 0 ] )
 				{
-					m_arpclTransition[ 0 ] = new TransitionClass( GetFirstStepApproach(	m_usSignalAspectApproach,
-																						usSignalAspect ),
-																	APPROACH_LEDS,
-																	APPROACH_LEDS_IDX_START,
-																	APPROACH_LEDS_IDX_STOP		);
-					m_usSignalAspectApproach	= usSignalAspect;
-					m_usExtraSignals			= usExtraSignals;
+					m_arpclTransition[ 0 ]	= pclTransition;
 				}
+				else
+				{
+					m_arpclTransition[ 1 ]	= pclTransition;
+				}
+
+				m_usSignalAspectApproach	= usSignalAspect;
+				m_usExtraSignals			= usExtraSignals;
+
+				SwitchLed( LED_GREEN, true );
 			}
 		}
 	}
@@ -1357,6 +1390,32 @@ void IO_ControlClass::SwitchExtraSignalsOff( void )
 	{
 		HandleLed( g_arLedIndex[ idx ], false );
 	}
+}
+
+
+//******************************************************************
+//	ProcessTransition
+//------------------------------------------------------------------
+//	This function will process the selected transition
+//
+bool IO_ControlClass::ProcessTransition( uint8_t idx, uint32_t ulMillis )
+{
+	TransitionClass	*	pclTransition	= m_arpclTransition[ idx ];
+	bool				bFinished		= false;
+
+
+	if( NULL != pclTransition )
+	{
+		if( pclTransition->Loop( ulMillis ) )
+		{
+			delete pclTransition;
+
+			m_arpclTransition[ idx ]	= NULL;
+			bFinished					= true;
+		}
+	}
+
+	return( bFinished );
 }
 
 

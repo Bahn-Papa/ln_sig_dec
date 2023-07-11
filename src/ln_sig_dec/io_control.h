@@ -15,6 +15,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	14		from: 11.07.2023
+//#
+//#	Implementation:
+//#		-	improve handling when two transitions should be handled at
+//#			the same time
+//#			new function
+//#				ProcessTransition()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	13		from: 30.03.2023
 //#
 //#	Implementation:
@@ -478,6 +488,7 @@ class IO_ControlClass
 		void		HandleSignalAspectMain( uint8_t usSignalAspect, uint8_t usExtraSignals );
 		void		HandleSignalAspectApproach( uint8_t usSignalAspect, uint8_t usExtraSignals );
 		void		HandleRangierAspect( uint8_t usSelectedSignal, uint8_t usSignalAspect );
+		bool		ProcessTransition( uint8_t idx, uint32_t ulMillis );
 		void		ProcessBrightnessAndFade( void );
 };
 
