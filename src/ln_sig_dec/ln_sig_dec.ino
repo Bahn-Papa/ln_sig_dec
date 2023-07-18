@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		7
-#define VERSION_BUGFIX		1
+#define VERSION_BUGFIX		2
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,14 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.07.02		from: 18.07.2023
+//#
+//#	Bug Fix:
+//#		-	do not go into prog mode when a programming start msg
+//#			with broadcast address was detected
 //#
 //#-------------------------------------------------------------------------
 //#

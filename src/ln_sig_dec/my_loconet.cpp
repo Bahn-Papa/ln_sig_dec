@@ -7,6 +7,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	15		from: 18.07.2023
+//#
+//#	Bug Fix:
+//#		-	do not go into prog mode when a programming start msg
+//#			with broadcast address was detected
+//#			change in function
+//#				notifyLNCVprogrammingStart()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	14		from: 04.06.2023
 //#
 //#	Bug Fix:
@@ -668,10 +678,10 @@ int8_t notifyLNCVprogrammingStart( uint16_t &ArtNr, uint16_t &ModuleAddress )
 		if( 0xFFFF == ModuleAddress )
 		{
 			//----	broadcast, so give Module Address back  -------
-			g_clMyLoconet.SetProgMode( true );
+//			g_clMyLoconet.SetProgMode( true );
 
 			ModuleAddress	= g_uiModuleAddress;
-			retval			= LNCV_LACK_OK;
+//			retval			= LNCV_LACK_OK;
 		}
 		else if( g_uiModuleAddress == ModuleAddress )
 		{
