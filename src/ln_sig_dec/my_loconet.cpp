@@ -7,6 +7,14 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	16		from: 26.07.2023
+//#
+//#	Bug Fix:
+//#		-	by mistake no acknowledge was send when receiving a programming
+//#			start with broadcast as address.
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	15		from: 18.07.2023
 //#
 //#	Bug Fix:
@@ -681,7 +689,7 @@ int8_t notifyLNCVprogrammingStart( uint16_t &ArtNr, uint16_t &ModuleAddress )
 //			g_clMyLoconet.SetProgMode( true );
 
 			ModuleAddress	= g_uiModuleAddress;
-//			retval			= LNCV_LACK_OK;
+			retval			= LNCV_LACK_OK;
 		}
 		else if( g_uiModuleAddress == ModuleAddress )
 		{
