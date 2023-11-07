@@ -28,6 +28,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	25		from: 07.11.2023
+//#
+//#	Bug Fix:
+//#		-	change handling of brightness and fade
+//#			first check step, then period
+//#			change in function
+//#				ProcessBrightnessAndFade()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	24		from: 11.07.2023
 //#
 //#	Implementation:
@@ -1435,50 +1445,7 @@ void IO_ControlClass::ProcessBrightnessAndFade( void )
 
 	
 	//----------------------------------------------------------
-	//	first check if a new cycle should start
-	//
-	if( ulActualTime > m_ulCycleTime )
-	{
-		//------------------------------------------------------
-		//	yes, we should start a new cycle
-		//	so store the cycle start time,
-		//	set the time when the next cycle should start
-		//	and the time when the next cycle step should start
-		//
-		m_ulLastCycleStartTime	= ulActualTime;
-		m_ulCycleTime			= ulActualTime + PWM_CYCLE_TIME;
-		m_ulCycleStepTime		= ulActualTime + PWM_STEP_TIME;
-
-		//------------------------------------------------------
-		//	then switch on each LED where a fade is active
-		//	or the target brightness is not '0'
-		//	and
-		//	for each active fade process the fade
-		//
-		for( idx = 0 ; idx < SIGNAL_LEDS ; idx++ )
-		{
-			pChannel = &(g_arChannel[ idx ]);
-
-			if(		(pChannel->m_fTarget > 0.0)
-				||	(pChannel->m_fActual > 0.0) )
-			{
-				sbi( *g_arPorts[ idx ], g_arPortPins[ idx ] );
-			}
-
-			if( pChannel->m_fActual < pChannel->m_fTarget )
-			{
-				pChannel->m_fActual += pChannel->m_fFadeRateUp;
-			}
-
-			if( pChannel->m_fActual > pChannel->m_fTarget )
-			{
-				pChannel->m_fActual -= pChannel->m_fFadeRateDwon;
-			}
-		}
-	}
-	
-	//----------------------------------------------------------
-	//	next check if a cycle step should be handled
+	//	first check if a cycle step should be handled
 	//
 	if( ulActualTime > m_ulCycleStepTime )
 	{
@@ -1552,6 +1519,49 @@ void IO_ControlClass::ProcessBrightnessAndFade( void )
 			}
 
 			uiMask <<= 1;
+		}
+	}
+
+	//----------------------------------------------------------
+	//	next check if a new cycle should start
+	//
+	if( (ulActualTime > m_ulCycleTime) || (ulActualTime < m_ulLastCycleStartTime) )
+	{
+		//------------------------------------------------------
+		//	yes, we should start a new cycle
+		//	so store the cycle start time,
+		//	set the time when the next cycle should start
+		//	and the time when the next cycle step should start
+		//
+		m_ulLastCycleStartTime	= ulActualTime;
+		m_ulCycleTime			= ulActualTime + PWM_CYCLE_TIME;
+		m_ulCycleStepTime		= ulActualTime + PWM_STEP_TIME;
+
+		//------------------------------------------------------
+		//	then switch on each LED where a fade is active
+		//	or the target brightness is not '0'
+		//	and
+		//	for each active fade process the fade
+		//
+		for( idx = 0 ; idx < SIGNAL_LEDS ; idx++ )
+		{
+			pChannel = &(g_arChannel[ idx ]);
+
+			if(		(pChannel->m_fTarget > 0.0)
+				||	(pChannel->m_fActual > 0.0) )
+			{
+				sbi( *g_arPorts[ idx ], g_arPortPins[ idx ] );
+			}
+
+			if( pChannel->m_fActual < pChannel->m_fTarget )
+			{
+				pChannel->m_fActual += pChannel->m_fFadeRateUp;
+			}
+
+			if( pChannel->m_fActual > pChannel->m_fTarget )
+			{
+				pChannel->m_fActual -= pChannel->m_fFadeRateDwon;
+			}
 		}
 	}
 }

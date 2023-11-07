@@ -7,6 +7,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	17		from: 07.11.2023
+//#
+//#	Bug Fix:
+//#		-	switch off green LED was too late
+//#			change in function
+//#				SetSelectedSignalAspect
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	16		from: 26.07.2023
 //#
 //#	Bug Fix:
@@ -599,10 +608,10 @@ void MyLoconetClass::SetExtraSignal( uint8_t usLED, bool bIsGreen )
 //
 void MyLoconetClass::SetSelectedSignalAspect( void )
 {
+	g_clControl.SwitchLed( LED_GREEN, false );
 	g_clControl.HandleSignalAspect(	m_usSignalSelected,
 									m_usSignalAspect,
 									m_usExtraSignals	);
-	g_clControl.SwitchLed( LED_GREEN, false );
 
 	m_usSignalSelected	= 0;
 	m_usSignalAspect	= 0;
