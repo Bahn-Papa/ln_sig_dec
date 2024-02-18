@@ -15,6 +15,17 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	15		from: 18.02.2024
+//#
+//#	Implementation:
+//#		-	improve handling of extra signals
+//#			rename variable
+//#				m_usExtraSignals	=>	m_usExtraSignalsMain
+//#			new variable
+//#				m_usExtraSignalsApproach
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	14		from: 11.07.2023
 //#
 //#	Implementation:
@@ -475,7 +486,8 @@ class IO_ControlClass
 		uint8_t		m_usSignalType;
 		uint8_t		m_usSignalAspectMain;
 		uint8_t		m_usSignalAspectApproach;
-		uint8_t		m_usExtraSignals;
+		uint8_t		m_usExtraSignalsMain;
+		uint8_t		m_usExtraSignalsApproach;
 		bool		m_bNightLight;
 		bool		m_bApproachDark;
 		bool		m_bErsatzSignalFlash;

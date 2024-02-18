@@ -7,6 +7,18 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	18		from: 18.02.2024
+//#
+//#	Implementation:
+//#		-	improvement of notify messages
+//#			don't react on notifySwitchReport and notifySwitchState
+//#			to avoid missinterpretation of requests.
+//#			delete functions
+//#				notifySwitchReport()
+//#				notifySwitchState()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	17		from: 07.11.2023
 //#
 //#	Bug Fix:
@@ -645,26 +657,6 @@ void notifySensor( uint16_t Address, uint8_t State )
 //----------------------------------------------------------------------
 //
 void notifySwitchRequest( uint16_t Address, uint8_t Output, uint8_t Direction )
-{
-	g_clMyLoconet.LoconetReceived( false, Address, Direction, Output );
-}
-
-
-//**********************************************************************
-//	notifySwitchReport
-//----------------------------------------------------------------------
-//
-void notifySwitchReport( uint16_t Address, uint8_t Output, uint8_t Direction )
-{
-	g_clMyLoconet.LoconetReceived( false, Address, Direction, Output );
-}
-
-
-//**********************************************************************
-//	notifySwitchState
-//----------------------------------------------------------------------
-//
-void notifySwitchState( uint16_t Address, uint8_t Output, uint8_t Direction )
 {
 	g_clMyLoconet.LoconetReceived( false, Address, Direction, Output );
 }

@@ -28,6 +28,22 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	26		from: 18.02.2024
+//#
+//#	Implementation:
+//#		-	improve handling of extra signals
+//#			rename variable
+//#				m_usExtraSignals	=>	m_usExtraSignalsMain
+//#			new variable
+//#				m_usExtraSignalsApproach
+//#			change in functions
+//#				Init()
+//#				HandleSignalAspectMain()
+//#				HandleSignalAspectApproach()
+//#				SwitchExtraSignalsOn()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	25		from: 07.11.2023
 //#
 //#	Bug Fix:
@@ -558,7 +574,8 @@ void IO_ControlClass::Init( void )
 	m_uiFadeTimeDown				= 0;
 	m_usSignalAspectMain			= SIGNAL_ASPECT_HP0;
 	m_usSignalAspectApproach		= SIGNAL_ASPECT_HP0;
-	m_usExtraSignals				= 0x00;
+	m_usExtraSignalsMain			= 0x00;
+	m_usExtraSignalsApproach		= 0x00;
 	m_bNightLight					= false;
 	m_bApproachDark					= false;
 	m_bErsatzSignalFlash			= false;
@@ -947,7 +964,7 @@ void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect, uint8_t us
 				}
 
 				m_usSignalAspectMain	= usSignalAspect;
-				m_usExtraSignals		= usExtraSignals;
+				m_usExtraSignalsMain	= usExtraSignals;
 
 				SwitchLed( LED_GREEN, true );
 			}
@@ -984,7 +1001,7 @@ void IO_ControlClass::HandleSignalAspectApproach( uint8_t usSignalAspect, uint8_
 				//	so just set the new signal aspect
 				//
 				m_usSignalAspectApproach	= usSignalAspect;
-				m_usExtraSignals			= usExtraSignals;
+				m_usExtraSignalsApproach	= usExtraSignals;
 			}
 			else if( (NULL == m_arpclTransition[ 0 ]) || (NULL == m_arpclTransition[ 1 ]) )
 			{
@@ -1007,7 +1024,7 @@ void IO_ControlClass::HandleSignalAspectApproach( uint8_t usSignalAspect, uint8_
 				}
 
 				m_usSignalAspectApproach	= usSignalAspect;
-				m_usExtraSignals			= usExtraSignals;
+				m_usExtraSignalsApproach	= usExtraSignals;
 
 				SwitchLed( LED_GREEN, true );
 			}
@@ -1363,12 +1380,13 @@ uint8_t * IO_ControlClass::GetFirstStepApproach( uint8_t usAspectFrom, uint8_t u
 //
 void IO_ControlClass::SwitchExtraSignalsOn( void )
 {
-	uint8_t		usMask	= 0x01;
+	uint8_t		usExtraSignals	= m_usExtraSignalsMain | m_usExtraSignalsApproach;
+	uint8_t		usMask			= 0x01;
 	uint8_t		usLedNo;
 
 	for( uint8_t idx = 0 ; EXTRA_SIGNAL_COUNT > idx ; idx++ )
 	{
-		if( m_usExtraSignals & usMask )
+		if( usExtraSignals & usMask )
 		{
 			usLedNo = g_arLedIndex[ idx ];
 

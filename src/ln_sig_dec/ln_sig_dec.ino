@@ -15,8 +15,8 @@
 #include "compile_options.h"
 
 #define VERSION_MAIN		PLATINE_VERSION
-#define	VERSION_MINOR		7
-#define VERSION_BUGFIX		4
+#define	VERSION_MINOR		8
+#define VERSION_BUGFIX		0
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,16 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.08.00		from: 18.02.2024
+//#
+//#	Implementation:
+//#		-	improve handling of extra signals
+//#		-	improvement of notify messages
+//#			don't react on notifySwitchReport and notifySwitchState
+//#			to avoid missinterpretation of requests.
 //#
 //#-------------------------------------------------------------------------
 //#
