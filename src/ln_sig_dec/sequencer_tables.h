@@ -63,6 +63,14 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	11		from: 31.07.2024
+//#
+//#	Bug Fix:
+//#		-	extra signals were not switched during approach signal handling
+//#			change in approach sequences
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	10		from: 24.03.2023
 //#
 //#	Implementation:
@@ -571,6 +579,7 @@ const uint8_t Main_E_from_KL[] PROGMEM =
 //
 const uint8_t Appr_to_Hp1[] PROGMEM =
 {
+	SEQUENCE_ADDITION_SIGNAL_ON,
 	0b00001000,
 	SEQUENCE_WAIT_FOR_FADE_FINISHED,
 	SEQUENCE_PAUSE_DARK,
@@ -590,6 +599,7 @@ const uint8_t Appr_to_Hp1[] PROGMEM =
 //
 const uint8_t Appr_to_Hp2[] PROGMEM =
 {
+	SEQUENCE_ADDITION_SIGNAL_ON,
 	0b00001000,
 	SEQUENCE_WAIT_FOR_FADE_FINISHED,
 	SEQUENCE_PAUSE_DARK,
@@ -612,6 +622,7 @@ const uint8_t Appr_to_Hp0[] PROGMEM =
 	SEQUENCE_WAIT_FOR_FADE_FINISHED,
 	0b00001010,
 	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_ADDITION_SIGNAL_OFF,
 	SEQUENCE_END
 };
 
