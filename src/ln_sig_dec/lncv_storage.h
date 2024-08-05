@@ -10,6 +10,14 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	11		from: 05.08.2024
+//#
+//#	Implementation:
+//#		-	add a new signal definition for an approach signal with
+//#			new definition: SIGNAL_TYPE_APPROACH
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	10		from: 17.03.2023
 //#
 //#	Implementation:
@@ -137,10 +145,11 @@
 #define SIGNAL_TYPE_KS_A_SIG				10
 #define SIGNAL_TYPE_KS_E_SIG				11
 #define SIGNAL_TYPE_FOUR_RANGIER_SIG		12
+#define SIGNAL_TYPE_APPROACH				13
 
 
 //----------------------------------------------------------------------
-//	address definitions for config informations
+//	address definitions where to store config informations
 //
 #define LNCV_ADR_MODULE_ADDRESS				0
 #define LNCV_ADR_ARTIKEL_NUMMER				1

@@ -28,6 +28,19 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	27		from: 05.08.2024
+//#
+//#	Implementation:
+//#		-	add a new signal type SIGNAL_TYPE_APPROACH
+//#			new variable
+//#				m_bApproachKennlichtSpecialHandling
+//#			changes in functions
+//#				Init()
+//#				SetSignalType()
+//#				SwitchExtraSignalsOff()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	26		from: 18.02.2024
 //#
 //#	Implementation:
@@ -562,27 +575,28 @@ void IO_ControlClass::Init( void )
 		m_arusRangierAspect[ idx ]	= RANGIER_ASPECT_SH0;
 	}
 
-	m_ulLastCycleStartTime			= 0L;
-	m_ulCycleTime					= 0L;
-	m_ulCycleStepTime				= 0L;
-	m_ulContactTime					= 0L;
-	m_ulErsatzSignalFlashTimer		= 0L;
-	m_uiErsatzSignalOffTimer		= 0;
-	m_uiLedsOn						= 0x0000;
-	m_uiFadeActive					= 0x0000;
-	m_uiFadeTimeUp					= 0;
-	m_uiFadeTimeDown				= 0;
-	m_usSignalAspectMain			= SIGNAL_ASPECT_HP0;
-	m_usSignalAspectApproach		= SIGNAL_ASPECT_HP0;
-	m_usExtraSignalsMain			= 0x00;
-	m_usExtraSignalsApproach		= 0x00;
-	m_bNightLight					= false;
-	m_bApproachDark					= false;
-	m_bErsatzSignalFlash			= false;
-	m_bMainSignalPresent			= false;
-	m_bApproachSignalPresent		= false;
+	m_ulLastCycleStartTime				= 0L;
+	m_ulCycleTime						= 0L;
+	m_ulCycleStepTime					= 0L;
+	m_ulContactTime						= 0L;
+	m_ulErsatzSignalFlashTimer			= 0L;
+	m_uiErsatzSignalOffTimer			= 0;
+	m_uiLedsOn							= 0x0000;
+	m_uiFadeActive						= 0x0000;
+	m_uiFadeTimeUp						= 0;
+	m_uiFadeTimeDown					= 0;
+	m_usSignalAspectMain				= SIGNAL_ASPECT_HP0;
+	m_usSignalAspectApproach			= SIGNAL_ASPECT_HP0;
+	m_usExtraSignalsMain				= 0x00;
+	m_usExtraSignalsApproach			= 0x00;
+	m_bNightLight						= false;
+	m_bApproachDark						= false;
+	m_bErsatzSignalFlash				= false;
+	m_bMainSignalPresent				= false;
+	m_bApproachSignalPresent			= false;
+	m_bApproachKennlichtSpecialHandling	= false;
 
-	m_bContactOccupied				= false;
+	m_bContactOccupied					= false;
 
 	g_stTimeValues.uiDarkTime				= g_clLncvStorage.ReadLNCV( LNCV_ADR_DARK_TIME );
 	g_stTimeValues.uiFlashTime				= g_clLncvStorage.ReadLNCV( LNCV_ADR_FLASH_TIME );
@@ -659,11 +673,11 @@ void IO_ControlClass::Init( void )
 	{
 		SwitchLed( LED_APPROACH_YELLOW_TOP,		true );
 		SwitchLed( LED_APPROACH_YELLOW_BOTTOM,	true );
-
-		if( 0 == g_clLncvStorage.ReadLNCV( LNCV_ADR_LIGHT_I ) )
-		{
-			SwitchLed( LED_APPROACH_KENNLICHT, true );
-		}
+	}
+	
+	if( m_bApproachKennlichtSpecialHandling )
+	{
+		SwitchLed( LED_APPROACH_KENNLICHT, true );
 	}
 }
 
@@ -1163,6 +1177,12 @@ bool IO_ControlClass::SetSignalType( void )
 
 	m_usSignalType	= (uint8_t)g_clLncvStorage.ReadLNCV( LNCV_ADR_SIGNAL_TYPE );
 
+	if( SIGNAL_TYPE_APPROACH == m_usSignalType )
+	{
+		m_bApproachKennlichtSpecialHandling	= true;
+		m_usSignalType						= SIGNAL_TYPE_59_E_SIG;
+	}
+
 	switch( m_usSignalType )
 	{
 		case SIGNAL_TYPE_59_A_SIG:
@@ -1412,11 +1432,25 @@ void IO_ControlClass::SwitchExtraSignalsOn( void )
 //
 void IO_ControlClass::SwitchExtraSignalsOff( void )
 {
+	uint8_t	usLedNo;
+
+
 	SetErsatzSignalFlash( false );
 
 	for( uint8_t idx = 0 ; EXTRA_SIGNAL_ERSATZSIGNAL_FLASH > idx ; idx++ )
 	{
-		HandleLed( g_arLedIndex[ idx ], false );
+		usLedNo = g_arLedIndex[ idx ];
+
+		//-----------------------------------------------------
+		//	do not switch off LED_APPROACH_KENNLICHT when
+		//	m_bApproachKennlichtSpecialHandling is true
+		//	in all other cases switch of the extra signals
+		//
+		if(		!m_bApproachKennlichtSpecialHandling
+			|| (LED_APPROACH_KENNLICHT != usLedNo)		)
+		{
+			HandleLed( usLedNo, false );
+		}
 	}
 }
 

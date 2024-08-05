@@ -15,6 +15,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	16		from: 05.08.2024
+//#
+//#	Implementation:
+//#		-	add new variable for SIGNAL_TYPE_APPROACH
+//#			new variable
+//#				m_bApproachKennlichtSpecialHandling
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	15		from: 18.02.2024
 //#
 //#	Implementation:
@@ -494,6 +503,7 @@ class IO_ControlClass
 		bool		m_bMainSignalPresent;
 		bool		m_bApproachSignalPresent;
 		bool		m_bContactOccupied;
+		bool		m_bApproachKennlichtSpecialHandling;
 
 		bool		SetSignalType( void );
 		void		CalculateFadeRates( void );
