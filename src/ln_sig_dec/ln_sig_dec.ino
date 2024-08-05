@@ -15,7 +15,7 @@
 #include "compile_options.h"
 
 #define VERSION_MAIN		PLATINE_VERSION
-#define	VERSION_MINOR		9
+#define	VERSION_MINOR		10
 #define VERSION_BUGFIX		0
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
@@ -24,6 +24,14 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.10.00		from: 05.08.2024
+//#
+//#	Implementation:
+//#		-	improve selection of main signal aspects. Now, only one
+//#			message is needed to start a signal aspec sequence
 //#
 //#-------------------------------------------------------------------------
 //#

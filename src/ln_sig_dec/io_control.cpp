@@ -28,6 +28,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	28		from: 05.08.2024
+//#
+//#	Implementation:
+//#		-	improve selection of main signal aspects. Now, only one
+//#			message is needed to start a signal aspec sequence
+//#			change in function
+//#				HandleSignalAspectMain()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	27		from: 05.08.2024
 //#
 //#	Implementation:
@@ -945,6 +955,21 @@ void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect, uint8_t us
 	uint8_t *			pusStep;
 
 
+	//---------------------------------------------------------
+	//	temporary "downgrade" usSignalAspect to valid number
+	//	this is done to have no gaps in the sequencer tables
+	//
+	if( 4 == usSignalAspect )
+	{
+		usSignalAspect = 3;
+	}
+	else if( 8 == usSignalAspect )
+	{
+		usSignalAspect = 4;
+	}
+	//
+	//---------------------------------------------------------
+	
 	if( SIGNAL_ASPECTS > usSignalAspect )
 	{
 		//------------------------------------------------------
