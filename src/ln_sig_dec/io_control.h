@@ -15,6 +15,17 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	17		from: 09.08.2024
+//#
+//#	Bug Fix:
+//#		-	handling of extra signals was wrong
+//#			every time all signals were handled where only a part should be
+//#			change in functions
+//#				SwitchExtraSignalsOn()
+//#				SwitchExtraSignalsOff()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	16		from: 05.08.2024
 //#
 //#	Implementation:
@@ -414,8 +425,8 @@ class IO_ControlClass
 		};
 
 		void SwitchLed( uint8_t usLedNo, bool bOn );
-		void SwitchExtraSignalsOn( void );
-		void SwitchExtraSignalsOff( void );
+		void SwitchExtraSignalsOn( uint8_t usSelectedSignal );
+		void SwitchExtraSignalsOff( uint8_t usSelectedSignal );
 
 		void HandleLed( uint8_t usLedNo, bool bOn );
 		void HandleSignalAspect(	uint8_t usSelectedSignal,

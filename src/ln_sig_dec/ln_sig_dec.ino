@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		10
-#define VERSION_BUGFIX		0
+#define VERSION_BUGFIX		1
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,14 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.10.01		from: 09.08.2024
+//#
+//#	Bug Fix:
+//#		-	handling of extra signals during a sequence was wrong
+//#			every time all signals were handled where only a part should be
 //#
 //#-------------------------------------------------------------------------
 //#

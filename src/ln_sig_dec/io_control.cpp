@@ -1423,7 +1423,7 @@ uint8_t * IO_ControlClass::GetFirstStepApproach( uint8_t usAspectFrom, uint8_t u
 //------------------------------------------------------------------
 //	This function will switch on the selected Extra signals
 //
-void IO_ControlClass::SwitchExtraSignalsOn( void )
+void IO_ControlClass::SwitchExtraSignalsOn( uint8_t usSelectedSignal )
 {
 	uint8_t		usExtraSignals	= m_usExtraSignalsMain | m_usExtraSignalsApproach;
 	uint8_t		usMask			= 0x01;
@@ -1453,18 +1453,27 @@ void IO_ControlClass::SwitchExtraSignalsOn( void )
 //******************************************************************
 //	SwitchExtraSignalsOff
 //------------------------------------------------------------------
-//	This function will switch off all Extra signals
+//	This function will switch off Extra signals, depending on
+//	which signal type is given
+//		SIGNAL_SELECTED_MAIN		all extra signals off
+//		SIGNAL_SELECTED_APPROACH	switch off only approach signal
+//									related extra signals
 //
-void IO_ControlClass::SwitchExtraSignalsOff( void )
+void IO_ControlClass::SwitchExtraSignalsOff( uint8_t usSelectedSignal )
 {
 	uint8_t	usLedNo;
+	uint8_t	idx		= 2;	//	start of approach extra signals
 
 
-	SetErsatzSignalFlash( false );
-
-	for( uint8_t idx = 0 ; EXTRA_SIGNAL_ERSATZSIGNAL_FLASH > idx ; idx++ )
+	if( SIGNAL_SELECTED_MAIN == usSelectedSignal )
 	{
-		usLedNo = g_arLedIndex[ idx ];
+		SetErsatzSignalFlash( false );
+		idx = 0;
+	}
+
+	while( EXTRA_SIGNAL_ERSATZSIGNAL_FLASH > idx )
+	{
+		usLedNo = g_arLedIndex[ idx++ ];
 
 		//-----------------------------------------------------
 		//	do not switch off LED_APPROACH_KENNLICHT when

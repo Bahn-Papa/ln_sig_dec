@@ -6,6 +6,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	2		from: 09.08.2024
+//#
+//#	Bug Fix:
+//#		-	handling of extra signals was wrong
+//#			every time all signals were handled where only a part should be
+//#			change in function
+//#				HandleControlGroup()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	1		from: 19.03.2023
 //#
 //#	Implementation:
@@ -268,13 +278,23 @@ bool TransitionClass::HandleControlGroup( uint32_t ulMillis, uint8_t usControlCo
 			}
 			break;
 
-		case SEQUENCE_ADDITION_SIGNAL_ON:
-			g_clControl.SwitchExtraSignalsOn();
+		case SEQUENCE_ADDITION_SIGNAL_MAIN_ON:
+			g_clControl.SwitchExtraSignalsOn( SIGNAL_SELECTED_MAIN );
 			m_bWaitForExtraFinished = true;
 			break;
 
-		case SEQUENCE_ADDITION_SIGNAL_OFF:
-			g_clControl.SwitchExtraSignalsOff();
+		case SEQUENCE_ADDITION_SIGNAL_MAIN_OFF:
+			g_clControl.SwitchExtraSignalsOff( SIGNAL_SELECTED_MAIN );
+			m_bWaitForExtraFinished = true;
+			break;
+
+		case SEQUENCE_ADDITION_SIGNAL_APPROACH_ON:
+			g_clControl.SwitchExtraSignalsOn( SIGNAL_SELECTED_APPROACH );
+			m_bWaitForExtraFinished = true;
+			break;
+
+		case SEQUENCE_ADDITION_SIGNAL_APPROACH_OFF:
+			g_clControl.SwitchExtraSignalsOff( SIGNAL_SELECTED_APPROACH );
 			m_bWaitForExtraFinished = true;
 			break;
 	}
