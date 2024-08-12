@@ -15,6 +15,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	18		from: 12.08.2024
+//#
+//#	Bug Fix:
+//#		-	when approach signal will be switched off then it should
+//#			go to signal aspect SIGNAL_ASPECT_HP0
+//#			new function
+//#				SetSignalAspectApproach()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	17		from: 09.08.2024
 //#
 //#	Bug Fix:
@@ -446,6 +456,11 @@ class IO_ControlClass
 		inline uint8_t GetSignalAspectApproach( void )
 		{
 			return( m_usSignalAspectApproach );
+		};
+
+		inline void SetSignalAspectApproach( uint8_t usAspect )
+		{
+			m_usSignalAspectApproach = usAspect;
 		};
 
 		uint8_t *	GetFirstStepMain( uint8_t usFromAspect, uint8_t usToAspect );

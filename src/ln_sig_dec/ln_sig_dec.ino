@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		10
-#define VERSION_BUGFIX		1
+#define VERSION_BUGFIX		2
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,14 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.10.02		from: 12.08.2024
+//#
+//#	Bug Fix:
+//#		-	when approach signal will be switched off then it should
+//#			go to signal aspect SIGNAL_ASPECT_HP0
 //#
 //#-------------------------------------------------------------------------
 //#

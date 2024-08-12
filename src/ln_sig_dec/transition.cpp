@@ -6,6 +6,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	3		from: 12.08.2024
+//#
+//#	Bug Fix:
+//#		-	when approach signal will be switched off then it should
+//#			go to signal aspect SIGNAL_ASPECT_HP0
+//#			change in function
+//#				HandleControlGroup()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	2		from: 09.08.2024
 //#
 //#	Bug Fix:
@@ -275,6 +285,8 @@ bool TransitionClass::HandleControlGroup( uint32_t ulMillis, uint8_t usControlCo
 														APPROACH_LEDS,
 														APPROACH_LEDS_IDX_START,
 														APPROACH_LEDS_IDX_STOP		);
+
+				g_clControl.SetSignalAspectApproach( SIGNAL_ASPECT_HP0 );
 			}
 			break;
 
