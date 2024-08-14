@@ -338,8 +338,6 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 {
 	device_t*	pDevice;
 	bool		bIsGreen	= (dir != DIR_RED);
-	uint8_t		usHelpSelect;
-	uint8_t		usBitNo;
 	uint8_t		idx;
 
 	for( idx = 0 ; DEVICE_COUNT > idx ; idx++ )

@@ -63,6 +63,17 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	13		from: 13.08.2024
+//#
+//#	Implementation:
+//#		-	add some signal aspect definitions
+//#				SIGNAL_ASPECT_VR0
+//#				SIGNAL_ASPECT_VR1
+//#				SIGNAL_ASPECT_VR2
+//#				SIGNAL_ASPECT_UNKNOWN
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	12		from: 09.08.2024
 //#
 //#	Bug Fix:
@@ -192,11 +203,20 @@
 //----------------------------------------------------------------------
 //	signal aspects
 //
+#define SIGNAL_ASPECT_UNKNOWN		100
+
 #define SIGNAL_ASPECT_HP0			0
 #define SIGNAL_ASPECT_HP1			1
 #define SIGNAL_ASPECT_HP2			2
 #define SIGNAL_ASPECT_SH1			3
 #define SIGNAL_ASPECT_KENNLICHT		4
+
+//----------------------------------------------------------------------
+//	signal aspects
+//
+#define SIGNAL_ASPECT_VR0			0
+#define SIGNAL_ASPECT_VR1			1
+#define SIGNAL_ASPECT_VR2			2
 
 //----------------------------------------------------------------------
 //	signal aspects

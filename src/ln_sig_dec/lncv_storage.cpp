@@ -159,7 +159,6 @@ LncvStorageClass::LncvStorageClass()
 void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 {
 	uint8_t		idx;
-	uint16_t	uiVersion;
 
 
 #ifdef WRITE_TEST_VALUES

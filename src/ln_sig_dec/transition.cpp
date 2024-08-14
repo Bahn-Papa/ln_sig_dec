@@ -6,6 +6,23 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	4		from: 13.08.2024
+//#
+//#	Bug Fix:
+//#		-	improvement of transition handling
+//#			new variables
+//#				m_bDoInit
+//#				m_usSignalType
+//#				m_usSelectedSignal
+//#				m_usTargetAspect
+//#				m_usExtraSignals
+//#			new function
+//#				InitTransition()
+//#			change in constructor
+//#				TransitionClass()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	3		from: 12.08.2024
 //#
 //#	Bug Fix:
@@ -42,9 +59,11 @@
 
 #include <Arduino.h>
 
+#include "global.h"
 #include "io_control.h"
 #include "transition.h"
 #include "time_values.h"
+#include "lncv_storage.h"
 #include "sequencer_tables.h"
 
 
@@ -77,21 +96,56 @@
 //	Constructor
 //------------------------------------------------------------------
 //
+TransitionClass::TransitionClass(	uint8_t usSignalType,
+									uint8_t usSelectedSignal,
+									uint8_t usTargetAspect,
+									uint8_t usExtraSignals	)
+{
+	m_usSignalType		= usSignalType;
+	m_usSelectedSignal	= usSelectedSignal;
+	m_usTargetAspect	= usTargetAspect;
+	m_usExtraSignals	= usExtraSignals;
+	m_bDoInit			= true;
+	m_bSetAspect		= true;
+
+	m_pSubTransition		= NULL;
+	m_pusStep				= NULL;
+	m_ulPauseTimer			= 0L;
+	m_uiLedMask				= 0x0000;
+	m_usLedStartIdx			= 0;
+	m_usLedStopIdx			= 0;
+	m_bWaitForFadeFinished	= false;
+	m_bWaitForExtraFinished	= false;
+}
+
+
+//******************************************************************
+//	Constructor
+//------------------------------------------------------------------
+//
 TransitionClass::TransitionClass(	uint8_t *	pusStep,
 									uint16_t	uiLedMask,
-									uint8_t		usStartIdx,
-									uint8_t		usStopIdx	)
+									uint8_t		usLedStartIdx,
+									uint8_t		usLedStopIdx	)
 {
+	m_pusStep				= pusStep;
+	m_uiLedMask				= uiLedMask;
+	m_usLedStartIdx			= usLedStartIdx;
+	m_usLedStopIdx			= usLedStopIdx;
+	m_bDoInit				= false;
+	m_bSetAspect			= false;
+
+	m_usSignalType			= 0;
+	m_usSelectedSignal		= SIGNAL_SELECTED_APPROACH;
+	m_usTargetAspect		= SIGNAL_ASPECT_VR0;
+	m_usExtraSignals		= 0x00;
+
 	m_pSubTransition		= NULL;
 	m_ulPauseTimer			= 0L;
 	m_bWaitForFadeFinished	= false;
 	m_bWaitForExtraFinished	= false;
-
-	m_uiLedMask		= uiLedMask;
-	m_usLedStartIdx	= usStartIdx;
-	m_usLedStopIdx	= usStopIdx;
-	m_pusStep		= pusStep;
 }
+
 
 //******************************************************************
 //	Loop
@@ -102,6 +156,16 @@ bool TransitionClass::Loop( uint32_t ulMillis )
 	uint8_t	usAspect;
 	uint8_t	usControlGroup;
 	bool	bIsFinished		= false;
+
+	if( m_bDoInit )
+	{
+		bIsFinished = InitTransition();
+		
+		if( bIsFinished )
+		{
+			return( bIsFinished );
+		}
+	}
 
 	if( NULL != m_pSubTransition )
 	{
@@ -171,6 +235,83 @@ bool TransitionClass::Loop( uint32_t ulMillis )
 	return( bIsFinished );
 }
 
+
+//******************************************************************
+//	InitTransition
+//------------------------------------------------------------------
+//
+bool TransitionClass::InitTransition( void )
+{
+	uint8_t	usActualAspect	= g_clStatus.GetSignalAspect( m_usSelectedSignal );
+	bool	bDoNotStart		= true;
+
+	m_bDoInit = false;
+
+	if(		(	(SIGNAL_ASPECT_HP0 == usActualAspect)
+			 &&	(SIGNAL_ASPECT_HP0 != m_usTargetAspect))
+		||	(	(SIGNAL_ASPECT_HP0 != usActualAspect)
+			 &&	(SIGNAL_ASPECT_HP0 == m_usTargetAspect))	)
+	{
+		bDoNotStart = false;	//	transition should start
+
+		switch( m_usSelectedSignal )
+		{
+			case SIGNAL_SELECTED_MAIN:
+				m_uiLedMask		= MAIN_LEDS;
+				m_usLedStartIdx	= MAIN_LEDS_IDX_START;
+				m_usLedStopIdx	= MAIN_LEDS_IDX_STOP;
+				m_pusStep		= GetFirstStepMain( usActualAspect );
+				break;
+			
+			case SIGNAL_SELECTED_APPROACH:
+				m_uiLedMask		= APPROACH_LEDS;
+				m_usLedStartIdx	= APPROACH_LEDS_IDX_START;
+				m_usLedStopIdx	= APPROACH_LEDS_IDX_STOP;
+				m_pusStep		= GetFirstStepApproach( usActualAspect );
+				break;
+
+			case SIGNAL_SELECTED_RANGIER_1:
+			case SIGNAL_SELECTED_RANGIER_2:
+			case SIGNAL_SELECTED_RANGIER_3:
+			case SIGNAL_SELECTED_RANGIER_4:
+			case SIGNAL_SELECTED_RANGIER_5:
+				if( SIGNAL_SELECTED_RANGIER_5 == m_usSelectedSignal )
+				{
+					m_usLedStartIdx	= RANGIER_5_LEDS_IDX_START;
+					m_usLedStopIdx	= RANGIER_5_LEDS_IDX_STOP;
+					m_uiLedMask		= RANGIER_5_LEDS;
+				}
+				else
+				{
+					m_usLedStartIdx	= RANGIER_1_LEDS_IDX_COUNT * m_usSelectedSignal;
+					m_usLedStopIdx	= m_usLedStartIdx + RANGIER_1_LEDS_IDX_COUNT;
+					m_uiLedMask		= RANGIER_1_LEDS << m_usLedStartIdx;
+				}
+				
+				if( RANGIER_ASPECT_SH0 != usActualAspect )
+				{
+					m_pusStep	= (uint8_t *)&Rangier_to_Sh0;
+				}
+				else if( RANGIER_ASPECT_SH1 == m_usTargetAspect )
+				{
+					m_pusStep	= (uint8_t *)&Rangier_to_Sh1;
+				}
+				else
+				{
+					m_pusStep	= (uint8_t *)&Rangier_to_ShKe;
+				}
+				break;
+
+			default:
+				bDoNotStart = true;
+				break;
+		}
+	}
+
+	return( bDoNotStart );
+}
+
+
 //******************************************************************
 //	HandleControlGroup
 //------------------------------------------------------------------
@@ -178,7 +319,6 @@ bool TransitionClass::Loop( uint32_t ulMillis )
 bool TransitionClass::HandleControlGroup( uint32_t ulMillis, uint8_t usControlCode )
 {
 	uint16_t	uiPauseTime;
-	uint8_t		usAspect		= g_clControl.GetSignalAspectApproach();
 	bool		bIsFinished		= false;
 
 	switch( usControlCode )
@@ -189,6 +329,11 @@ bool TransitionClass::HandleControlGroup( uint32_t ulMillis, uint8_t usControlCo
 			//	so stop the transition
 			//
 			bIsFinished = true;
+
+			if( m_bSetAspect )
+			{
+				g_clStatus.SetSignalAspect( m_usSelectedSignal, m_usTargetAspect );
+			}
 
 			g_clControl.SwitchLed( LED_GREEN, false );
 			break;
@@ -249,11 +394,10 @@ bool TransitionClass::HandleControlGroup( uint32_t ulMillis, uint8_t usControlCo
 				&& !g_clControl.IsApproachDark()
 				&&  g_clControl.IsOneLedOn( APPROACH_LEDS )	)
 			{
-				if( SIGNAL_ASPECT_HP0 != usAspect )
-				{
-					m_pSubTransition = new TransitionClass( g_clControl.GetFirstStepApproach( SIGNAL_ASPECT_HP0, usAspect ),
-															APPROACH_LEDS, APPROACH_LEDS_IDX_START, APPROACH_LEDS_IDX_STOP );
-				}
+				m_pSubTransition = new TransitionClass( m_usSignalType,
+														SIGNAL_SELECTED_APPROACH,
+														g_clStatus.GetSignalAspect( SIGNAL_SELECTED_APPROACH ),
+														0	);
 			}
 			break;
 
@@ -265,11 +409,9 @@ bool TransitionClass::HandleControlGroup( uint32_t ulMillis, uint8_t usControlCo
 				&& !g_clControl.IsApproachDark()
 				&&  g_clControl.IsOneLedOn( APPROACH_LEDS )	)
 			{
-				if( SIGNAL_ASPECT_HP0 != usAspect )
-				{
-					m_pSubTransition = new TransitionClass( g_clControl.GetFirstStepApproach( usAspect, SIGNAL_ASPECT_HP0 ),
-															APPROACH_LEDS, APPROACH_LEDS_IDX_START, APPROACH_LEDS_IDX_STOP );
-				}
+				m_pSubTransition = new TransitionClass( m_usSignalType,
+														SIGNAL_SELECTED_APPROACH,
+														SIGNAL_ASPECT_HP0, 0	);
 			}
 			break;
 
@@ -285,8 +427,6 @@ bool TransitionClass::HandleControlGroup( uint32_t ulMillis, uint8_t usControlCo
 														APPROACH_LEDS,
 														APPROACH_LEDS_IDX_START,
 														APPROACH_LEDS_IDX_STOP		);
-
-				g_clControl.SetSignalAspectApproach( SIGNAL_ASPECT_HP0 );
 			}
 			break;
 
@@ -314,6 +454,10 @@ bool TransitionClass::HandleControlGroup( uint32_t ulMillis, uint8_t usControlCo
 	return( bIsFinished );
 }
 
+//******************************************************************
+//	HandleLedGroups
+//------------------------------------------------------------------
+//
 void TransitionClass::HandleLedGroups( uint32_t ulMillis, uint8_t usControlGroup, uint8_t usAspect )
 {
 	uint8_t		usDiff;
@@ -359,4 +503,130 @@ void TransitionClass::HandleLedGroups( uint32_t ulMillis, uint8_t usControlGroup
 
 		usMask <<= 1;
 	}
+}
+
+
+//******************************************************************
+//	GetFirstStepMain
+//------------------------------------------------------------------
+//	This function will return a pointer to the first step of
+//	a signal aspect sequence for the main signal
+//
+uint8_t * TransitionClass::GetFirstStepMain( uint8_t usFromAspect )
+{
+	uint8_t *	pFirstStep	= sNOP;
+
+	if( SIGNAL_ASPECT_HP0 == usFromAspect )
+	{
+		switch( m_usSignalType )
+		{
+			case SIGNAL_TYPE_59_A_SIG:
+			case SIGNAL_TYPE_60_A_SIG:
+			case SIGNAL_TYPE_COMPACT_A_SIG:
+			case SIGNAL_TYPE_KS_A_SIG:
+				pFirstStep = pgm_read_word( &A_Sig_Main_From_Hp0[ m_usTargetAspect ] );
+				break;
+
+			case SIGNAL_TYPE_59_E_SIG:
+			case SIGNAL_TYPE_60_E_SIG:
+			case SIGNAL_TYPE_COMPACT_E_SIG:
+			case SIGNAL_TYPE_KS_E_SIG:
+				pFirstStep = pgm_read_word( &E_Sig_Main_From_Hp0[ m_usTargetAspect ] );
+				break;
+
+			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
+			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
+			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
+			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
+			default:
+				break;
+		}
+	}
+	else if( SIGNAL_ASPECT_HP0 == m_usTargetAspect )
+	{
+		switch( m_usSignalType )
+		{
+			case SIGNAL_TYPE_59_A_SIG:
+			case SIGNAL_TYPE_60_A_SIG:
+			case SIGNAL_TYPE_COMPACT_A_SIG:
+			case SIGNAL_TYPE_KS_A_SIG:
+				pFirstStep = pgm_read_word( &A_Sig_Main_To_Hp0[ usFromAspect ] );
+				break;
+
+			case SIGNAL_TYPE_59_E_SIG:
+			case SIGNAL_TYPE_60_E_SIG:
+			case SIGNAL_TYPE_COMPACT_E_SIG:
+			case SIGNAL_TYPE_KS_E_SIG:
+				pFirstStep = pgm_read_word( &E_Sig_Main_To_Hp0[ usFromAspect ] );
+				break;
+
+			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
+			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
+			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
+			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
+			default:
+				break;
+		}
+	}
+
+	return( pFirstStep );
+}
+
+
+//******************************************************************
+//	GetFirstStepApproach
+//------------------------------------------------------------------
+//
+uint8_t * TransitionClass::GetFirstStepApproach( uint8_t usFromAspect )
+{
+	uint8_t *	pFirstStep	= sNOP;
+
+	if( SIGNAL_ASPECT_HP0 == usFromAspect )
+	{
+		switch( m_usSignalType )
+		{
+			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
+			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
+			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
+			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
+			case SIGNAL_TYPE_59_A_SIG:
+			case SIGNAL_TYPE_59_E_SIG:
+			case SIGNAL_TYPE_60_A_SIG:
+			case SIGNAL_TYPE_60_E_SIG:
+			case SIGNAL_TYPE_COMPACT_A_SIG:
+			case SIGNAL_TYPE_COMPACT_E_SIG:
+			case SIGNAL_TYPE_KS_A_SIG:
+			case SIGNAL_TYPE_KS_E_SIG:
+				pFirstStep = pgm_read_word( &Approach_From_Hp0[ m_usTargetAspect ] );
+				break;
+
+			default:
+				break;
+		}
+	}
+	else if( SIGNAL_ASPECT_HP0 == m_usTargetAspect )
+	{
+		switch( m_usSignalType )
+		{
+			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
+			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
+			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
+			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
+			case SIGNAL_TYPE_59_A_SIG:
+			case SIGNAL_TYPE_59_E_SIG:
+			case SIGNAL_TYPE_60_A_SIG:
+			case SIGNAL_TYPE_60_E_SIG:
+			case SIGNAL_TYPE_COMPACT_A_SIG:
+			case SIGNAL_TYPE_COMPACT_E_SIG:
+			case SIGNAL_TYPE_KS_A_SIG:
+			case SIGNAL_TYPE_KS_E_SIG:
+				pFirstStep = pgm_read_word( &Approach_To_Hp0[ usFromAspect ] );
+				break;
+
+			default:
+				break;
+		}
+	}
+
+	return( pFirstStep );
 }

@@ -401,8 +401,8 @@
 #include "io_control.h"
 #include "lncv_storage.h"
 #include "macros.h"
-#include "sequencer_tables.h"
 #include "time_values.h"
+#include "sequencer_tables.h"
 
 
 //==========================================================================
@@ -581,8 +581,7 @@ void IO_ControlClass::Init( void )
 
 	for( uint8_t idx = 0 ; RANGIER_SIGNAL_COUNT > idx ; idx++ )
 	{
-		m_arpclTransition[ idx ]	= NULL;
-		m_arusRangierAspect[ idx ]	= RANGIER_ASPECT_SH0;
+		m_arpclTransition[ idx ]		= NULL;
 	}
 
 	m_ulLastCycleStartTime				= 0L;
@@ -595,8 +594,6 @@ void IO_ControlClass::Init( void )
 	m_uiFadeActive						= 0x0000;
 	m_uiFadeTimeUp						= 0;
 	m_uiFadeTimeDown					= 0;
-	m_usSignalAspectMain				= SIGNAL_ASPECT_HP0;
-	m_usSignalAspectApproach			= SIGNAL_ASPECT_HP0;
 	m_usExtraSignalsMain				= 0x00;
 	m_usExtraSignalsApproach			= 0x00;
 	m_bNightLight						= false;
@@ -918,41 +915,7 @@ void IO_ControlClass::HandleSignalAspect(	uint8_t usSelectedSignal,
 											uint8_t usSignalAspect,
 											uint8_t usExtraSignals		)
 {
-	switch( usSelectedSignal )
-	{
-		case SIGNAL_SELECTED_MAIN:
-			if( m_bMainSignalPresent )
-			{
-				HandleSignalAspectMain( usSignalAspect, usExtraSignals );
-			}
-			break;
-
-		case SIGNAL_SELECTED_APPROACH:
-			if( m_bApproachSignalPresent )
-			{
-				HandleSignalAspectApproach( usSignalAspect, usExtraSignals );
-			}
-			break;
-
-		case SIGNAL_SELECTED_RANGIER_1:
-		case SIGNAL_SELECTED_RANGIER_2:
-		case SIGNAL_SELECTED_RANGIER_3:
-		case SIGNAL_SELECTED_RANGIER_4:
-		case SIGNAL_SELECTED_RANGIER_5:
-			HandleRangierAspect( usSelectedSignal, usSignalAspect );
-			break;
-	}
-}
-
-
-//******************************************************************
-//	HandleSignalAspectMain
-//------------------------------------------------------------------
-//
-void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect, uint8_t usExtraSignals )
-{
 	TransitionClass	*	pclTransition;
-	uint8_t *			pusStep;
 
 
 	//---------------------------------------------------------
@@ -969,153 +932,86 @@ void IO_ControlClass::HandleSignalAspectMain( uint8_t usSignalAspect, uint8_t us
 	}
 	//
 	//---------------------------------------------------------
-	
-	if( SIGNAL_ASPECTS > usSignalAspect )
+
+	switch( usSelectedSignal )
 	{
-		//------------------------------------------------------
-		//	first check if the new transition is allowed
-		//		allowed transitions are:
-		//			from Hp0 to xxx
-		//			from xxx to Hp0
-		//
-		if(		((SIGNAL_ASPECT_HP0 == m_usSignalAspectMain) && (SIGNAL_ASPECT_HP0 != usSignalAspect))
-			||	((SIGNAL_ASPECT_HP0 != m_usSignalAspectMain) && (SIGNAL_ASPECT_HP0 == usSignalAspect)) )
-		{
-			//--------------------------------------------------
-			//	if we get a new signal aspect then
-			//		start the transition
-			//		store new signal aspect
-			//
-			if( (NULL == m_arpclTransition[ 0 ]) || (NULL == m_arpclTransition[ 1 ]) )
+		case SIGNAL_SELECTED_MAIN:
+			if( m_bMainSignalPresent && (SIGNAL_ASPECTS > usSignalAspect) )
 			{
-				pusStep = GetFirstStepMain( m_usSignalAspectMain, usSignalAspect );
-
-				pclTransition	= new TransitionClass(	pusStep, MAIN_LEDS,
-														MAIN_LEDS_IDX_START, MAIN_LEDS_IDX_STOP );
-
-				if( NULL == m_arpclTransition[ 0 ] )
+				if(		(NULL == m_arpclTransition[ 0 ])
+					||	(NULL == m_arpclTransition[ 1 ]) )
 				{
-					m_arpclTransition[ 0 ]	= pclTransition;
-				}
-				else
-				{
-					m_arpclTransition[ 1 ]	= pclTransition;
-				}
+					pclTransition = new TransitionClass(	m_usSignalType,
+															usSelectedSignal,
+															usSignalAspect,
+															usExtraSignals		);
 
-				m_usSignalAspectMain	= usSignalAspect;
-				m_usExtraSignalsMain	= usExtraSignals;
+					if( NULL == m_arpclTransition[ 0 ] )
+					{
+						m_arpclTransition[ 0 ]	= pclTransition;
+					}
+					else
+					{
+						m_arpclTransition[ 1 ]	= pclTransition;
+					}
+
+					SwitchLed( LED_GREEN, true );
+				}
+			}
+			break;
+
+		case SIGNAL_SELECTED_APPROACH:
+			if( m_bApproachSignalPresent && (SIGNAL_ASPECTS > usSignalAspect) )
+			{
+				if( IsLedsOff( APPROACH_LEDS ) )
+				{
+					//----------------------------------------------
+					//	the approach signal is switched OFF
+					//	so just store the new signal aspect
+					//	as the actual one
+					//
+					g_clStatus.SetSignalAspect( usSelectedSignal, usSignalAspect );
+					m_usExtraSignalsApproach = usExtraSignals;
+				}
+				else if(	(NULL == m_arpclTransition[ 0 ])
+						||	(NULL == m_arpclTransition[ 1 ]) )
+				{
+					pclTransition = new TransitionClass(	m_usSignalType,
+															usSelectedSignal,
+															usSignalAspect,
+															usExtraSignals		);
+
+					if( NULL == m_arpclTransition[ 0 ] )
+					{
+						m_arpclTransition[ 0 ]	= pclTransition;
+					}
+					else
+					{
+						m_arpclTransition[ 1 ]	= pclTransition;
+					}
+
+					SwitchLed( LED_GREEN, true );
+				}
+			}
+			break;
+
+		case SIGNAL_SELECTED_RANGIER_1:
+		case SIGNAL_SELECTED_RANGIER_2:
+		case SIGNAL_SELECTED_RANGIER_3:
+		case SIGNAL_SELECTED_RANGIER_4:
+		case SIGNAL_SELECTED_RANGIER_5:
+			if(		(RANGIER_ASPECTS > usSignalAspect)
+				&&	(NULL == m_arpclTransition[ usSelectedSignal ]) )
+			{
+				m_arpclTransition[ usSelectedSignal ] =
+					new TransitionClass(	m_usSignalType,
+											usSelectedSignal,
+											usSignalAspect,
+											0x00				);
 
 				SwitchLed( LED_GREEN, true );
 			}
-		}
-	}
-}
-
-
-//******************************************************************
-//	HandleSignalAspectApproach
-//------------------------------------------------------------------
-//
-void IO_ControlClass::HandleSignalAspectApproach( uint8_t usSignalAspect, uint8_t usExtraSignals )
-{
-	TransitionClass	*	pclTransition;
-	uint8_t *			pusStep;
-
-
-	if( SIGNAL_ASPECTS > usSignalAspect )
-	{
-		//------------------------------------------------------
-		//	first check if the new transition is allowed
-		//		allowed transitions are:
-		//			from Hp0 to xxx
-		//			from xxx to Hp0
-		//
-		if(		((SIGNAL_ASPECT_HP0 == m_usSignalAspectApproach) && (SIGNAL_ASPECT_HP0 != usSignalAspect))
-			||	((SIGNAL_ASPECT_HP0 != m_usSignalAspectApproach) && (SIGNAL_ASPECT_HP0 == usSignalAspect)) )
-		{
-			if( IsLedsOff( APPROACH_LEDS ) )
-			{
-				//----------------------------------------------
-				//	the approach signal is switched OFF
-				//	so just set the new signal aspect
-				//
-				m_usSignalAspectApproach	= usSignalAspect;
-				m_usExtraSignalsApproach	= usExtraSignals;
-			}
-			else if( (NULL == m_arpclTransition[ 0 ]) || (NULL == m_arpclTransition[ 1 ]) )
-			{
-				//--------------------------------------------------
-				//	if we got a new signal aspect then
-				//		start the transition
-				//		store new signal aspect
-				//
-				pusStep			= GetFirstStepApproach( m_usSignalAspectApproach, usSignalAspect );
-				pclTransition	= new TransitionClass(	pusStep, APPROACH_LEDS,
-														APPROACH_LEDS_IDX_START, APPROACH_LEDS_IDX_STOP );
-
-				if( NULL == m_arpclTransition[ 0 ] )
-				{
-					m_arpclTransition[ 0 ]	= pclTransition;
-				}
-				else
-				{
-					m_arpclTransition[ 1 ]	= pclTransition;
-				}
-
-				m_usSignalAspectApproach	= usSignalAspect;
-				m_usExtraSignalsApproach	= usExtraSignals;
-
-				SwitchLed( LED_GREEN, true );
-			}
-		}
-	}
-}
-
-
-//******************************************************************
-//	HandleRangierAspect
-//------------------------------------------------------------------
-//
-void IO_ControlClass::HandleRangierAspect( uint8_t usSelectedSignal, uint8_t usSignalAspect )
-{
-	uint16_t	uiLedMask;
-	uint8_t		usStartIdx;
-	uint8_t		usStopIdx;
-
-	if(		(NULL == m_arpclTransition[ usSelectedSignal ])
-		&&	(RANGIER_ASPECTS > usSignalAspect)
-		&&	(usSignalAspect != m_arusRangierAspect[ usSelectedSignal ])	)
-	{
-		if( SIGNAL_SELECTED_RANGIER_5 == usSelectedSignal )
-		{
-			usStartIdx	= RANGIER_5_LEDS_IDX_START;
-			usStopIdx	= RANGIER_5_LEDS_IDX_STOP;
-			uiLedMask	= RANGIER_5_LEDS;
-		}
-		else
-		{
-			usStartIdx	= RANGIER_1_LEDS_IDX_COUNT * usSelectedSignal;
-			usStopIdx	= usStartIdx + RANGIER_1_LEDS_IDX_COUNT;
-			uiLedMask	= RANGIER_1_LEDS << usStartIdx;
-		}
-
-		if( RANGIER_ASPECT_SH0 != m_arusRangierAspect[ usSelectedSignal ] )
-		{
-			m_arpclTransition[ usSelectedSignal ] =
-				new TransitionClass( (uint8_t *)&Rangier_to_Sh0, uiLedMask, usStartIdx, usStopIdx );
-		}
-		else if( RANGIER_ASPECT_SH1 == usSignalAspect )
-		{
-			m_arpclTransition[ usSelectedSignal ] =
-				new TransitionClass( (uint8_t *)&Rangier_to_Sh1, uiLedMask, usStartIdx, usStopIdx );
-		}
-		else if( SIGNAL_SELECTED_RANGIER_5 != usSelectedSignal )
-		{
-			m_arpclTransition[ usSelectedSignal ] =
-				new TransitionClass( (uint8_t *)&Rangier_to_ShKe, uiLedMask, usStartIdx, usStopIdx );
-		}
-
-		m_arusRangierAspect[ usSelectedSignal ] = usSignalAspect;
+			break;
 	}
 }
 
@@ -1293,141 +1189,24 @@ void IO_ControlClass::CalculateFadeRates( void )
 
 
 //******************************************************************
-//	GetFirstStepMain
-//------------------------------------------------------------------
-//	This function will return a pointer to the first step of
-//	a signal aspect sequence for the main signal
-//
-uint8_t * IO_ControlClass::GetFirstStepMain( uint8_t usFromAspect, uint8_t usToAspect )
-{
-	uint8_t *	pFirstStep	= sNOP;
-
-	if( SIGNAL_ASPECT_HP0 == usFromAspect )
-	{
-		switch( m_usSignalType )
-		{
-			case SIGNAL_TYPE_59_A_SIG:
-			case SIGNAL_TYPE_60_A_SIG:
-			case SIGNAL_TYPE_COMPACT_A_SIG:
-			case SIGNAL_TYPE_KS_A_SIG:
-				pFirstStep = pgm_read_word( &A_Sig_Main_From_Hp0[ usToAspect ] );
-				break;
-
-			case SIGNAL_TYPE_59_E_SIG:
-			case SIGNAL_TYPE_60_E_SIG:
-			case SIGNAL_TYPE_COMPACT_E_SIG:
-			case SIGNAL_TYPE_KS_E_SIG:
-				pFirstStep = pgm_read_word( &E_Sig_Main_From_Hp0[ usToAspect ] );
-				break;
-
-			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
-			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
-			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
-			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
-			default:
-				break;
-		}
-	}
-	else if( SIGNAL_ASPECT_HP0 == usToAspect )
-	{
-		switch( m_usSignalType )
-		{
-			case SIGNAL_TYPE_59_A_SIG:
-			case SIGNAL_TYPE_60_A_SIG:
-			case SIGNAL_TYPE_COMPACT_A_SIG:
-			case SIGNAL_TYPE_KS_A_SIG:
-				pFirstStep = pgm_read_word( &A_Sig_Main_To_Hp0[ usFromAspect ] );
-				break;
-
-			case SIGNAL_TYPE_59_E_SIG:
-			case SIGNAL_TYPE_60_E_SIG:
-			case SIGNAL_TYPE_COMPACT_E_SIG:
-			case SIGNAL_TYPE_KS_E_SIG:
-				pFirstStep = pgm_read_word( &E_Sig_Main_To_Hp0[ usFromAspect ] );
-				break;
-
-			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
-			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
-			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
-			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
-			default:
-				break;
-		}
-	}
-
-	return( pFirstStep );
-}
-
-
-//******************************************************************
-//	GetFirstStepApproach
-//------------------------------------------------------------------
-//
-uint8_t * IO_ControlClass::GetFirstStepApproach( uint8_t usAspectFrom, uint8_t usAspectTo )
-{
-	uint8_t *	pFirstStep	= sNOP;
-
-	if( SIGNAL_ASPECT_HP0 == usAspectFrom )
-	{
-		switch( m_usSignalType )
-		{
-			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
-			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
-			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
-			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
-			case SIGNAL_TYPE_59_A_SIG:
-			case SIGNAL_TYPE_59_E_SIG:
-			case SIGNAL_TYPE_60_A_SIG:
-			case SIGNAL_TYPE_60_E_SIG:
-			case SIGNAL_TYPE_COMPACT_A_SIG:
-			case SIGNAL_TYPE_COMPACT_E_SIG:
-			case SIGNAL_TYPE_KS_A_SIG:
-			case SIGNAL_TYPE_KS_E_SIG:
-				pFirstStep = pgm_read_word( &Approach_From_Hp0[ usAspectTo ] );
-				break;
-
-			default:
-				break;
-		}
-	}
-	else if( SIGNAL_ASPECT_HP0 == usAspectTo )
-	{
-		switch( m_usSignalType )
-		{
-			case SIGNAL_TYPE_DIRECT_CONTROL_HARD:
-			case SIGNAL_TYPE_DIRECT_CONTROL_FAST:
-			case SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE:
-			case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
-			case SIGNAL_TYPE_59_A_SIG:
-			case SIGNAL_TYPE_59_E_SIG:
-			case SIGNAL_TYPE_60_A_SIG:
-			case SIGNAL_TYPE_60_E_SIG:
-			case SIGNAL_TYPE_COMPACT_A_SIG:
-			case SIGNAL_TYPE_COMPACT_E_SIG:
-			case SIGNAL_TYPE_KS_A_SIG:
-			case SIGNAL_TYPE_KS_E_SIG:
-				pFirstStep = pgm_read_word( &Approach_To_Hp0[ usAspectFrom ] );
-				break;
-
-			default:
-				break;
-		}
-	}
-
-	return( pFirstStep );
-}
-
-
-//******************************************************************
 //	SwitchExtraSignalsOn
 //------------------------------------------------------------------
 //	This function will switch on the selected Extra signals
 //
 void IO_ControlClass::SwitchExtraSignalsOn( uint8_t usSelectedSignal )
 {
-	uint8_t		usExtraSignals	= m_usExtraSignalsMain | m_usExtraSignalsApproach;
+	uint8_t		usExtraSignals;
 	uint8_t		usMask			= 0x01;
 	uint8_t		usLedNo;
+
+	if( SIGNAL_SELECTED_MAIN == usSelectedSignal )
+	{
+		usExtraSignals = m_usExtraSignalsMain;
+	}
+	else
+	{
+		usExtraSignals = m_usExtraSignalsApproach;
+	}
 
 	for( uint8_t idx = 0 ; EXTRA_SIGNAL_COUNT > idx ; idx++ )
 	{
@@ -1468,7 +1247,7 @@ void IO_ControlClass::SwitchExtraSignalsOff( uint8_t usSelectedSignal )
 	if( SIGNAL_SELECTED_MAIN == usSelectedSignal )
 	{
 		SetErsatzSignalFlash( false );
-		idx = 0;
+		idx = 0;	//	all approach extra signals
 	}
 
 	while( EXTRA_SIGNAL_ERSATZSIGNAL_FLASH > idx )
