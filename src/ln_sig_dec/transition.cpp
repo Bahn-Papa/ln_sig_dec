@@ -6,6 +6,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	5		from: 14.08.2024
+//#
+//#	Implementation:
+//#		-	improvement of transition handling
+//#			change in function
+//#				HandleControlGroup()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	4		from: 13.08.2024
 //#
 //#	Bug Fix:
@@ -431,22 +440,26 @@ bool TransitionClass::HandleControlGroup( uint32_t ulMillis, uint8_t usControlCo
 			break;
 
 		case SEQUENCE_ADDITION_SIGNAL_MAIN_ON:
-			g_clControl.SwitchExtraSignalsOn( SIGNAL_SELECTED_MAIN );
+			g_clControl.SwitchExtraSignalsOn(	SIGNAL_SELECTED_MAIN,
+												m_usExtraSignals		);
 			m_bWaitForExtraFinished = true;
 			break;
 
 		case SEQUENCE_ADDITION_SIGNAL_MAIN_OFF:
-			g_clControl.SwitchExtraSignalsOff( SIGNAL_SELECTED_MAIN );
+			g_clControl.SwitchExtraSignalsOff(	SIGNAL_SELECTED_MAIN,
+												m_usExtraSignals		);
 			m_bWaitForExtraFinished = true;
 			break;
 
 		case SEQUENCE_ADDITION_SIGNAL_APPROACH_ON:
-			g_clControl.SwitchExtraSignalsOn( SIGNAL_SELECTED_APPROACH );
+			g_clControl.SwitchExtraSignalsOn(	SIGNAL_SELECTED_APPROACH,
+												m_usExtraSignals			);
 			m_bWaitForExtraFinished = true;
 			break;
 
 		case SEQUENCE_ADDITION_SIGNAL_APPROACH_OFF:
-			g_clControl.SwitchExtraSignalsOff( SIGNAL_SELECTED_APPROACH );
+			g_clControl.SwitchExtraSignalsOff(	SIGNAL_SELECTED_APPROACH,
+												m_usExtraSignals			);
 			m_bWaitForExtraFinished = true;
 			break;
 	}

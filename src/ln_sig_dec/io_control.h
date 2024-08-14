@@ -15,6 +15,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	20		from: 14.08.2024
+//#
+//#	Implementation:
+//#		-	improvement of sequence handling
+//#			change in functions
+//#				SwitchExtraSignalsOn()
+//#				SwitchExtraSignalsOff()
+//#		
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	19		from: 13.08.2024
 //#
 //#	Bug Fix:
@@ -270,6 +280,7 @@
 //
 //==========================================================================
 
+#include "global.h"
 #include "transition.h"
 #include "signal_status.h"
 
@@ -311,8 +322,10 @@ class IO_ControlClass
 		};
 
 		void SwitchLed( uint8_t usLedNo, bool bOn );
-		void SwitchExtraSignalsOn( uint8_t usSelectedSignal );
-		void SwitchExtraSignalsOff( uint8_t usSelectedSignal );
+		void SwitchExtraSignalsOn(	uint8_t usSelectedSignal,
+									uint8_t usExtraSignals		);
+		void SwitchExtraSignalsOff( uint8_t usSelectedSignal,
+									uint8_t usExtraSignals		);
 
 		void HandleLed( uint8_t usLedNo, bool bOn );
 		void HandleSignalAspect(	uint8_t usSelectedSignal,

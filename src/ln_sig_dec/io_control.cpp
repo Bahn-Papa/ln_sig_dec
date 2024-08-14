@@ -28,6 +28,17 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	29		from: 14.08.2024
+//#
+//#	Implementation:
+//#		-	improvement of sequence handling
+//#			change in functions
+//#				SwitchExtraSignalsOn()
+//#				SwitchExtraSignalsOff()
+//#		-	unused definitions deleted
+//#		
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	28		from: 05.08.2024
 //#
 //#	Implementation:
@@ -402,7 +413,7 @@
 #include "lncv_storage.h"
 #include "macros.h"
 #include "time_values.h"
-#include "sequencer_tables.h"
+#include "sequencer_definitions.h"
 
 
 //==========================================================================
@@ -425,18 +436,6 @@
 
 #define READ_CONTACT				(0 == (TRACK_PIN & (1 << TRACK_BIT)))
 
-
-//----------------------------------------------------------------------
-//	State machine to switch approach signal on and off
-//
-#define STATE_APPROACH_OFF			1
-#define	STATE_APPROACH_ON			2
-#define STATE_SWITCH_OFF_LOWER		3
-#define STATE_SWITCH_OFF_UPPER		4
-#define STATE_SWITCH_ON_LOWER		5
-#define STATE_SWITCH_ON_UPPER		6
-#define STATE_SET_SIGNAL_ASPECT		7
-#define STATE_SET_HP0				8
 
 //----------------------------------------------------------------------
 //	Cycle time in µs
@@ -1193,19 +1192,19 @@ void IO_ControlClass::CalculateFadeRates( void )
 //------------------------------------------------------------------
 //	This function will switch on the selected Extra signals
 //
-void IO_ControlClass::SwitchExtraSignalsOn( uint8_t usSelectedSignal )
+void IO_ControlClass::SwitchExtraSignalsOn(	uint8_t usSelectedSignal,
+											uint8_t usExtraSignals		)
 {
-	uint8_t		usExtraSignals;
-	uint8_t		usMask			= 0x01;
 	uint8_t		usLedNo;
+	uint8_t		usMask		= 0x01;
 
 	if( SIGNAL_SELECTED_MAIN == usSelectedSignal )
 	{
-		usExtraSignals = m_usExtraSignalsMain;
+		m_usExtraSignalsMain = usExtraSignals;
 	}
 	else
 	{
-		usExtraSignals = m_usExtraSignalsApproach;
+		m_usExtraSignalsApproach = usExtraSignals;
 	}
 
 	for( uint8_t idx = 0 ; EXTRA_SIGNAL_COUNT > idx ; idx++ )
@@ -1238,7 +1237,8 @@ void IO_ControlClass::SwitchExtraSignalsOn( uint8_t usSelectedSignal )
 //		SIGNAL_SELECTED_APPROACH	switch off only approach signal
 //									related extra signals
 //
-void IO_ControlClass::SwitchExtraSignalsOff( uint8_t usSelectedSignal )
+void IO_ControlClass::SwitchExtraSignalsOff( uint8_t usSelectedSignal,
+											 uint8_t /* usExtraSignals */	)
 {
 	uint8_t	usLedNo;
 	uint8_t	idx		= 2;	//	start of approach extra signals

@@ -6,7 +6,7 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	1		from: 13.08.2024
+//#	File Version:	1		from: 14.08.2024
 //#
 //#	Implementation:
 //#		-	first working version
@@ -21,7 +21,7 @@
 
 #include "global.h"
 #include "signal_status.h"
-#include "sequencer_tables.h"
+#include "sequencer_definitions.h"
 
 
 //==========================================================================

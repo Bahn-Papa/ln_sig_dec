@@ -63,6 +63,14 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	14		from: 14.08.2024
+//#
+//#	Implementation:
+//#		-	improvement of sequence handling
+//#			move all definitions into a new file 'sequencer_definitions.h'
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	13		from: 13.08.2024
 //#
 //#	Implementation:
@@ -190,71 +198,7 @@
 
 #include <avr/pgmspace.h>
 
-
-//==========================================================================
-//
-//		D E F I N I T I O N S
-//
-//==========================================================================
-
-#define SIGNAL_ASPECTS				5
-#define RANGIER_ASPECTS				3
-
-//----------------------------------------------------------------------
-//	signal aspects
-//
-#define SIGNAL_ASPECT_UNKNOWN		100
-
-#define SIGNAL_ASPECT_HP0			0
-#define SIGNAL_ASPECT_HP1			1
-#define SIGNAL_ASPECT_HP2			2
-#define SIGNAL_ASPECT_SH1			3
-#define SIGNAL_ASPECT_KENNLICHT		4
-
-//----------------------------------------------------------------------
-//	signal aspects
-//
-#define SIGNAL_ASPECT_VR0			0
-#define SIGNAL_ASPECT_VR1			1
-#define SIGNAL_ASPECT_VR2			2
-
-//----------------------------------------------------------------------
-//	signal aspects
-//
-#define RANGIER_ASPECT_SH0			0
-#define RANGIER_ASPECT_SH1			1
-#define RANGIER_ASPECT_SHKE			2
-
-//----------------------------------------------------------------------
-//	definitions for the parts in a sequence control word
-//
-#define SEQUENCE_CONTROL_GROUPS		0xC0
-#define	SEQUENCE_LEDS				0x3F
-
-//----------------------------------------------------------------------
-//	definitions for sequencer control groups
-//
-#define SG_FADING_LEDS				0x00
-#define SG_FLASHING_LEDS			0x40
-#define SG_UNUSED					0x80
-#define SG_CONTROL_WORDS			0xC0
-
-//----------------------------------------------------------------------
-//	definitions for sequence control codes
-//
-#define SEQUENCE_END							0xFF
-#define SEQUENCE_WAIT_FOR_FADE_FINISHED			0xCF
-#define SEQUENCE_PAUSE							0xC0
-#define SEQUENCE_PAUSE_DARK						0xC1
-#define SEQUENCE_PAUSE_FLASH					0xC2
-#define SEQUENCE_APPROACH_ON					0xC3
-#define SEQUENCE_APPROACH_OFF					0xC4
-#define SEQUENCE_SET_SIGNAL_ASPECT				0xC5
-#define SEQUENCE_SET_HP0						0xC6
-#define SEQUENCE_ADDITION_SIGNAL_MAIN_ON		0xC7
-#define SEQUENCE_ADDITION_SIGNAL_MAIN_OFF		0xC8
-#define SEQUENCE_ADDITION_SIGNAL_APPROACH_ON	0xC9
-#define SEQUENCE_ADDITION_SIGNAL_APPROACH_OFF	0xCA
+#include "sequencer_definitions.h"
 
 
 //==========================================================================
