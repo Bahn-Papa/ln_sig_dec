@@ -10,6 +10,17 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	12		from: 14.08.2024
+//#
+//#	Implementation:
+//#		-	improvement of special handling of approach kennlicht
+//#			add two configuration bits
+//#				APPROACH_KENNLICHT_DEFAULT_ON
+//#				APPROACH_KENNLICHT_SPECIAL_HANDLING
+//#			removed signal type SIGNAL_TYPE_APPROACH
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	11		from: 05.08.2024
 //#
 //#	Implementation:
@@ -130,7 +141,14 @@
 
 
 //----------------------------------------------------------------------
-//	definitions for signal types
+//	definitions for configuration options (LNCV_ADR_CONFIG)
+//
+#define APPROACH_KENNLICHT_DEFAULT_ON			0x0001
+#define APPROACH_KENNLICHT_SPECIAL_HANDLING		0x0002
+
+
+//----------------------------------------------------------------------
+//	definitions for signal types (LNCV_ADR_SIGNAL_TYPE)
 //
 #define SIGNAL_TYPE_DIRECT_CONTROL_HARD		0
 #define SIGNAL_TYPE_DIRECT_CONTROL_FAST		1
@@ -145,7 +163,6 @@
 #define SIGNAL_TYPE_KS_A_SIG				10
 #define SIGNAL_TYPE_KS_E_SIG				11
 #define SIGNAL_TYPE_FOUR_RANGIER_SIG		12
-#define SIGNAL_TYPE_APPROACH				13
 
 
 //----------------------------------------------------------------------

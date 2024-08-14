@@ -11,6 +11,19 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	10		from: 14.08.2024
+//#
+//#	Implementation:
+//#		-	improvement of special handling of approach kennlicht
+//#			add two configuration bits
+//#				APPROACH_KENNLICHT_DEFAULT_ON
+//#				APPROACH_KENNLICHT_SPECIAL_HANDLING
+//#			change in function
+//#				CheckEEPROM()
+//#			removed signal type SIGNAL_TYPE_APPROACH
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	9		from: 23.03.2023
 //#
 //#	Implementation:
@@ -175,6 +188,7 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		//
 		WriteLNCV( LNCV_ADR_ARTIKEL_NUMMER,	ARTIKEL_NUMMER );
 		WriteLNCV( LNCV_ADR_VERSION, uiVersionNumber );
+		WriteLNCV( LNCV_ADR_CONFIG, 0x0000 );
 
 #ifdef WRITE_TEST_VALUES
 		WriteLNCV( LNCV_ADR_MODULE_ADDRESS,	100 );

@@ -28,6 +28,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	30		from: 14.08.2024
+//#
+//#	Implementation:
+//#		-	improvement of special handling of approach kennlicht
+//#			change in functions
+//#				Init()
+//#				SetSignalType()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	29		from: 14.08.2024
 //#
 //#	Implementation:
@@ -681,9 +691,20 @@ void IO_ControlClass::Init( void )
 		SwitchLed( LED_APPROACH_YELLOW_BOTTOM,	true );
 	}
 	
-	if( m_bApproachKennlichtSpecialHandling )
+	//----------------------------------------------------------
+	//	configuration options
+	//		approach signal kennlicht special handling
+	//
+	uiHelper = g_clLncvStorage.ReadLNCV( LNCV_ADR_CONFIG );
+
+	if( uiHelper & APPROACH_KENNLICHT_SPECIAL_HANDLING )
 	{
-		SwitchLed( LED_APPROACH_KENNLICHT, true );
+		m_bApproachKennlichtSpecialHandling = true;
+		
+		if( uiHelper & APPROACH_KENNLICHT_DEFAULT_ON )
+		{
+			SwitchLed( LED_APPROACH_KENNLICHT, true );
+		}
 	}
 }
 
@@ -1096,12 +1117,6 @@ bool IO_ControlClass::SetSignalType( void )
 
 
 	m_usSignalType	= (uint8_t)g_clLncvStorage.ReadLNCV( LNCV_ADR_SIGNAL_TYPE );
-
-	if( SIGNAL_TYPE_APPROACH == m_usSignalType )
-	{
-		m_bApproachKennlichtSpecialHandling	= true;
-		m_usSignalType						= SIGNAL_TYPE_59_E_SIG;
-	}
 
 	switch( m_usSignalType )
 	{
