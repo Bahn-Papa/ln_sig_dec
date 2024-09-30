@@ -28,6 +28,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	31		from: 30.09.2024
+//#
+//#	Bug Fix:
+//#		-	improve calculation of new brightness level
+//#			change in function
+//#				ProcessBrightnessAndFade()
+//#					change type of 'newValue' from 'uint32_t' to 'float'
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	30		from: 14.08.2024
 //#
 //#	Implementation:
@@ -1319,7 +1329,7 @@ void IO_ControlClass::ProcessBrightnessAndFade( void )
 {
 	PWMChannel_t*	pChannel;
 	uint8_t			idx;
-	uint32_t		ulNewValue;
+	float			fNewValue;
 	uint16_t		uiMask			= 0x0001;
 	uint32_t		ulActualTime	= micros();
 
@@ -1359,21 +1369,21 @@ void IO_ControlClass::ProcessBrightnessAndFade( void )
 				//------------------------------------------
 				//	... to brighter light
 				//
-				ulNewValue = pChannel->m_fActual + pChannel->m_fFadeRateUp;
+				fNewValue = pChannel->m_fActual + pChannel->m_fFadeRateUp;
 				
-				if( ulNewValue >= pChannel->m_fTarget )
+				if( fNewValue >= pChannel->m_fTarget )
 				{
 					//----------------------------------
 					//	the target is reached
 					//	so stop fading
 					//
-					ulNewValue		= pChannel->m_fTarget;
+					fNewValue		= pChannel->m_fTarget;
 					m_uiFadeActive &= ~uiMask;
 
 					SwitchLed( LED_BLUE, false );
 				}
 
-				pChannel->m_fActual = ulNewValue;
+				pChannel->m_fActual = fNewValue;
 			}
 
 			if( pChannel->m_fActual > pChannel->m_fTarget )
@@ -1381,21 +1391,21 @@ void IO_ControlClass::ProcessBrightnessAndFade( void )
 				//------------------------------------------
 				//	... to darker light
 				//
-				ulNewValue = pChannel->m_fActual - pChannel->m_fFadeRateDwon;
+				fNewValue = pChannel->m_fActual - pChannel->m_fFadeRateDwon;
 
-				if( ulNewValue <= pChannel->m_fTarget )
+				if( fNewValue <= pChannel->m_fTarget )
 				{
 					//----------------------------------
 					//	the target is reached
 					//	so stop fading
 					//
-					ulNewValue		= pChannel->m_fTarget;
+					fNewValue		= pChannel->m_fTarget;
 					m_uiFadeActive &= ~uiMask;
 
 					SwitchLed( LED_BLUE, false );
 				}
 
-				pChannel->m_fActual = ulNewValue;
+				pChannel->m_fActual = fNewValue;
 			}
 
 			uiMask <<= 1;
