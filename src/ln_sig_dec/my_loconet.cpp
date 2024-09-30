@@ -7,6 +7,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	19		from: 30.09.2024
+//#
+//#	Bug Fix:
+//#		-	improve handling of writing LNCVs
+//#			change in function
+//#				notifyLNCVwrite()
+//#					don't write '0' or '0xFFFF' as module address
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	18		from: 18.02.2024
 //#
 //#	Implementation:
@@ -763,14 +773,26 @@ int8_t notifyLNCVwrite( uint16_t ArtNr, uint16_t Address, uint16_t Value )
 	{
 		if( g_clLncvStorage.IsValidLNCVAddress( Address ) )
 		{
-			if(		(LNCV_ADR_VERSION != Address)
+			if(		(LNCV_ADR_VERSION		 != Address)
 				&&	(LNCV_ADR_ARTIKEL_NUMMER != Address) )
 			{
-				g_clLncvStorage.WriteLNCV( Address, Value );
-
 				if( LNCV_ADR_MODULE_ADDRESS == Address )
 				{
-					g_uiModuleAddress = Value;
+					//-----------------------------------------
+					//	make sure that the module address
+					//	 -	is not '0'
+					//	 -	and not '0xFFFF' (broadcast)
+					//
+					if( (0 < Value) && (0xFFFF > Value) )
+					{
+						g_clLncvStorage.WriteLNCV( Address, Value );
+
+						g_uiModuleAddress = Value;
+					}
+				}
+				else
+				{
+					g_clLncvStorage.WriteLNCV( Address, Value );
 				}
 			}
 

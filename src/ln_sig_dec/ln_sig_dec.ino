@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		12
-#define VERSION_BUGFIX		1
+#define VERSION_BUGFIX		2
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,14 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.12.02		from: 30.09.2024
+//#
+//#	Bug Fix:
+//#		-	improve handling of writing LNCVs
+//#				don't write '0' or '0xFFFF' as module address
 //#
 //#-------------------------------------------------------------------------
 //#
