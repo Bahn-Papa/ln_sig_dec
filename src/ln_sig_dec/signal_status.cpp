@@ -6,6 +6,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	2		from: 27.01.2025
+//#
+//#	Implementation:
+//#		-	add support for new signal type SIGNAL_TYPE_US
+//#			changes in constructor and all functions
+//#			new variable
+//#				m_arusUsSignalAspect[]
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	1		from: 14.08.2024
 //#
 //#	Implementation:
@@ -64,6 +74,11 @@ SignalStatusClass::SignalStatusClass( void )
 	{
 		m_arusRangierAspect[ idx ]	= RANGIER_ASPECT_SH0;
 	}
+
+	for( uint8_t idx = 0 ; US_SIGNAL_COUNT > idx ; idx++ )
+	{
+		m_arusUsSignalAspect[ idx ]	= US_SIGNAL_ASPECT_HP0;
+	}
 }
 
 
@@ -91,6 +106,13 @@ uint8_t SignalStatusClass::GetSignalAspect( uint8_t usSelectedSignal )
 		case SIGNAL_SELECTED_RANGIER_4:
 		case SIGNAL_SELECTED_RANGIER_5:
 			usAspect = m_arusRangierAspect[ usSelectedSignal ];
+			break;
+
+		case SIGNAL_SELECTED_US_1:
+		case SIGNAL_SELECTED_US_2:
+		case SIGNAL_SELECTED_US_3:
+		case SIGNAL_SELECTED_US_4:
+			usAspect = m_arusUsSignalAspect[ usSelectedSignal - SIGNAL_SELECTED_US_1 ];
 			break;
 
 		default:
@@ -125,6 +147,13 @@ void SignalStatusClass::SetSignalAspect( uint8_t usSelectedSignal,
 		case SIGNAL_SELECTED_RANGIER_4:
 		case SIGNAL_SELECTED_RANGIER_5:
 			m_arusRangierAspect[ usSelectedSignal ] = usAspect;
+			break;
+
+		case SIGNAL_SELECTED_US_1:
+		case SIGNAL_SELECTED_US_2:
+		case SIGNAL_SELECTED_US_3:
+		case SIGNAL_SELECTED_US_4:
+			m_arusUsSignalAspect[ usSelectedSignal - SIGNAL_SELECTED_US_1 ] = usAspect;
 			break;
 
 		default:

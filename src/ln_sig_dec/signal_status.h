@@ -9,6 +9,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	2		from: 27.01.2025
+//#
+//#	Implementation:
+//#		-	add support for new signal type SIGNAL_TYPE_US
+//#			new variable
+//#				m_arusUsSignalAspect[]
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	1		from: 13.08.2024
 //#
 //#	Implementation:
@@ -56,6 +65,7 @@ class SignalStatusClass
 
 	private:
 		uint8_t		m_arusRangierAspect[ RANGIER_SIGNAL_COUNT ];
+		uint8_t		m_arusUsSignalAspect[ US_SIGNAL_COUNT ];
 		uint8_t		m_usSignalAspectMain;
 		uint8_t		m_usSignalAspectApproach;
 };

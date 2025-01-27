@@ -33,9 +33,9 @@
 //#		LLLLLL	are the bits to define which LED should be switched
 //#				or which command should be performed
 //#	The four groups are:
-//#		00	normal switching of LEDs
-//#		01	flashing of LEDs
-//#		10	not used
+//#		00	fading of LEDs
+//#		01	switching of LEDs
+//#		10	blinking of LEDs
 //#		11	control codes, like SEQUENCE_APPROACH_ON or SEQUENCE_END
 //#
 //#	The first value in each sequence is the first change of
@@ -60,6 +60,16 @@
 //#	the main signal.
 //#	LNCVs 40 to 43 are used to build the aspect number for
 //#	the approach signal
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File Version:	15		from: 27.01.2025
+//#
+//#	Implementation:
+//#		-	change sequences to reflect the change of definitions for
+//#			sequencer control group
+//#				Main_A_to_Hp1[]
+//#				Main_A_to_Hp2[]
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -292,7 +302,9 @@ const uint8_t Main_A_to_Hp1[] PROGMEM =
 	SEQUENCE_WAIT_FOR_FADE_FINISHED,
 	SEQUENCE_PAUSE_DARK,
 	0b01010000,
+	SEQUENCE_PAUSE_FLASH,
 	0b01000000,
+	SEQUENCE_PAUSE_FLASH,
 	SEQUENCE_ADDITION_SIGNAL_MAIN_ON,
 //	0b00100000,
 //	0b00100001,
@@ -338,7 +350,9 @@ const uint8_t Main_A_to_Hp2[] PROGMEM =
 	SEQUENCE_WAIT_FOR_FADE_FINISHED,
 	SEQUENCE_PAUSE_DARK,
 	0b01010000,
+	SEQUENCE_PAUSE_FLASH,
 	0b01000000,
+	SEQUENCE_PAUSE_FLASH,
 	SEQUENCE_ADDITION_SIGNAL_MAIN_ON,
 	0b00100000,
 	SEQUENCE_WAIT_FOR_FADE_FINISHED,
@@ -686,3 +700,86 @@ const uint8_t* const Approach_To_Hp0[] PROGMEM =
 	sNOP,
 	sNOP
 } ;
+
+
+//**********************************************************************
+//**********************************************************************
+//
+//	signal aspect sequences for US signals
+//
+//	there are two sets of sequences
+//		one for switching the LEDS
+//		the second for fading the LEDS
+//
+
+//**********************************************************************
+//
+//	sequences for switching the LEDs
+//
+
+//------------------------------------------------------------------
+//	US Signal to Hp0, inv to Hp1
+//
+const uint8_t US_SW_to_Hp0_INV_Hp1[] PROGMEM =
+{
+	0b01000000,
+	0b01000001,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	US Signal to Hp1, inv to Hp0
+//
+const uint8_t US_SW_to_Hp1_INV_Hp0[] PROGMEM =
+{
+	0b01000000,
+	0b01000100,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	US Signal to Hp2
+//
+const uint8_t US_SW_to_Hp2[] PROGMEM =
+{
+	0b01000000,
+	0b01000010,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	US Signal to Hp2 blinking
+//
+const uint8_t US_SW_to_Hp2_blink[] PROGMEM =
+{
+	0b01000000,
+	0b10000010,
+	SEQUENCE_END
+};
+
+
+//**********************************************************************
+//
+//	sequences for fading the LEDs
+//
+
+//------------------------------------------------------------------
+//	US Signal from Hp0 to Hp1, inv from Hp1 to Hp0
+//
+const uint8_t US_FADE_Hp0_Hp1_INV_Hp1_Hp0[] PROGMEM =
+{
+	0b00000100,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	US Signal from Hp1/Hp2 to Hp0, inv from Hp0 to Hp1
+//
+const uint8_t US_FADE_to_Hp0_INV_Hp0_Hp1[] PROGMEM =
+{
+	0b00000001,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_END
+};
+

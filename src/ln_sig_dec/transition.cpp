@@ -6,6 +6,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	6		from: 27.01.2025
+//#
+//#	Implementation:
+//#		-	add new transition handling: switch LEDs
+//#			change in function
+//#				HandleLedGroups()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	5		from: 14.08.2024
 //#
 //#	Implementation:
@@ -475,6 +484,7 @@ void TransitionClass::HandleLedGroups( uint32_t ulMillis, uint8_t usControlGroup
 {
 	uint8_t		usDiff;
 	uint8_t		usMask		= 0x01;
+	bool		bOn			= false;
 
 	//----------------------------------------------------------
 	//	check wich LEDs should go OFF and wich should go ON
@@ -488,27 +498,16 @@ void TransitionClass::HandleLedGroups( uint32_t ulMillis, uint8_t usControlGroup
 		{
 			if( usAspect & usMask )
 			{
-				if( SG_FLASHING_LEDS == usControlGroup )
-				{
-					g_clControl.SwitchLed( idx, true );
-					m_ulPauseTimer = ulMillis + g_stTimeValues.uiFlashTime;
-				}
-				else
-				{
-					g_clControl.HandleLed( idx, true );
-				}
+				bOn = true;
+			}
+
+			if( SG_SWITCH_LEDS == usControlGroup )
+			{
+				g_clControl.SwitchLed( idx, bOn );
 			}
 			else
 			{
-				if( SG_FLASHING_LEDS == usControlGroup )
-				{
-					g_clControl.SwitchLed( idx, false );
-					m_ulPauseTimer = ulMillis + g_stTimeValues.uiFlashTime;
-				}
-				else
-				{
-					g_clControl.HandleLed( idx, false );
-				}
+				g_clControl.HandleLed( idx, bOn );
 			}
 
 			usDiff &= ~usMask;
