@@ -58,10 +58,13 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	2		from: 26.01.2025
+//#	File Version:	2		from: 27.01.2025
 //#
 //#	Implementation:
 //#		-	add definitions for new signal type SIGNAL_TYPE_US
+//#		-	change definitions for sequencer control groups
+//#				SG_SWITCH_LEDS		just switch LEDs, no fading
+//#				SG_BLINKING_LEDS	led LEDs blink
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -133,8 +136,8 @@
 //	definitions for sequencer control groups
 //
 #define SG_FADING_LEDS				0x00
-#define SG_FLASHING_LEDS			0x40
-#define SG_UNUSED					0x80
+#define SG_SWITCH_LEDS				0x40
+#define SG_BLINKING_LEDS			0x80
 #define SG_CONTROL_WORDS			0xC0
 
 //----------------------------------------------------------------------
