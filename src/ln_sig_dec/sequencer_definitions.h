@@ -58,6 +58,13 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	2		from: 26.01.2025
+//#
+//#	Implementation:
+//#		-	add definitions for new signal type SIGNAL_TYPE_US
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	1		from: 14.08.2024
 //#
 //#	Implementation:
@@ -81,6 +88,7 @@
 
 #define SIGNAL_ASPECTS				5
 #define RANGIER_ASPECTS				3
+#define US_SIGNAL_ASPECTS			4
 
 //----------------------------------------------------------------------
 //	signal aspects
@@ -106,6 +114,14 @@
 #define RANGIER_ASPECT_SH0			0
 #define RANGIER_ASPECT_SH1			1
 #define RANGIER_ASPECT_SHKE			2
+
+//----------------------------------------------------------------------
+//	signal aspects for US signals
+//
+#define US_SIGNAL_ASPECT_HP0			0
+#define US_SIGNAL_ASPECT_HP2			1
+#define US_SIGNAL_ASPECT_HP2_BLINK		2
+#define US_SIGNAL_ASPECT_HP1			3
 
 //----------------------------------------------------------------------
 //	definitions for the parts in a sequence control word

@@ -331,6 +331,8 @@ class IO_ControlClass
 		void HandleSignalAspect(	uint8_t usSelectedSignal,
 									uint8_t usSignalAspect,
 									uint8_t usExtraSignals		);
+		void HandleUsSignalAspect(	uint8_t usSelectedSignal,
+									uint8_t usSignalAspect		);
 
 		inline uint16_t GetLedsOn( void )
 		{

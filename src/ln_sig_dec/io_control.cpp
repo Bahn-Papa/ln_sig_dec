@@ -946,6 +946,7 @@ void IO_ControlClass::HandleSignalAspect(	uint8_t usSelectedSignal,
 											uint8_t usExtraSignals		)
 {
 	TransitionClass	*	pclTransition;
+	uint8_t				idx;
 
 
 	//---------------------------------------------------------
@@ -1041,6 +1042,38 @@ void IO_ControlClass::HandleSignalAspect(	uint8_t usSelectedSignal,
 
 				SwitchLed( LED_GREEN, true );
 			}
+			break;
+
+		case SIGNAL_SELECTED_US_1:
+		case SIGNAL_SELECTED_US_2:
+		case SIGNAL_SELECTED_US_3:
+		case SIGNAL_SELECTED_US_4:
+			idx = usSelectedSignal - SIGNAL_SELECTED_US_1;
+			
+			if(		(US_SIGNAL_ASPECTS > usSignalAspect)
+				&&	(NULL == m_arpclTransition[ idx ])	)
+				{
+				}
+			break;
+	}
+}
+
+
+//******************************************************************
+//	HandleUsSignalAspect
+//------------------------------------------------------------------
+//
+void IO_ControlClass::HandleUsSignalAspect(	uint8_t usSelectedSignal,
+											uint8_t usSignalAspect		)
+{
+	uint8_t	offset	= 0;
+	
+	switch( usSelectedSignal )
+	{
+		case SIGNAL_SELECTED_US_3:
+			offset = 7;
+
+		case SIGNAL_SELECTED_US_1:
 			break;
 	}
 }

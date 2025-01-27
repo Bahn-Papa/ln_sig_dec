@@ -7,6 +7,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	20		from: 26.01.2025
+//#
+//#	Implementation:
+//#		-	add handling for new signal type SIGNAL_TYPE_US
+//#			change in functions
+//#				LoconetReceived()
+//#				SetSelectedSignalAspect()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	19		from: 30.09.2024
 //#
 //#	Bug Fix:
@@ -389,7 +399,67 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 				//--------------------------------------------------
 				//	proces message for ...
 				//
-				if( SIGNAL_TYPE_FOUR_RANGIER_SIG == m_usSignalType )
+				if( SIGNAL_TYPE_US == m_usSignalType )
+				{
+					//----------------------------------------------
+					//	... a signal aspect for a rangier signal
+					//
+					switch( idx )
+					{
+						case IDX_US_SIGNAL_1_BIT_0:
+							AddSignalAspect( SIGNAL_SELECTED_US_1, bIsGreen, 0x01 );
+							break;
+
+						case IDX_US_SIGNAL_1_BIT_1:
+							AddSignalAspect( SIGNAL_SELECTED_US_1, bIsGreen, 0x02 );
+							break;
+
+						case IDX_US_SIGNAL_1_OFF:
+//							AddSignalAspect( SIGNAL_SELECTED_US_1, bIsGreen, 0x04 );
+							break;
+
+						case IDX_US_SIGNAL_2_BIT_0:
+							AddSignalAspect( SIGNAL_SELECTED_US_2, bIsGreen, 0x01 );
+							break;
+
+						case IDX_US_SIGNAL_2_BIT_1:
+							AddSignalAspect( SIGNAL_SELECTED_US_2, bIsGreen, 0x02 );
+							break;
+
+						case IDX_US_SIGNAL_2_OFF:
+//							AddSignalAspect( SIGNAL_SELECTED_US_2, bIsGreen, 0x04 );
+							break;
+
+						case IDX_US_SIGNAL_3_BIT_0:
+							AddSignalAspect( SIGNAL_SELECTED_US_3, bIsGreen, 0x01 );
+							break;
+
+						case IDX_US_SIGNAL_3_BIT_1:
+							AddSignalAspect( SIGNAL_SELECTED_US_3, bIsGreen, 0x02 );
+							break;
+
+						case IDX_US_SIGNAL_3_OFF:
+//							AddSignalAspect( SIGNAL_SELECTED_US_3, bIsGreen, 0x04 );
+							break;
+
+						case IDX_US_SIGNAL_4_BIT_0:
+							AddSignalAspect( SIGNAL_SELECTED_US_4, bIsGreen, 0x01 );
+							break;
+
+						case IDX_US_SIGNAL_4_BIT_1:
+							AddSignalAspect( SIGNAL_SELECTED_US_4, bIsGreen, 0x02 );
+							break;
+
+						case IDX_US_SIGNAL_4_OFF:
+//							AddSignalAspect( SIGNAL_SELECTED_US_4, bIsGreen, 0x04 );
+							break;
+
+						case IDX_US_SIGNAL_ALL_OFF:
+//							AddSignalAspect( SIGNAL_SELECTED_US_5, bIsGreen, 0x04 );
+							break;
+					}
+				}
+				else if( SIGNAL_TYPE_FOUR_RANGIER_SIG == m_usSignalType )
 				{
 					//----------------------------------------------
 					//	... a signal aspect for a rangier signal
@@ -632,9 +702,19 @@ void MyLoconetClass::SetExtraSignal( uint8_t usLED, bool bIsGreen )
 void MyLoconetClass::SetSelectedSignalAspect( void )
 {
 	g_clControl.SwitchLed( LED_GREEN, false );
-	g_clControl.HandleSignalAspect(	m_usSignalSelected,
-									m_usSignalAspect,
-									m_usExtraSignals	);
+	
+	if(		(SIGNAL_TYPE_US == m_usSignalType)
+		&&	!g_clControl.IsContactOccupied()	)
+	{
+		g_clControl.HandleUsSignalAspect(	m_usSignalSelected,
+											m_usSignalAspect	);
+	}
+	else
+	{
+		g_clControl.HandleSignalAspect(	m_usSignalSelected,
+										m_usSignalAspect,
+										m_usExtraSignals	);
+	}
 
 	m_usSignalSelected	= 0;
 	m_usSignalAspect	= 0;

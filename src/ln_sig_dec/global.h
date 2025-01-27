@@ -9,6 +9,13 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	2		from: 26.01.2025
+//#
+//#	Implementation:
+//#		-	add definitions for US signals
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	1		from: 13.08.2024
 //#
 //#	Implementation:
@@ -87,6 +94,15 @@
 
 #define RANGIER_SIGNAL_COUNT		5
 
+
+#define SIGNAL_SELECTED_US_1		10
+#define SIGNAL_SELECTED_US_2		11
+#define SIGNAL_SELECTED_US_3		12
+#define SIGNAL_SELECTED_US_4		13
+
+#define US_SIGNAL_COUNT				4
+
+
 //----------------------------------------------------------------------
 //	index for signal aspects
 //
@@ -114,6 +130,7 @@
 #define APPROACH_LEDS_IDX_START			IDX_SIGNAL_APPROACH_BIT_0
 #define APPROACH_LEDS_IDX_COUNT			4
 #define APPROACH_LEDS_IDX_STOP			(APPROACH_LEDS_IDX_START + APPROACH_LEDS_IDX_COUNT)
+
 
 //----	rangier signal 1  ------------------------------------------
 #define RANGIER_1_LEDS					0x0007
@@ -164,3 +181,34 @@
 #define RANGIER_5_LEDS_IDX_START		LED_M
 #define RANGIER_5_LEDS_IDX_COUNT		2
 #define RANGIER_5_LEDS_IDX_STOP			(RANGIER_5_LEDS_IDX_START + RANGIER_5_LEDS_IDX_COUNT)
+
+
+//----	US signal 1  -----------------------------------------------
+#define US_SIGNAL_1_LEDS				0x0007
+
+#define IDX_US_SIGNAL_1_BIT_0			0
+#define IDX_US_SIGNAL_1_BIT_1			1
+#define IDX_US_SIGNAL_1_OFF				2
+
+//----	US signal 2  -----------------------------------------------
+#define US_SIGNAL_2_LEDS				0x0070
+
+#define IDX_US_SIGNAL_2_BIT_0			3
+#define IDX_US_SIGNAL_2_BIT_1			4
+#define IDX_US_SIGNAL_2_OFF				5
+
+//----	US signal 3  -----------------------------------------------
+#define US_SIGNAL_3_LEDS				0x0380
+
+#define IDX_US_SIGNAL_3_BIT_0			6
+#define IDX_US_SIGNAL_3_BIT_1			7
+#define IDX_US_SIGNAL_3_OFF				8
+
+//----	US signal 4  -----------------------------------------------
+#define US_SIGNAL_4_LEDS				0x3800
+
+#define IDX_US_SIGNAL_4_BIT_0			9
+#define IDX_US_SIGNAL_4_BIT_1			10
+#define IDX_US_SIGNAL_4_OFF				11
+
+#define IDX_US_SIGNAL_ALL_OFF			12

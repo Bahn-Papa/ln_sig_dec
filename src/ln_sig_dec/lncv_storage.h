@@ -10,6 +10,13 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	13		from: 26.01.2025
+//#
+//#	Implementation:
+//#		-	add new signal type SIGNAL_TYPE_US
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	12		from: 14.08.2024
 //#
 //#	Implementation:
@@ -163,6 +170,7 @@
 #define SIGNAL_TYPE_KS_A_SIG				10
 #define SIGNAL_TYPE_KS_E_SIG				11
 #define SIGNAL_TYPE_FOUR_RANGIER_SIG		12
+#define SIGNAL_TYPE_US						21
 
 
 //----------------------------------------------------------------------
