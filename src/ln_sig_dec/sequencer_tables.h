@@ -764,16 +764,6 @@ const uint8_t US_SW_to_Hp2_blink[] PROGMEM =
 //
 
 //------------------------------------------------------------------
-//	US Signal from Hp0 to Hp1, inv from Hp1 to Hp0
-//
-const uint8_t US_FADE_Hp0_Hp1_INV_Hp1_Hp0[] PROGMEM =
-{
-	0b00000100,
-	SEQUENCE_WAIT_FOR_FADE_FINISHED,
-	SEQUENCE_END
-};
-
-//------------------------------------------------------------------
 //	US Signal from Hp1/Hp2 to Hp0, inv from Hp0 to Hp1
 //
 const uint8_t US_FADE_to_Hp0_INV_Hp0_Hp1[] PROGMEM =
@@ -781,5 +771,224 @@ const uint8_t US_FADE_to_Hp0_INV_Hp0_Hp1[] PROGMEM =
 	0b00000001,
 	SEQUENCE_WAIT_FOR_FADE_FINISHED,
 	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	US Signal from Hp0 to Hp1, inv from Hp1/Hp2 to Hp0
+//
+const uint8_t US_FADE_Hp0_Hp1_INV_to_Hp0[] PROGMEM =
+{
+	0b00000100,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	US Signal from Hp0 to Hp2, inv dito
+//
+const uint8_t US_FADE_Hp0_Hp2[] PROGMEM =
+{
+	0b00000010,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	US Signal from Hp0 to Hp2 blinking, inv dito
+//
+const uint8_t US_FADE_Hp0_Hp2B[] PROGMEM =
+{
+	0b00000010,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	0b10000010,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	US Signal from Hp1 to Hp2, inv N/A
+//
+const uint8_t US_FADE_Hp1_Hp2[] PROGMEM =
+{
+	0b00000001,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	0b00000010,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	US Signal from Hp1 to Hp2B, inv N/A
+//
+const uint8_t US_FADE_Hp1_Hp2B[] PROGMEM =
+{
+	0b00000001,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	0b00000010,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	0b10000010,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	US Signal from Hp2 to Hp1, inv N/A
+//
+const uint8_t US_FADE_Hp2_Hp1[] PROGMEM =
+{
+	0b00000001,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	0b00000100,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	US Signal from Hp2 to Hp2B, inv dito
+//
+const uint8_t US_FADE_Hp2_Hp2B[] PROGMEM =
+{
+	0b10000010,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	US Signal from Hp2B to Hp0, inv N/A
+//
+const uint8_t US_FADE_Hp2B_Hp0[] PROGMEM =
+{
+	0b10000000,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	0b00000001,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	US Signal from Hp2B to Hp1, inv N/A
+//
+const uint8_t US_FADE_Hp2B_Hp1[] PROGMEM =
+{
+	0b10000000,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	0b00000001,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	0b00000100,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	US Signal from Hp2B to Hp2, inv dito
+//
+const uint8_t US_FADE_Hp2B_Hp2[] PROGMEM =
+{
+	0b10000000,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	0b00000010,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_END
+};
+
+
+//------------------------------------------------------------------
+//	US Signal inverse from Hp1 to Hp2
+//
+const uint8_t US_FADE_INV_Hp1_Hp2[] PROGMEM =
+{
+	0b00000100,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	0b00000010,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	US Signal inverse from Hp1 to Hp2B
+//
+const uint8_t US_FADE_INV_Hp1_Hp2B[] PROGMEM =
+{
+	0b00000100,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	0b00000010,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	0b10000010,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	US Signal inverse from Hp2 to Hp1
+//
+const uint8_t US_FADE_INV_Hp2_Hp1[] PROGMEM =
+{
+	0b00000100,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	0b00000001,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	US Signal inverse from Hp2B to Hp1
+//
+const uint8_t US_FADE_INV_Hp2B_Hp0[] PROGMEM =
+{
+	0b10000000,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	0b00000100,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_END
+};
+
+//------------------------------------------------------------------
+//	US Signal inverse from Hp2B to Hp1
+//
+const uint8_t US_FADE_INV_Hp2B_Hp1[] PROGMEM =
+{
+	0b10000000,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	0b00000100,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	0b00000001,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_END
+};
+
+
+//------------------------------------------------------------------
+//	US Signal sequence matrix for switched signals
+//
+const uint8_t* const US_SW_Matrix[ US_SIGNAL_COUNT ][ US_SIGNAL_COUNT ] PROGMEM =
+{
+	{	sNOP,					US_SW_to_Hp1_INV_Hp0,	US_SW_to_Hp2,	US_SW_to_Hp2_blink	},
+	{	US_SW_to_Hp0_INV_Hp1,	sNOP,					US_SW_to_Hp2,	US_SW_to_Hp2_blink	},
+	{	US_SW_to_Hp0_INV_Hp1,	US_SW_to_Hp1_INV_Hp0,	sNOP,			US_SW_to_Hp2_blink	},
+	{	US_SW_to_Hp0_INV_Hp1,	US_SW_to_Hp1_INV_Hp0,	US_SW_to_Hp2,	sNOP				}
+};
+
+const uint8_t* const US_SW_INV_Matrix[ US_SIGNAL_COUNT ][ US_SIGNAL_COUNT ] PROGMEM =
+{
+	{	sNOP,					US_SW_to_Hp0_INV_Hp1,	US_SW_to_Hp2,	US_SW_to_Hp2_blink	},
+	{	US_SW_to_Hp1_INV_Hp0,	sNOP,					US_SW_to_Hp2,	US_SW_to_Hp2_blink	},
+	{	US_SW_to_Hp1_INV_Hp0,	US_SW_to_Hp0_INV_Hp1,	sNOP,			US_SW_to_Hp2_blink	},
+	{	US_SW_to_Hp1_INV_Hp0,	US_SW_to_Hp0_INV_Hp1,	US_SW_to_Hp2,	sNOP				}
+};
+
+
+//------------------------------------------------------------------
+//	US Signal sequence matrix for fading signals
+//
+const uint8_t* const US_FADE_Matrix[ US_SIGNAL_COUNT ][ US_SIGNAL_COUNT ] PROGMEM =
+{
+	{	sNOP,						US_FADE_Hp0_Hp1_INV_to_Hp0,	US_FADE_Hp0_Hp2,	US_FADE_Hp0_Hp2B	},
+	{	US_FADE_to_Hp0_INV_Hp0_Hp1,	sNOP,						US_FADE_Hp1_Hp2,	US_FADE_Hp1_Hp2B	},
+	{	US_FADE_to_Hp0_INV_Hp0_Hp1,	US_FADE_Hp2_Hp1,			sNOP,				US_FADE_Hp2_Hp2B	},
+	{	US_FADE_Hp2B_Hp0,			US_FADE_Hp2B_Hp1,			US_FADE_Hp2B_Hp2,	sNOP				}
+};
+
+const uint8_t* const US_FADE_INV_Matrix[ US_SIGNAL_COUNT ][ US_SIGNAL_COUNT ] PROGMEM =
+{
+	{	sNOP,						US_FADE_to_Hp0_INV_Hp0_Hp1,	US_FADE_Hp0_Hp2,		US_FADE_Hp0_Hp2B		},
+	{	US_FADE_Hp0_Hp1_INV_to_Hp0,	sNOP,						US_FADE_INV_Hp1_Hp2,	US_FADE_INV_Hp1_Hp2B	},
+	{	US_FADE_Hp0_Hp1_INV_to_Hp0,	US_FADE_INV_Hp2_Hp1,		sNOP,					US_FADE_Hp2_Hp2B		},
+	{	US_FADE_INV_Hp2B_Hp0,		US_FADE_INV_Hp2B_Hp1,		US_FADE_Hp2B_Hp2,		sNOP					}
 };
 
