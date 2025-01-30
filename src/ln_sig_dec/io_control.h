@@ -322,6 +322,7 @@ class IO_ControlClass
 		};
 
 		void SwitchLed( uint8_t usLedNo, bool bOn );
+		void SwitchSignal( uint8_t usSelectedSignal, bool bOn );
 		void SwitchExtraSignalsOn(	uint8_t usSelectedSignal,
 									uint8_t usExtraSignals		);
 		void SwitchExtraSignalsOff( uint8_t usSelectedSignal,
@@ -331,8 +332,6 @@ class IO_ControlClass
 		void HandleSignalAspect(	uint8_t usSelectedSignal,
 									uint8_t usSignalAspect,
 									uint8_t usExtraSignals		);
-		void HandleUsSignalAspect(	uint8_t usSelectedSignal,
-									uint8_t usSignalAspect		);
 
 		inline uint16_t GetLedsOn( void )
 		{

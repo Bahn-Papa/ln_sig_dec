@@ -718,6 +718,16 @@ const uint8_t* const Approach_To_Hp0[] PROGMEM =
 //
 
 //------------------------------------------------------------------
+//	US Signal switch off
+//
+const uint8_t US_SW_to_Off[] PROGMEM =
+{
+	0b01000000,
+	SEQUENCE_END
+};
+
+
+//------------------------------------------------------------------
 //	US Signal to Hp0, inv to Hp1
 //
 const uint8_t US_SW_to_Hp0_INV_Hp1[] PROGMEM =
@@ -762,6 +772,17 @@ const uint8_t US_SW_to_Hp2_blink[] PROGMEM =
 //
 //	sequences for fading the LEDs
 //
+
+//------------------------------------------------------------------
+//	US Signal switch off
+//
+const uint8_t US_FADE_to_Off[] PROGMEM =
+{
+	0b00000000,
+	SEQUENCE_WAIT_FOR_FADE_FINISHED,
+	SEQUENCE_END
+};
+
 
 //------------------------------------------------------------------
 //	US Signal from Hp1/Hp2 to Hp0, inv from Hp0 to Hp1
@@ -972,6 +993,22 @@ const uint8_t* const US_SW_INV_Matrix[ US_SIGNAL_COUNT ][ US_SIGNAL_COUNT ] PROG
 	{	US_SW_to_Hp1_INV_Hp0,	US_SW_to_Hp0_INV_Hp1,	US_SW_to_Hp2,	sNOP				}
 };
 
+const uint8_t* const US_SW_On[] PROGMEM =
+{
+	US_SW_to_Hp0_INV_Hp1,
+	US_SW_to_Hp1_INV_Hp0,
+	US_SW_to_Hp2,
+	US_SW_to_Hp2_blink
+} ;
+
+const uint8_t* const US_SW_INV_On[] PROGMEM =
+{
+	US_SW_to_Hp1_INV_Hp0,
+	US_SW_to_Hp0_INV_Hp1,
+	US_SW_to_Hp2,
+	US_SW_to_Hp2_blink
+} ;
+
 
 //------------------------------------------------------------------
 //	US Signal sequence matrix for fading signals
@@ -991,4 +1028,20 @@ const uint8_t* const US_FADE_INV_Matrix[ US_SIGNAL_COUNT ][ US_SIGNAL_COUNT ] PR
 	{	US_FADE_Hp0_Hp1_INV_to_Hp0,	US_FADE_INV_Hp2_Hp1,		sNOP,					US_FADE_Hp2_Hp2B		},
 	{	US_FADE_INV_Hp2B_Hp0,		US_FADE_INV_Hp2B_Hp1,		US_FADE_Hp2B_Hp2,		sNOP					}
 };
+
+const uint8_t* const US_FADE_On[] PROGMEM =
+{
+	US_FADE_to_Hp0_INV_Hp0_Hp1,
+	US_FADE_Hp0_Hp1_INV_to_Hp0,
+	US_FADE_Hp0_Hp2,
+	US_FADE_Hp0_Hp2B
+} ;
+
+const uint8_t* const US_FADE_INV_On[] PROGMEM =
+{
+	US_FADE_Hp0_Hp1_INV_to_Hp0,
+	US_FADE_to_Hp0_INV_Hp0_Hp1,
+	US_FADE_Hp0_Hp2,
+	US_FADE_Hp0_Hp2B
+} ;
 

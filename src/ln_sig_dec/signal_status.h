@@ -9,12 +9,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	2		from: 27.01.2025
+//#	File Version:	2		from: 29.01.2025
 //#
 //#	Implementation:
 //#		-	add support for new signal type SIGNAL_TYPE_US
-//#			new variable
+//#			new variables
+//#				m_arbUsSignalOn[]
 //#				m_arusUsSignalAspect[]
+//#			new functions
+//#				GetSignalOn()
+//#				SetSignalOn()
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -63,9 +67,13 @@ class SignalStatusClass
 		uint8_t	GetSignalAspect( uint8_t usSelectedSignal );
 		void	SetSignalAspect( uint8_t usSelectedSignal, uint8_t usAspect );
 
+		bool	GetSignalOn( uint8_t usSelectedSignal );
+		void	SetSignalOn( uint8_t usSelectedSignal, bool bIsOn );
+
 	private:
 		uint8_t		m_arusRangierAspect[ RANGIER_SIGNAL_COUNT ];
 		uint8_t		m_arusUsSignalAspect[ US_SIGNAL_COUNT ];
+		bool		m_arbUsSignalOn[ US_SIGNAL_COUNT ];
 		uint8_t		m_usSignalAspectMain;
 		uint8_t		m_usSignalAspectApproach;
 };

@@ -7,13 +7,12 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	20		from: 26.01.2025
+//#	File Version:	20		from: 29.01.2025
 //#
 //#	Implementation:
 //#		-	add handling for new signal type SIGNAL_TYPE_US
-//#			change in functions
+//#			change in function
 //#				LoconetReceived()
-//#				SetSelectedSignalAspect()
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -415,7 +414,7 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 							break;
 
 						case IDX_US_SIGNAL_1_OFF:
-//							AddSignalAspect( SIGNAL_SELECTED_US_1, bIsGreen, 0x04 );
+							g_clControl.SwitchSignal( SIGNAL_SELECTED_US_1, bIsGreen );
 							break;
 
 						case IDX_US_SIGNAL_2_BIT_0:
@@ -427,7 +426,7 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 							break;
 
 						case IDX_US_SIGNAL_2_OFF:
-//							AddSignalAspect( SIGNAL_SELECTED_US_2, bIsGreen, 0x04 );
+							g_clControl.SwitchSignal( SIGNAL_SELECTED_US_2, bIsGreen );
 							break;
 
 						case IDX_US_SIGNAL_3_BIT_0:
@@ -439,7 +438,7 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 							break;
 
 						case IDX_US_SIGNAL_3_OFF:
-//							AddSignalAspect( SIGNAL_SELECTED_US_3, bIsGreen, 0x04 );
+							g_clControl.SwitchSignal( SIGNAL_SELECTED_US_3, bIsGreen );
 							break;
 
 						case IDX_US_SIGNAL_4_BIT_0:
@@ -451,11 +450,14 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 							break;
 
 						case IDX_US_SIGNAL_4_OFF:
-//							AddSignalAspect( SIGNAL_SELECTED_US_4, bIsGreen, 0x04 );
+							g_clControl.SwitchSignal( SIGNAL_SELECTED_US_4, bIsGreen );
 							break;
 
 						case IDX_US_SIGNAL_ALL_OFF:
-//							AddSignalAspect( SIGNAL_SELECTED_US_5, bIsGreen, 0x04 );
+							g_clControl.SwitchSignal( SIGNAL_SELECTED_US_1, bIsGreen );
+							g_clControl.SwitchSignal( SIGNAL_SELECTED_US_2, bIsGreen );
+							g_clControl.SwitchSignal( SIGNAL_SELECTED_US_3, bIsGreen );
+							g_clControl.SwitchSignal( SIGNAL_SELECTED_US_4, bIsGreen );
 							break;
 					}
 				}
@@ -703,18 +705,9 @@ void MyLoconetClass::SetSelectedSignalAspect( void )
 {
 	g_clControl.SwitchLed( LED_GREEN, false );
 	
-	if(		(SIGNAL_TYPE_US == m_usSignalType)
-		&&	!g_clControl.IsContactOccupied()	)
-	{
-		g_clControl.HandleUsSignalAspect(	m_usSignalSelected,
-											m_usSignalAspect	);
-	}
-	else
-	{
-		g_clControl.HandleSignalAspect(	m_usSignalSelected,
-										m_usSignalAspect,
-										m_usExtraSignals	);
-	}
+	g_clControl.HandleSignalAspect(	m_usSignalSelected,
+									m_usSignalAspect,
+									m_usExtraSignals	);
 
 	m_usSignalSelected	= 0;
 	m_usSignalAspect	= 0;

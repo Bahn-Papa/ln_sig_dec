@@ -12,7 +12,11 @@
 //#		-	add support for new signal type SIGNAL_TYPE_US
 //#			changes in constructor and all functions
 //#			new variable
+//#				m_arbUsSignalOn[]
 //#				m_arusUsSignalAspect[]
+//#			new functions
+//#				GetSignalOn()
+//#				SetSignalOn()
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -154,6 +158,85 @@ void SignalStatusClass::SetSignalAspect( uint8_t usSelectedSignal,
 		case SIGNAL_SELECTED_US_3:
 		case SIGNAL_SELECTED_US_4:
 			m_arusUsSignalAspect[ usSelectedSignal - SIGNAL_SELECTED_US_1 ] = usAspect;
+			break;
+
+		default:
+			break;
+	}
+}
+
+
+//******************************************************************
+//	GetSignalOn
+//------------------------------------------------------------------
+//
+bool SignalStatusClass::GetSignalOn( uint8_t usSelectedSignal )
+{
+	bool	bIsOn	= false;
+
+	switch( usSelectedSignal )
+	{
+		case SIGNAL_SELECTED_MAIN:
+//			bIsOn = m_usSignalAspectMain;
+			break;
+
+		case SIGNAL_SELECTED_APPROACH:
+//			bIsOn = m_usSignalAspectApproach;
+			break;
+
+		case SIGNAL_SELECTED_RANGIER_1:
+		case SIGNAL_SELECTED_RANGIER_2:
+		case SIGNAL_SELECTED_RANGIER_3:
+		case SIGNAL_SELECTED_RANGIER_4:
+		case SIGNAL_SELECTED_RANGIER_5:
+//			bIsOn = m_arusRangierAspect[ usSelectedSignal ];
+			break;
+
+		case SIGNAL_SELECTED_US_1:
+		case SIGNAL_SELECTED_US_2:
+		case SIGNAL_SELECTED_US_3:
+		case SIGNAL_SELECTED_US_4:
+			bIsOn = m_arbUsSignalOn[ usSelectedSignal - SIGNAL_SELECTED_US_1 ];
+			break;
+
+		default:
+			break;
+	}
+
+	return( bIsOn );
+}
+
+
+//******************************************************************
+//	SetSignalOn
+//------------------------------------------------------------------
+//
+void SignalStatusClass::SetSignalOn(	uint8_t usSelectedSignal,
+										bool	bIsOn				)
+{
+	switch( usSelectedSignal )
+	{
+		case SIGNAL_SELECTED_MAIN:
+//			m_usSignalAspectMain = bIsOn;
+			break;
+
+		case SIGNAL_SELECTED_APPROACH:
+//			m_usSignalAspectApproach = bIsOn;
+			break;
+
+		case SIGNAL_SELECTED_RANGIER_1:
+		case SIGNAL_SELECTED_RANGIER_2:
+		case SIGNAL_SELECTED_RANGIER_3:
+		case SIGNAL_SELECTED_RANGIER_4:
+		case SIGNAL_SELECTED_RANGIER_5:
+//			m_arusRangierAspect[ usSelectedSignal ] = bIsOn;
+			break;
+
+		case SIGNAL_SELECTED_US_1:
+		case SIGNAL_SELECTED_US_2:
+		case SIGNAL_SELECTED_US_3:
+		case SIGNAL_SELECTED_US_4:
+			m_arbUsSignalOn[ usSelectedSignal - SIGNAL_SELECTED_US_1 ] = bIsOn;
 			break;
 
 		default:

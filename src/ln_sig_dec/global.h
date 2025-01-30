@@ -9,7 +9,7 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	2		from: 27.01.2025
+//#	File Version:	2		from: 29.01.2025
 //#
 //#	Implementation:
 //#		-	add definitions for US signals
@@ -201,9 +201,9 @@
 #define IDX_US_SIGNAL_2_BIT_1			4
 #define IDX_US_SIGNAL_2_OFF				5
 
-#define US_SIGNAL_1_LEDS_IDX_START		LED_E
-#define US_SIGNAL_1_LEDS_IDX_COUNT		3
-#define US_SIGNAL_1_LEDS_IDX_STOP		(US_SIGNAL_1_LEDS_IDX_START + US_SIGNAL_1_LEDS_IDX_COUNT)
+#define US_SIGNAL_2_LEDS_IDX_START		LED_E
+#define US_SIGNAL_2_LEDS_IDX_COUNT		3
+#define US_SIGNAL_2_LEDS_IDX_STOP		(US_SIGNAL_2_LEDS_IDX_START + US_SIGNAL_2_LEDS_IDX_COUNT)
 
 //----	US signal 3  -----------------------------------------------
 #define US_SIGNAL_3_LEDS				0x0380
@@ -212,9 +212,9 @@
 #define IDX_US_SIGNAL_3_BIT_1			7
 #define IDX_US_SIGNAL_3_OFF				8
 
-#define US_SIGNAL_1_LEDS_IDX_START		LED_H
-#define US_SIGNAL_1_LEDS_IDX_COUNT		3
-#define US_SIGNAL_1_LEDS_IDX_STOP		(US_SIGNAL_1_LEDS_IDX_START + US_SIGNAL_1_LEDS_IDX_COUNT)
+#define US_SIGNAL_3_LEDS_IDX_START		LED_H
+#define US_SIGNAL_3_LEDS_IDX_COUNT		3
+#define US_SIGNAL_3_LEDS_IDX_STOP		(US_SIGNAL_3_LEDS_IDX_START + US_SIGNAL_3_LEDS_IDX_COUNT)
 
 //----	US signal 4  -----------------------------------------------
 #define US_SIGNAL_4_LEDS				0x3800
@@ -223,8 +223,8 @@
 #define IDX_US_SIGNAL_4_BIT_1			10
 #define IDX_US_SIGNAL_4_OFF				11
 
-#define US_SIGNAL_1_LEDS_IDX_START		LED_L
-#define US_SIGNAL_1_LEDS_IDX_COUNT		3
-#define US_SIGNAL_1_LEDS_IDX_STOP		(US_SIGNAL_1_LEDS_IDX_START + US_SIGNAL_1_LEDS_IDX_COUNT)
+#define US_SIGNAL_4_LEDS_IDX_START		LED_L
+#define US_SIGNAL_4_LEDS_IDX_COUNT		3
+#define US_SIGNAL_4_LEDS_IDX_STOP		(US_SIGNAL_4_LEDS_IDX_START + US_SIGNAL_4_LEDS_IDX_COUNT)
 
 #define IDX_US_SIGNAL_ALL_OFF			12

@@ -434,6 +434,7 @@
 #include "macros.h"
 #include "time_values.h"
 #include "sequencer_definitions.h"
+#include "sequencer_tables.h"
 
 
 //==========================================================================
@@ -686,6 +687,21 @@ void IO_ControlClass::Init( void )
 		SwitchLed( LED_J, true );
 		SwitchLed( LED_M, true );
 	}
+	else if( SIGNAL_TYPE_US == m_usSignalType )
+	{
+		for( uint8_t idx = 0 ; US_SIGNAL_COUNT > idx ; idx++ )
+		{
+			uint8_t	sigIdx	= SIGNAL_SELECTED_US_1 + idx;
+
+			g_clStatus.SetSignalAspect( sigIdx, US_SIGNAL_ASPECT_HP0 );
+			g_clStatus.SetSignalOn( sigIdx, true );
+		}
+
+		SwitchLed( LED_A, true );
+		SwitchLed( LED_G, true );
+		SwitchLed( LED_H, true );
+		SwitchLed( LED_N, true );
+	}
 	else if( m_bMainSignalPresent )
 	{
 		SwitchLed( LED_MAIN_RED_LEFT, true );
@@ -807,6 +823,13 @@ void IO_ControlClass::Loop( void )
 	if( SIGNAL_TYPE_FOUR_RANGIER_SIG == m_usSignalType )
 	{
 		for( uint8_t idx = 0 ; RANGIER_SIGNAL_COUNT > idx ; idx++ )
+		{
+			ProcessTransition( idx, ulMillis );
+		}
+	}
+	else if( SIGNAL_TYPE_US == m_usSignalType )
+	{
+		for( uint8_t idx = 0 ; US_SIGNAL_COUNT > idx ; idx++ )
 		{
 			ProcessTransition( idx, ulMillis );
 		}
@@ -1048,32 +1071,25 @@ void IO_ControlClass::HandleSignalAspect(	uint8_t usSelectedSignal,
 		case SIGNAL_SELECTED_US_2:
 		case SIGNAL_SELECTED_US_3:
 		case SIGNAL_SELECTED_US_4:
-			idx = usSelectedSignal - SIGNAL_SELECTED_US_1;
-			
-			if(		(US_SIGNAL_ASPECTS > usSignalAspect)
-				&&	(NULL == m_arpclTransition[ idx ])	)
+			if( US_SIGNAL_ASPECTS > usSignalAspect )
+			{
+				idx = usSelectedSignal - SIGNAL_SELECTED_US_1;
+
+				if( !g_clStatus.GetSignalOn( usSelectedSignal ) )
 				{
+					g_clStatus.SetSignalAspect( usSelectedSignal, usSignalAspect );
 				}
-			break;
-	}
-}
+				else if( NULL == m_arpclTransition[ idx ] )
+				{
+					m_arpclTransition[ idx ] =
+						new TransitionClass(	m_usSignalType,
+												usSelectedSignal,
+												usSignalAspect,
+												0x00				);
 
-
-//******************************************************************
-//	HandleUsSignalAspect
-//------------------------------------------------------------------
-//
-void IO_ControlClass::HandleUsSignalAspect(	uint8_t usSelectedSignal,
-											uint8_t usSignalAspect		)
-{
-	uint8_t	offset	= 0;
-	
-	switch( usSelectedSignal )
-	{
-		case SIGNAL_SELECTED_US_3:
-			offset = 7;
-
-		case SIGNAL_SELECTED_US_1:
+					SwitchLed( LED_GREEN, true );
+				}
+			}
 			break;
 	}
 }
@@ -1133,6 +1149,175 @@ void IO_ControlClass::SwitchLed( uint8_t usLedNo, bool bOn )
 
 
 //******************************************************************
+//	SwitchSignal
+//------------------------------------------------------------------
+//
+void IO_ControlClass::SwitchSignal( uint8_t usSelectedSignal, bool bOn )
+{
+	uint8_t		usTargetAspect		= g_clStatus.GetSignalAspect( usSelectedSignal );
+	uint16_t	uiMask;
+	uint8_t		usStartIdx;
+	uint8_t		usStopIdx;
+	uint8_t *	pusStep				= (uint8_t *)sNOP;
+	uint8_t		usIdx;
+	bool		bStartTransition	= true;
+
+
+	if( g_clStatus.GetSignalOn( usSelectedSignal ) != bOn )
+	{
+		switch( usSelectedSignal )
+		{
+			case SIGNAL_SELECTED_US_1:
+				usStartIdx	= US_SIGNAL_1_LEDS_IDX_START;
+				usStopIdx	= US_SIGNAL_1_LEDS_IDX_STOP;
+				uiMask		= US_SIGNAL_1_LEDS;
+				usIdx		= 0;
+
+				if( m_bContactOccupied )
+				{
+					//-----------------------------------------
+					//	hier die alten Signale schalten
+					//
+					if( bOn )
+					{
+						pusStep = pgm_read_word( &US_FADE_On[ usTargetAspect ] );
+					}
+					else
+					{
+						pusStep	= (uint8_t *)&US_FADE_to_Off;
+					}
+				}
+				else
+				{
+					//-----------------------------------------
+					//	und hier entsprechend die Neuen
+					//
+					if( bOn )
+					{
+						pusStep = pgm_read_word( &US_SW_On[ usTargetAspect ] );
+					}
+					else
+					{
+						pusStep	= (uint8_t *)&US_SW_to_Off;
+					}
+				}
+				break;
+
+			case SIGNAL_SELECTED_US_2:
+				usStartIdx	= US_SIGNAL_2_LEDS_IDX_START;
+				usStopIdx	= US_SIGNAL_2_LEDS_IDX_STOP;
+				uiMask		= US_SIGNAL_2_LEDS;
+				usIdx		= 1;
+				
+				if( m_bContactOccupied )
+				{
+					if( bOn )
+					{
+						pusStep = pgm_read_word( &US_FADE_INV_On[ usTargetAspect ] );
+					}
+					else
+					{
+						pusStep	= (uint8_t *)&US_FADE_to_Off;
+					}
+				}
+				else
+				{
+					if( bOn )
+					{
+						pusStep = pgm_read_word( &US_SW_INV_On[ usTargetAspect ] );
+					}
+					else
+					{
+						pusStep	= (uint8_t *)&US_SW_to_Off;
+					}
+				}
+				break;
+
+			case SIGNAL_SELECTED_US_3:
+				usStartIdx	= US_SIGNAL_3_LEDS_IDX_START;
+				usStopIdx	= US_SIGNAL_3_LEDS_IDX_STOP;
+				uiMask		= US_SIGNAL_3_LEDS;
+				usIdx		= 2;
+				
+				if( m_bContactOccupied )
+				{
+					if( bOn )
+					{
+						pusStep = pgm_read_word( &US_FADE_On[ usTargetAspect ] );
+					}
+					else
+					{
+						pusStep	= (uint8_t *)&US_FADE_to_Off;
+					}
+				}
+				else
+				{
+					if( bOn )
+					{
+						pusStep = pgm_read_word( &US_SW_On[ usTargetAspect ] );
+					}
+					else
+					{
+						pusStep	= (uint8_t *)&US_SW_to_Off;
+					}
+				}
+				break;
+
+			case SIGNAL_SELECTED_US_4:
+				usStartIdx	= US_SIGNAL_4_LEDS_IDX_START;
+				usStopIdx	= US_SIGNAL_4_LEDS_IDX_STOP;
+				uiMask		= US_SIGNAL_4_LEDS;
+				usIdx		= 3;
+				
+				if( m_bContactOccupied )
+				{
+					if( bOn )
+					{
+						pusStep = pgm_read_word( &US_FADE_INV_On[ usTargetAspect ] );
+					}
+					else
+					{
+						pusStep	= (uint8_t *)&US_FADE_to_Off;
+					}
+				}
+				else
+				{
+					if( bOn )
+					{
+						pusStep = pgm_read_word( &US_SW_INV_On[ usTargetAspect ] );
+					}
+					else
+					{
+						pusStep	= (uint8_t *)&US_SW_to_Off;
+					}
+				}
+				break;
+
+			default:
+				bStartTransition = false;
+				break;
+		}
+		
+		if( bStartTransition )
+		{
+			if( NULL == m_arpclTransition[ usIdx ] )
+			{
+				m_arpclTransition[ usIdx ] =
+					new TransitionClass(	pusStep,
+											uiMask,
+											usStartIdx,
+											usStopIdx		);
+
+				g_clStatus.SetSignalOn( usSelectedSignal, bOn );
+
+				SwitchLed( LED_GREEN, true );
+			}
+		}
+	}
+}
+
+
+//******************************************************************
 //	IsFadeFinished
 //------------------------------------------------------------------
 //
@@ -1180,7 +1365,8 @@ bool IO_ControlClass::SetSignalType( void )
 			m_uiFadeTimeUp		= g_clLncvStorage.GetFadeTimeUp(   IDX_FADE_TIME_MIDDLE );
 			m_uiFadeTimeDown	= g_clLncvStorage.GetFadeTimeDown( IDX_FADE_TIME_MIDDLE );
 			break;
-			
+
+		case SIGNAL_TYPE_US:
 		case SIGNAL_TYPE_DIRECT_CONTROL_SLOW:
 			m_uiFadeTimeUp		= g_clLncvStorage.GetFadeTimeUp(   IDX_FADE_TIME_SLOW );
 			m_uiFadeTimeDown	= g_clLncvStorage.GetFadeTimeDown( IDX_FADE_TIME_SLOW );

@@ -9,6 +9,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	3		from: 29.01.2025
+//#
+//#	Implementation:
+//#		-	add support for US signals
+//#			new function
+//#				InitUsSignalTransition()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	2		from: 13.08.2024
 //#
 //#	Bug Fix:
@@ -76,6 +85,7 @@ class TransitionClass
 
 	protected:
 		bool InitTransition( void );
+		bool InitUsSignalTransition( uint8_t usActualAspect );
 		bool HandleControlGroup( uint32_t ulMillis, uint8_t usAspect );
 		void HandleLedGroups( uint32_t ulMillis, uint8_t usControlGroup, uint8_t usAspect );
 

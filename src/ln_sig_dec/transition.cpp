@@ -6,6 +6,17 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	7		from: 29.01.2025
+//#
+//#	Implementation:
+//#		-	add support for US signals
+//#			new function
+//#				InitUsSignalTransition()
+//#			change in function
+//#				InitTransition()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	6		from: 27.01.2025
 //#
 //#	Implementation:
@@ -154,8 +165,8 @@ TransitionClass::TransitionClass(	uint8_t *	pusStep,
 	m_bSetAspect			= false;
 
 	m_usSignalType			= 0;
-	m_usSelectedSignal		= SIGNAL_SELECTED_APPROACH;
-	m_usTargetAspect		= SIGNAL_ASPECT_VR0;
+	m_usSelectedSignal		= 0;
+	m_usTargetAspect		= 0;
 	m_usExtraSignals		= 0x00;
 
 	m_pSubTransition		= NULL;
@@ -265,10 +276,14 @@ bool TransitionClass::InitTransition( void )
 
 	m_bDoInit = false;
 
-	if(		(	(SIGNAL_ASPECT_HP0 == usActualAspect)
-			 &&	(SIGNAL_ASPECT_HP0 != m_usTargetAspect))
-		||	(	(SIGNAL_ASPECT_HP0 != usActualAspect)
-			 &&	(SIGNAL_ASPECT_HP0 == m_usTargetAspect))	)
+	if( SIGNAL_TYPE_US == m_usSignalType )
+	{
+		m_bDoInit = InitUsSignalTransition( usActualAspect );
+	}
+	else if(	(	(SIGNAL_ASPECT_HP0 == usActualAspect)
+				 &&	(SIGNAL_ASPECT_HP0 != m_usTargetAspect))
+			||	(	(SIGNAL_ASPECT_HP0 != usActualAspect)
+				 &&	(SIGNAL_ASPECT_HP0 == m_usTargetAspect))	)
 	{
 		bDoNotStart = false;	//	transition should start
 
@@ -317,6 +332,92 @@ bool TransitionClass::InitTransition( void )
 				else
 				{
 					m_pusStep	= (uint8_t *)&Rangier_to_ShKe;
+				}
+				break;
+
+			default:
+				bDoNotStart = true;
+				break;
+		}
+	}
+
+	return( bDoNotStart );
+}
+
+
+//******************************************************************
+//	InitUsSignalTransition
+//------------------------------------------------------------------
+//
+bool TransitionClass::InitUsSignalTransition( uint8_t usActualAspect )
+{
+	bool	bDoNotStart	= true;		//	default do not start transition
+	bool	bOldSignals	= g_clControl.IsContactOccupied();
+
+
+	if( usActualAspect != m_usTargetAspect )
+	{
+		bDoNotStart = false;		//	transition should start
+
+		switch( m_usSelectedSignal )
+		{
+			case SIGNAL_SELECTED_US_1:
+				m_usLedStartIdx	= US_SIGNAL_1_LEDS_IDX_START;
+				m_usLedStopIdx	= US_SIGNAL_1_LEDS_IDX_STOP;
+				m_uiLedMask		= US_SIGNAL_1_LEDS;
+				
+				if( bOldSignals )
+				{
+					m_pusStep	= pgm_read_word( &US_FADE_Matrix[ usActualAspect ][ m_usTargetAspect ] );
+				}
+				else
+				{
+					m_pusStep	= pgm_read_word( &US_SW_Matrix[ usActualAspect ][ m_usTargetAspect ] );
+				}
+				break;
+
+			case SIGNAL_SELECTED_US_2:
+				m_usLedStartIdx	= US_SIGNAL_2_LEDS_IDX_START;
+				m_usLedStopIdx	= US_SIGNAL_2_LEDS_IDX_STOP;
+				m_uiLedMask		= US_SIGNAL_2_LEDS;
+				
+				if( bOldSignals )
+				{
+					m_pusStep	= pgm_read_word( &US_FADE_INV_Matrix[ usActualAspect ][ m_usTargetAspect ] );
+				}
+				else
+				{
+					m_pusStep	= pgm_read_word( &US_SW_INV_Matrix[ usActualAspect ][ m_usTargetAspect ] );
+				}
+				break;
+
+			case SIGNAL_SELECTED_US_3:
+				m_usLedStartIdx	= US_SIGNAL_3_LEDS_IDX_START;
+				m_usLedStopIdx	= US_SIGNAL_3_LEDS_IDX_STOP;
+				m_uiLedMask		= US_SIGNAL_3_LEDS;
+				
+				if( bOldSignals )
+				{
+					m_pusStep	= pgm_read_word( &US_FADE_Matrix[ usActualAspect ][ m_usTargetAspect ] );
+				}
+				else
+				{
+					m_pusStep	= pgm_read_word( &US_SW_Matrix[ usActualAspect ][ m_usTargetAspect ] );
+				}
+				break;
+
+			case SIGNAL_SELECTED_US_4:
+				m_usLedStartIdx	= US_SIGNAL_4_LEDS_IDX_START;
+				m_usLedStopIdx	= US_SIGNAL_4_LEDS_IDX_STOP;
+				m_uiLedMask		= US_SIGNAL_4_LEDS;
+				
+				if( bOldSignals )
+				{
+					m_pusStep	= pgm_read_word( &US_FADE_INV_Matrix[ usActualAspect ][ m_usTargetAspect ] );
+				}
+				else
+				{
+					m_pusStep	= pgm_read_word( &US_SW_INV_Matrix[ usActualAspect ][ m_usTargetAspect ] );
 				}
 				break;
 
@@ -526,7 +627,7 @@ void TransitionClass::HandleLedGroups( uint32_t ulMillis, uint8_t usControlGroup
 //
 uint8_t * TransitionClass::GetFirstStepMain( uint8_t usFromAspect )
 {
-	uint8_t *	pFirstStep	= sNOP;
+	uint8_t *	pFirstStep	= (uint8_t *)sNOP;
 
 	if( SIGNAL_ASPECT_HP0 == usFromAspect )
 	{
@@ -591,7 +692,7 @@ uint8_t * TransitionClass::GetFirstStepMain( uint8_t usFromAspect )
 //
 uint8_t * TransitionClass::GetFirstStepApproach( uint8_t usFromAspect )
 {
-	uint8_t *	pFirstStep	= sNOP;
+	uint8_t *	pFirstStep	= (uint8_t *)sNOP;
 
 	if( SIGNAL_ASPECT_HP0 == usFromAspect )
 	{
