@@ -333,6 +333,11 @@ class IO_ControlClass
 									uint8_t usSignalAspect,
 									uint8_t usExtraSignals		);
 
+		inline uint8_t GetSignalType( void )
+		{
+			return( m_usSignalType );
+		};
+
 		inline uint16_t GetLedsOn( void )
 		{
 			return( m_uiLedsOn );

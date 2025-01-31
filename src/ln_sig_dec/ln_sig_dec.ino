@@ -490,7 +490,10 @@ void loop()
 		{
 			g_bTrackContactOccupied = g_clControl.IsContactOccupied();
 
-			g_clMyLoconet.SendTrackContactMessage( g_bTrackContactOccupied );
+			if( SIGNAL_TYPE_US != g_clControl.GetSignalType() )
+			{
+				g_clMyLoconet.SendTrackContactMessage( g_bTrackContactOccupied );
+			}
 		}
 		else if( g_uiDelayTime )
 		{
@@ -503,7 +506,10 @@ void loop()
 			//	direct
 			g_bTrackContactOccupied = g_clControl.IsContactOccupied();
 
-			g_clMyLoconet.SendTrackContactMessage( g_bTrackContactOccupied );
+			if( SIGNAL_TYPE_US != g_clControl.GetSignalType() )
+			{
+				g_clMyLoconet.SendTrackContactMessage( g_bTrackContactOccupied );
+			}
 		}
 	}
 

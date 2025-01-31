@@ -916,7 +916,9 @@ void IO_ControlClass::HandleLed( uint8_t usLedNo, bool bOn )
 			{
 				SetWordBit( m_uiLedsOn, usLedNo );
 
-				if( (LED_ERSATZSIGNAL == usLedNo) && !m_bErsatzSignalFlash )
+				if(		(SIGNAL_TYPE_US   != m_usSignalType)
+					&&  (LED_ERSATZSIGNAL == usLedNo)		
+					&&  !m_bErsatzSignalFlash				)
 				{
 					m_uiErsatzSignalOffTimer	= g_clLncvStorage.ReadLNCV( LNCV_ADR_ERSATZ_SIGNAL_OFF_TIME );
 					g_ulTimerTick				= millis() + FLASH_COUNTER_TIME;
