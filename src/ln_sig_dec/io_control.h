@@ -15,6 +15,22 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	21		from: 02.02.2025
+//#
+//#	Implementation:
+//#		-	add support for US signals
+//#			new variables
+//#				m_uiLedsBlinkOn
+//#				m_arulLedBlinkTimer
+//#				m_arusLedBlinkState
+//#			new functions
+//#				IsLedBlinking()
+//#				GetLedsBlinking()
+//#				SetLedBlinking()
+//#				SwitchSignal()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	20		from: 14.08.2024
 //#
 //#	Implementation:
@@ -321,6 +337,8 @@ class IO_ControlClass
 			m_bApproachDark = bDark;
 		};
 
+		void SetLedBlinking( uint8_t usLedNo, bool bOn );
+
 		void SwitchLed( uint8_t usLedNo, bool bOn );
 		void SwitchSignal( uint8_t usSelectedSignal, bool bOn );
 		void SwitchExtraSignalsOn(	uint8_t usSelectedSignal,
@@ -343,6 +361,11 @@ class IO_ControlClass
 			return( m_uiLedsOn );
 		};
 
+		inline uint16_t GetLedsBlinking( void )
+		{
+			return( m_uiLedsBlinkOn );
+		};
+
 		inline bool IsApproachSignalPresent( void )
 		{
 			return( m_bApproachSignalPresent );
@@ -352,6 +375,18 @@ class IO_ControlClass
 		{
 			return( m_bApproachDark );
 		};
+
+		inline bool IsLedBlinking( void )
+		{
+			return( 0x0000 != m_uiLedsBlinkOn );
+		}
+		
+		bool IsLedBlinking( uint8_t usLedNo );
+		
+		inline bool IsLedBlinking( uint16_t uiLedMask )
+		{
+			return( 0x0000 != (m_uiLedsBlinkOn & uiLedMask) );
+		}
 
 		inline bool IsFadeFinished( void )
 		{
@@ -383,6 +418,8 @@ class IO_ControlClass
 
 	private:
 		TransitionClass *	m_arpclTransition[ RANGIER_SIGNAL_COUNT ];
+		uint32_t			m_arulLedBlinkTimer[ SIGNAL_LEDS ];
+		uint8_t				m_arusLedBlinkState[ SIGNAL_LEDS ];
 
 		uint32_t	m_ulLastCycleStartTime;
 		uint32_t	m_ulCycleTime;
@@ -391,6 +428,7 @@ class IO_ControlClass
 		uint32_t	m_ulErsatzSignalFlashTimer;
 		uint16_t	m_uiErsatzSignalOffTimer;
 		uint16_t	m_uiLedsOn;
+		uint16_t	m_uiLedsBlinkOn;
 		uint16_t	m_uiFadeTimeUp;
 		uint16_t	m_uiFadeTimeDown;
 		uint16_t	m_uiFadeActive;

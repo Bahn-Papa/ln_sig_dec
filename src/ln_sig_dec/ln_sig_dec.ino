@@ -27,7 +27,7 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	Version:	x.13.00		from: 30.01.2025
+//#	Version:	x.13.00		from: 02.02.2025
 //#
 //#	Implementation:
 //#		-	add support for US signals
@@ -468,7 +468,10 @@ void loop()
 			g_ulContactOffDelayTimer	= 0L;
 			g_bTrackContactOccupied		= g_clControl.IsContactOccupied();
 
-			g_clMyLoconet.SendTrackContactMessage( g_bTrackContactOccupied );
+			if( SIGNAL_TYPE_US != g_clControl.GetSignalType() )
+			{
+				g_clMyLoconet.SendTrackContactMessage( g_bTrackContactOccupied );
+			}
 		}
 		else if( g_clControl.IsContactOccupied() == g_bTrackContactOccupied )
 		{

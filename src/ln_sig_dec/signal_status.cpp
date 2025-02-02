@@ -6,7 +6,7 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	2		from: 27.01.2025
+//#	File Version:	2		from: 02.02.2025
 //#
 //#	Implementation:
 //#		-	add support for new signal type SIGNAL_TYPE_US

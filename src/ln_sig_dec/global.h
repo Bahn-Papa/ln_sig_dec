@@ -5,11 +5,51 @@
 //#
 //#		global.h
 //#
-//#	Description
+//#	In this file the assignment of the individual LEDs to the various
+//#	signals or signal screens is defined.
+//#
+//#	The basic definition comes from the hardware, which can control up to
+//#	14 LEDs. So it makes sense that each bit in a uint16_t variable
+//#	represents an LED.
+//#	Some of these LEDs belong to a signal or signal screen. So for each
+//#	signal or signal screen there will be one set of definitions.
+//#	One set of definitions consists of
+//#		-	the bit mask of the LEDs belonging to this set
+//#		-	the first LED
+//#		-	the last  LED
+//#		-	the number of LEDs in this set (calculated)
+//#
+//#	When a signal uses only a few LEDs then it is possible that
+//#	one hardware can control multiple signals.
+//# Therefore there are also definitions as to which signal is selected.
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	2		from: 29.01.2025
+//#	Controlling the signals or signal screens
+//#	There are two different control methods:
+//#		-	direct control
+//#		-	signal aspects
+//#
+//#	Direct Control:
+//#	This is very simple, for each LED there is an address to which a
+//#	SWITCH Loconet message can be sent to turn the LED on or off.
+//#	So there is an array of at least 14 addresses. The index number to
+//#	one address in the array represents the bit number of one LED.
+//#
+//#	Signal Aspects:
+//#	Things get a little more complicated when the signals are controlled
+//#	using signal aspects. A signal can display multiple signal aspects.
+//#	In order to select a signal aspect from the list of signal aspects,
+//#	an index must be created. Since the index is a number, the number
+//#	can be generated from a combination of its binary digits.
+//#	Such a binary digit can be changed using a Loconet SWITCH message.
+//#	Therefore, an assignment is required as to which address of the
+//#	14 possible addresses corresponds to which bit in the index.
+//#	(see the XXX_ASPECT_BIT_Y definitions below)
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File Version:	2		from: 31.01.2025
 //#
 //#	Implementation:
 //#		-	add definitions for US signals
@@ -104,127 +144,138 @@
 
 
 //----------------------------------------------------------------------
-//	index for signal aspects
+//	definitions for a main signal screen
+//
+#define MASK_MAIN_LEDS					0x007E
+
+#define IDX_MAIN_SCREEN_FIRST_LED		LED_MAIN_GREEN
+#define IDX_MAIN_SCREEN_LAST_LED		LED_MAIN_YELLOW
+#define MAIN_SCREEN_LED_COUNT			((IDX_MAIN_SCREEN_LAST_LED - IDX_MAIN_SCREEN_FIRST_LED) + 1)
+
+#define IDX_MAIN_SCREEN_ASPECT_BIT_0	1
+#define IDX_MAIN_SCREEN_ASPECT_BIT_1	2
+#define IDX_MAIN_SCREEN_ASPECT_BIT_2	3
+#define IDX_MAIN_SCREEN_ASPECT_BIT_3	4
+
+
+//----------------------------------------------------------------------
+//	definitions for a approach signal screen
+//
+#define MASK_APPROACH_LEDS					0x1E00
+
+#define IDX_APPROACH_SCREEN_FIRST_LED		LED_APPROACH_GREEN_TOP
+#define IDX_APPROACH_SCREEN_LAST_LED		LED_APPROACH_YELLOW_BOTTOM
+#define APPROACH_SCREEN_LED_COUNT			((IDX_APPROACH_SCREEN_LAST_LED - IDX_APPROACH_SCREEN_FIRST_LED) + 1)
+
+#define IDX_APPROACH_SCREEN_ASPECT_BIT_0	9
+#define IDX_APPROACH_SCREEN_ASPECT_BIT_1	10
+#define IDX_APPROACH_SCREEN_ASPECT_BIT_2	11
+#define IDX_APPROACH_SCREEN_ASPECT_BIT_3	12
+
+
+//----------------------------------------------------------------------
+//	definitions for a set of rangier signals
+//
+//	the LED count for each rangier signal is the same except 
+//	for rangier signal 5
+//	so we need only the first LED of each signal
 //
 
-//----	main signal  -----------------------------------------------
-#define MAIN_LEDS						0x007E
-
-#define IDX_SIGNAL_MAIN_BIT_0			1
-#define IDX_SIGNAL_MAIN_BIT_1			2
-#define IDX_SIGNAL_MAIN_BIT_2			3
-#define IDX_SIGNAL_MAIN_BIT_3			4
-
-#define MAIN_LEDS_IDX_START				IDX_SIGNAL_MAIN_BIT_0
-#define MAIN_LEDS_IDX_COUNT				6
-#define MAIN_LEDS_IDX_STOP				(MAIN_LEDS_IDX_START + MAIN_LEDS_IDX_COUNT)
-
-//----	approach signal  -------------------------------------------
-#define APPROACH_LEDS					0x1E00
-
-#define IDX_SIGNAL_APPROACH_BIT_0		9
-#define IDX_SIGNAL_APPROACH_BIT_1		10
-#define IDX_SIGNAL_APPROACH_BIT_2		11
-#define IDX_SIGNAL_APPROACH_BIT_3		12
-
-#define APPROACH_LEDS_IDX_START			IDX_SIGNAL_APPROACH_BIT_0
-#define APPROACH_LEDS_IDX_COUNT			4
-#define APPROACH_LEDS_IDX_STOP			(APPROACH_LEDS_IDX_START + APPROACH_LEDS_IDX_COUNT)
-
+#define	RANGIER_SIGNAL_LED_COUNT			3
+#define	RANGIER_SIGNAL_5_LED_COUNT			2
 
 //----	rangier signal 1  ------------------------------------------
-#define RANGIER_1_LEDS					0x0007
 
-#define IDX_RANGIER_SIGNAL_1_BIT_0		0
-#define IDX_RANGIER_SIGNAL_1_BIT_1		1
+#define MASK_RANGIER_SIGNAL_1_LEDS			0x0007
 
-#define RANGIER_1_LEDS_IDX_START		LED_A
-#define RANGIER_1_LEDS_IDX_COUNT		3
-#define RANGIER_1_LEDS_IDX_STOP			(RANGIER_1_LEDS_IDX_START + RANGIER_1_LEDS_IDX_COUNT)
+#define IDX_RANGIER_SIGNAL_1_FIRST_LED		LED_A
+
+#define IDX_RANGIER_SIGNAL_1_ASPECT_BIT_0	0
+#define IDX_RANGIER_SIGNAL_1_ASPECT_BIT_1	1
 
 //----	rangier signal 2  ------------------------------------------
-#define RANGIER_2_LEDS					0x0038
 
-#define IDX_RANGIER_SIGNAL_2_BIT_0		2
-#define IDX_RANGIER_SIGNAL_2_BIT_1		3
+#define MASK_RANGIER_SIGNAL_2_LEDS			0x0038
 
-#define RANGIER_2_LEDS_IDX_START		LED_D
-#define RANGIER_2_LEDS_IDX_COUNT		3
-#define RANGIER_2_LEDS_IDX_STOP			(RANGIER_2_LEDS_IDX_START + RANGIER_2_LEDS_IDX_COUNT)
+#define IDX_RANGIER_SIGNAL_2_FIRST_LED		LED_D
+
+#define IDX_RANGIER_SIGNAL_2_ASPECT_BIT_0	2
+#define IDX_RANGIER_SIGNAL_2_ASPECT_BIT_1	3
 
 //----	rangier signal 3  ------------------------------------------
-#define RANGIER_3_LEDS					0x01C0
 
-#define IDX_RANGIER_SIGNAL_3_BIT_0		4
-#define IDX_RANGIER_SIGNAL_3_BIT_1		5
+#define MASK_RANGIER_SIGNAL_3_LEDS			0x01C0
 
-#define RANGIER_3_LEDS_IDX_START		LED_G
-#define RANGIER_3_LEDS_IDX_COUNT		3
-#define RANGIER_3_LEDS_IDX_STOP			(RANGIER_3_LEDS_IDX_START + RANGIER_3_LEDS_IDX_COUNT)
+#define IDX_RANGIER_SIGNAL_3_FIRST_LED		LED_G
+
+#define IDX_RANGIER_SIGNAL_3_ASPECT_BIT_0	4
+#define IDX_RANGIER_SIGNAL_3_ASPECT_BIT_1	5
 
 //----	rangier signal 4  ------------------------------------------
-#define RANGIER_4_LEDS					0x0E00
 
-#define IDX_RANGIER_SIGNAL_4_BIT_0		6
-#define IDX_RANGIER_SIGNAL_4_BIT_1		7
+#define MASK_RANGIER_SIGNAL_4_LEDS			0x0E00
 
-#define RANGIER_4_LEDS_IDX_START		LED_J
-#define RANGIER_4_LEDS_IDX_COUNT		3
-#define RANGIER_4_LEDS_IDX_STOP			(RANGIER_4_LEDS_IDX_START + RANGIER_4_LEDS_IDX_COUNT)
+#define IDX_RANGIER_SIGNAL_4_FIRST_LED		LED_J
+
+#define IDX_RANGIER_SIGNAL_4_ASPECT_BIT_0	6
+#define IDX_RANGIER_SIGNAL_4_ASPECT_BIT_1	7
 
 //----	rangier signal 5  ------------------------------------------
-#define RANGIER_5_LEDS					0x3000
 
-#define IDX_RANGIER_SIGNAL_5_BIT_0		8
-#define IDX_RANGIER_SIGNAL_5_BIT_1		9
+#define MASK_RANGIER_SIGNAL_5_LEDS			0x3000
 
-#define RANGIER_5_LEDS_IDX_START		LED_M
-#define RANGIER_5_LEDS_IDX_COUNT		2
-#define RANGIER_5_LEDS_IDX_STOP			(RANGIER_5_LEDS_IDX_START + RANGIER_5_LEDS_IDX_COUNT)
+#define IDX_RANGIER_SIGNAL_5_FIRST_LED		LED_M
 
+#define IDX_RANGIER_SIGNAL_5_ASPECT_BIT_0	8
+#define IDX_RANGIER_SIGNAL_5_ASPECT_BIT_1	9
+
+
+//----------------------------------------------------------------------
+//	definitions for a set of US signals
+//
+//	the LED count for each US signal is the same
+//	so we need only the first LED of each signal
+//
+
+#define	US_SIGNAL_LED_COUNT		3
 
 //----	US signal 1  -----------------------------------------------
-#define US_SIGNAL_1_LEDS				0x0007
 
-#define IDX_US_SIGNAL_1_BIT_0			0
-#define IDX_US_SIGNAL_1_BIT_1			1
-#define IDX_US_SIGNAL_1_OFF				2
+#define MASK_US_SIGNAL_1_LEDS			0x0007
 
-#define US_SIGNAL_1_LEDS_IDX_START		LED_A
-#define US_SIGNAL_1_LEDS_IDX_COUNT		3
-#define US_SIGNAL_1_LEDS_IDX_STOP		(US_SIGNAL_1_LEDS_IDX_START + US_SIGNAL_1_LEDS_IDX_COUNT)
+#define IDX_US_SIGNAL_1_FIRST_LED		LED_A
+
+#define IDX_US_SIGNAL_1_ASPECT_BIT_0	0
+#define IDX_US_SIGNAL_1_ASPECT_BIT_1	1
+#define IDX_US_SIGNAL_1_ON_OFF			2
 
 //----	US signal 2  -----------------------------------------------
-#define US_SIGNAL_2_LEDS				0x0070
 
-#define IDX_US_SIGNAL_2_BIT_0			3
-#define IDX_US_SIGNAL_2_BIT_1			4
-#define IDX_US_SIGNAL_2_OFF				5
+#define MASK_US_SIGNAL_2_LEDS			0x0070
 
-#define US_SIGNAL_2_LEDS_IDX_START		LED_E
-#define US_SIGNAL_2_LEDS_IDX_COUNT		3
-#define US_SIGNAL_2_LEDS_IDX_STOP		(US_SIGNAL_2_LEDS_IDX_START + US_SIGNAL_2_LEDS_IDX_COUNT)
+#define IDX_US_SIGNAL_2_FIRST_LED		LED_E
+
+#define IDX_US_SIGNAL_2_ASPECT_BIT_0	3
+#define IDX_US_SIGNAL_2_ASPECT_BIT_1	4
+#define IDX_US_SIGNAL_2_ON_OFF			5
 
 //----	US signal 3  -----------------------------------------------
+
 #define US_SIGNAL_3_LEDS				0x0380
 
-#define IDX_US_SIGNAL_3_BIT_0			6
-#define IDX_US_SIGNAL_3_BIT_1			7
-#define IDX_US_SIGNAL_3_OFF				8
+#define IDX_US_SIGNAL_3_FIRST_LED		LED_H
 
-#define US_SIGNAL_3_LEDS_IDX_START		LED_H
-#define US_SIGNAL_3_LEDS_IDX_COUNT		3
-#define US_SIGNAL_3_LEDS_IDX_STOP		(US_SIGNAL_3_LEDS_IDX_START + US_SIGNAL_3_LEDS_IDX_COUNT)
+#define IDX_US_SIGNAL_3_ASPECT_BIT_0	6
+#define IDX_US_SIGNAL_3_ASPECT_BIT_1	7
+#define IDX_US_SIGNAL_3_ON_OFF			8
 
 //----	US signal 4  -----------------------------------------------
 #define US_SIGNAL_4_LEDS				0x3800
 
-#define IDX_US_SIGNAL_4_BIT_0			9
-#define IDX_US_SIGNAL_4_BIT_1			10
-#define IDX_US_SIGNAL_4_OFF				11
+#define IDX_US_SIGNAL_4_FIRST_LED		LED_L
 
-#define US_SIGNAL_4_LEDS_IDX_START		LED_L
-#define US_SIGNAL_4_LEDS_IDX_COUNT		3
-#define US_SIGNAL_4_LEDS_IDX_STOP		(US_SIGNAL_4_LEDS_IDX_START + US_SIGNAL_4_LEDS_IDX_COUNT)
+#define IDX_US_SIGNAL_4_ASPECT_BIT_0	9
+#define IDX_US_SIGNAL_4_ASPECT_BIT_1	10
+#define IDX_US_SIGNAL_4_ON_OFF			11
 
-#define IDX_US_SIGNAL_ALL_OFF			12
+#define IDX_US_SIGNAL_ALL_ON_OFF		12

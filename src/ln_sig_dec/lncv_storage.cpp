@@ -11,6 +11,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	11		from: 02.02.2025
+//#
+//#	Implementation:
+//#		-	add support for US signals
+//#			change some settings for test mode
+//#			change in function
+//#				CheckEEPROM()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	10		from: 14.08.2024
 //#
 //#	Implementation:
@@ -192,8 +202,8 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 
 #ifdef WRITE_TEST_VALUES
 		WriteLNCV( LNCV_ADR_MODULE_ADDRESS,	100 );
-		WriteLNCV( LNCV_ADR_SIGNAL_TYPE, SIGNAL_TYPE_59_A_SIG );
-		WriteLNCV( LNCV_ADR_SIGNAL_VALID_WAIT_TIME, 3000 );
+		WriteLNCV( LNCV_ADR_SIGNAL_TYPE, SIGNAL_TYPE_US );
+		WriteLNCV( LNCV_ADR_SIGNAL_VALID_WAIT_TIME, 4000 );
 #else
 		WriteLNCV( LNCV_ADR_MODULE_ADDRESS,	1 );
 		WriteLNCV( LNCV_ADR_SIGNAL_TYPE, SIGNAL_TYPE_DIRECT_CONTROL_MIDDLE );
@@ -214,8 +224,10 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		//	... other times ...
 		//
 		WriteLNCV( LNCV_ADR_TRACK_CONTACT_DELAY_TIME,	1000 );
-		WriteLNCV( LNCV_ADR_DARK_TIME,					 200 );
-		WriteLNCV( LNCV_ADR_FLASH_TIME,					  50 );
+//		WriteLNCV( LNCV_ADR_DARK_TIME,					 200 );
+//		WriteLNCV( LNCV_ADR_FLASH_TIME,					  50 );
+		WriteLNCV( LNCV_ADR_DARK_TIME,					1000 );
+		WriteLNCV( LNCV_ADR_FLASH_TIME,					2000 );
 		WriteLNCV( LNCV_ADR_ERSATZ_SIGNAL_FLASH_TIME,	1000 );
 		WriteLNCV( LNCV_ADR_ERSATZ_SIGNAL_OFF_TIME,		  90 );
 

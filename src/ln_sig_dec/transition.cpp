@@ -6,14 +6,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	7		from: 29.01.2025
+//#	File Version:	7		from: 02.02.2025
 //#
 //#	Implementation:
 //#		-	add support for US signals
-//#			new function
+//#			new functions
+//#				TransitionClass				(Constructor)
 //#				InitUsSignalTransition()
 //#			change in function
 //#				InitTransition()
+//#				HandleLedGroups()
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -152,6 +154,37 @@ TransitionClass::TransitionClass(	uint8_t usSignalType,
 //	Constructor
 //------------------------------------------------------------------
 //
+TransitionClass::TransitionClass(	uint8_t usSignalType,
+									uint8_t usSelectedSignal,
+									bool	bSignalOn			)
+{
+	m_usSignalType		= usSignalType;
+	m_usSelectedSignal	= usSelectedSignal;
+	m_usTargetAspect	= US_SIGNAL_ASPECT_OFF;
+	m_usExtraSignals	= 0;
+	m_bDoInit			= true;
+	m_bSetAspect		= false;
+
+	m_pSubTransition		= NULL;
+	m_pusStep				= NULL;
+	m_ulPauseTimer			= 0L;
+	m_uiLedMask				= 0x0000;
+	m_usLedStartIdx			= 0;
+	m_usLedStopIdx			= 0;
+	m_bWaitForFadeFinished	= false;
+	m_bWaitForExtraFinished	= false;
+	
+	if( bSignalOn )
+	{
+		m_usTargetAspect = US_SIGNAL_ASPECT_ON;
+	}
+}
+
+
+//******************************************************************
+//	Constructor
+//------------------------------------------------------------------
+//
 TransitionClass::TransitionClass(	uint8_t *	pusStep,
 									uint16_t	uiLedMask,
 									uint8_t		usLedStartIdx,
@@ -278,7 +311,7 @@ bool TransitionClass::InitTransition( void )
 
 	if( SIGNAL_TYPE_US == m_usSignalType )
 	{
-		m_bDoInit = InitUsSignalTransition( usActualAspect );
+		bDoNotStart = InitUsSignalTransition( usActualAspect );
 	}
 	else if(	(	(SIGNAL_ASPECT_HP0 == usActualAspect)
 				 &&	(SIGNAL_ASPECT_HP0 != m_usTargetAspect))
@@ -290,16 +323,16 @@ bool TransitionClass::InitTransition( void )
 		switch( m_usSelectedSignal )
 		{
 			case SIGNAL_SELECTED_MAIN:
-				m_uiLedMask		= MAIN_LEDS;
-				m_usLedStartIdx	= MAIN_LEDS_IDX_START;
-				m_usLedStopIdx	= MAIN_LEDS_IDX_STOP;
+				m_uiLedMask		= MASK_MAIN_LEDS;
+				m_usLedStartIdx	= IDX_MAIN_SCREEN_FIRST_LED;
+				m_usLedStopIdx	= IDX_MAIN_SCREEN_FIRST_LED + MAIN_SCREEN_LED_COUNT;
 				m_pusStep		= GetFirstStepMain( usActualAspect );
 				break;
 			
 			case SIGNAL_SELECTED_APPROACH:
-				m_uiLedMask		= APPROACH_LEDS;
-				m_usLedStartIdx	= APPROACH_LEDS_IDX_START;
-				m_usLedStopIdx	= APPROACH_LEDS_IDX_STOP;
+				m_uiLedMask		= MASK_APPROACH_LEDS;
+				m_usLedStartIdx	= IDX_APPROACH_SCREEN_FIRST_LED;
+				m_usLedStopIdx	= IDX_APPROACH_SCREEN_FIRST_LED + APPROACH_SCREEN_LED_COUNT;
 				m_pusStep		= GetFirstStepApproach( usActualAspect );
 				break;
 
@@ -310,15 +343,15 @@ bool TransitionClass::InitTransition( void )
 			case SIGNAL_SELECTED_RANGIER_5:
 				if( SIGNAL_SELECTED_RANGIER_5 == m_usSelectedSignal )
 				{
-					m_usLedStartIdx	= RANGIER_5_LEDS_IDX_START;
-					m_usLedStopIdx	= RANGIER_5_LEDS_IDX_STOP;
-					m_uiLedMask		= RANGIER_5_LEDS;
+					m_usLedStartIdx	= IDX_RANGIER_SIGNAL_5_FIRST_LED;
+					m_usLedStopIdx	= IDX_RANGIER_SIGNAL_5_FIRST_LED + RANGIER_SIGNAL_5_LED_COUNT;
+					m_uiLedMask		= MASK_RANGIER_SIGNAL_5_LEDS;
 				}
 				else
 				{
-					m_usLedStartIdx	= RANGIER_1_LEDS_IDX_COUNT * m_usSelectedSignal;
-					m_usLedStopIdx	= m_usLedStartIdx + RANGIER_1_LEDS_IDX_COUNT;
-					m_uiLedMask		= RANGIER_1_LEDS << m_usLedStartIdx;
+					m_usLedStartIdx	= RANGIER_SIGNAL_LED_COUNT * m_usSelectedSignal;
+					m_usLedStopIdx	= m_usLedStartIdx + RANGIER_SIGNAL_LED_COUNT;
+					m_uiLedMask		= MASK_RANGIER_SIGNAL_1_LEDS << m_usLedStartIdx;
 				}
 				
 				if( RANGIER_ASPECT_SH0 != usActualAspect )
@@ -351,73 +384,118 @@ bool TransitionClass::InitTransition( void )
 //
 bool TransitionClass::InitUsSignalTransition( uint8_t usActualAspect )
 {
-	bool	bDoNotStart	= true;		//	default do not start transition
+	bool	bDoNotStart	= false;	//	default: start transition
 	bool	bOldSignals	= g_clControl.IsContactOccupied();
+	uint8_t	usHelpIdx	= m_usSelectedSignal - SIGNAL_SELECTED_US_1;
 
+	//-----------------------------------------------------
+	//	first get the signal set ...
+	//
+	m_usLedStartIdx = 0;
 
-	if( usActualAspect != m_usTargetAspect )
+	switch( m_usSelectedSignal )
 	{
+		case SIGNAL_SELECTED_US_4:
+			m_usLedStartIdx++;
+
+		case SIGNAL_SELECTED_US_3:
+		case SIGNAL_SELECTED_US_2:
+			m_usLedStartIdx++;
+
+		case SIGNAL_SELECTED_US_1:
+			m_usLedStartIdx += US_SIGNAL_LED_COUNT * usHelpIdx;
+			m_usLedStopIdx	 = m_usLedStartIdx + US_SIGNAL_LED_COUNT;
+			m_uiLedMask		 = MASK_US_SIGNAL_1_LEDS << m_usLedStartIdx;
+			break;
+		
+		default:
+			bDoNotStart = true;
+			break;
+	}
+
+	//-----------------------------------------------------
+	//	... then get the sequence
+	//
+	if( US_SIGNAL_ASPECT_HP1 < m_usTargetAspect )
+	{
+		//---------------------------------------
+		//	switch signal on or off
+		//
+		if( US_SIGNAL_ASPECT_OFF == m_usTargetAspect )
+		{
+			if( bOldSignals )
+			{
+				m_pusStep = (uint8_t *)&US_FADE_to_Off;
+			}
+			else
+			{
+				m_pusStep = (uint8_t *)&US_SW_to_Off;
+			}
+		}
+		else
+		{
+			switch( m_usSelectedSignal )
+			{
+				case SIGNAL_SELECTED_US_1:
+				case SIGNAL_SELECTED_US_3:
+					if( bOldSignals )
+					{
+						m_pusStep = pgm_read_word( &US_FADE_On[ usActualAspect ] );
+					}
+					else
+					{
+						m_pusStep = pgm_read_word( &US_SW_On[ usActualAspect ] );
+					}
+					break;
+
+				case SIGNAL_SELECTED_US_2:
+				case SIGNAL_SELECTED_US_4:
+					if( bOldSignals )
+					{
+						m_pusStep = pgm_read_word( &US_FADE_INV_On[ usActualAspect ] );
+					}
+					else
+					{
+						m_pusStep = pgm_read_word( &US_SW_INV_On[ usActualAspect ] );
+					}
+					break;
+
+				default:
+					bDoNotStart = true;
+					break;
+			}
+		}
+	}
+	else if( usActualAspect != m_usTargetAspect )
+	{
+		//---------------------------------------
+		//	change signal aspect
+		//
 		bDoNotStart = false;		//	transition should start
 
 		switch( m_usSelectedSignal )
 		{
 			case SIGNAL_SELECTED_US_1:
-				m_usLedStartIdx	= US_SIGNAL_1_LEDS_IDX_START;
-				m_usLedStopIdx	= US_SIGNAL_1_LEDS_IDX_STOP;
-				m_uiLedMask		= US_SIGNAL_1_LEDS;
-				
+			case SIGNAL_SELECTED_US_3:
 				if( bOldSignals )
 				{
-					m_pusStep	= pgm_read_word( &US_FADE_Matrix[ usActualAspect ][ m_usTargetAspect ] );
+					m_pusStep = pgm_read_word( &US_FADE_Matrix[ usActualAspect ][ m_usTargetAspect ] );
 				}
 				else
 				{
-					m_pusStep	= pgm_read_word( &US_SW_Matrix[ usActualAspect ][ m_usTargetAspect ] );
+					m_pusStep = pgm_read_word( &US_SW_Matrix[ usActualAspect ][ m_usTargetAspect ] );
 				}
 				break;
 
 			case SIGNAL_SELECTED_US_2:
-				m_usLedStartIdx	= US_SIGNAL_2_LEDS_IDX_START;
-				m_usLedStopIdx	= US_SIGNAL_2_LEDS_IDX_STOP;
-				m_uiLedMask		= US_SIGNAL_2_LEDS;
-				
-				if( bOldSignals )
-				{
-					m_pusStep	= pgm_read_word( &US_FADE_INV_Matrix[ usActualAspect ][ m_usTargetAspect ] );
-				}
-				else
-				{
-					m_pusStep	= pgm_read_word( &US_SW_INV_Matrix[ usActualAspect ][ m_usTargetAspect ] );
-				}
-				break;
-
-			case SIGNAL_SELECTED_US_3:
-				m_usLedStartIdx	= US_SIGNAL_3_LEDS_IDX_START;
-				m_usLedStopIdx	= US_SIGNAL_3_LEDS_IDX_STOP;
-				m_uiLedMask		= US_SIGNAL_3_LEDS;
-				
-				if( bOldSignals )
-				{
-					m_pusStep	= pgm_read_word( &US_FADE_Matrix[ usActualAspect ][ m_usTargetAspect ] );
-				}
-				else
-				{
-					m_pusStep	= pgm_read_word( &US_SW_Matrix[ usActualAspect ][ m_usTargetAspect ] );
-				}
-				break;
-
 			case SIGNAL_SELECTED_US_4:
-				m_usLedStartIdx	= US_SIGNAL_4_LEDS_IDX_START;
-				m_usLedStopIdx	= US_SIGNAL_4_LEDS_IDX_STOP;
-				m_uiLedMask		= US_SIGNAL_4_LEDS;
-				
 				if( bOldSignals )
 				{
-					m_pusStep	= pgm_read_word( &US_FADE_INV_Matrix[ usActualAspect ][ m_usTargetAspect ] );
+					m_pusStep = pgm_read_word( &US_FADE_INV_Matrix[ usActualAspect ][ m_usTargetAspect ] );
 				}
 				else
 				{
-					m_pusStep	= pgm_read_word( &US_SW_INV_Matrix[ usActualAspect ][ m_usTargetAspect ] );
+					m_pusStep = pgm_read_word( &US_SW_INV_Matrix[ usActualAspect ][ m_usTargetAspect ] );
 				}
 				break;
 
@@ -495,12 +573,12 @@ bool TransitionClass::HandleControlGroup( uint32_t ulMillis, uint8_t usControlCo
 			//
 			if(		g_clControl.IsApproachSignalPresent()
 				&& !g_clControl.IsApproachDark()
-				&&  g_clControl.IsLedsOff( APPROACH_LEDS )	)
+				&&  g_clControl.IsLedsOff( MASK_APPROACH_LEDS )	)
 			{
 				m_pSubTransition = new TransitionClass( (uint8_t *)&ApproachOn,
-														APPROACH_LEDS,
-														APPROACH_LEDS_IDX_START,
-														APPROACH_LEDS_IDX_STOP		);
+														MASK_APPROACH_LEDS,
+														IDX_APPROACH_SCREEN_FIRST_LED,
+														IDX_APPROACH_SCREEN_FIRST_LED + APPROACH_SCREEN_LED_COUNT );
 			}
 			break;
 
@@ -511,7 +589,7 @@ bool TransitionClass::HandleControlGroup( uint32_t ulMillis, uint8_t usControlCo
 			//
 			if(		g_clControl.IsApproachSignalPresent()
 				&& !g_clControl.IsApproachDark()
-				&&  g_clControl.IsOneLedOn( APPROACH_LEDS )	)
+				&&  g_clControl.IsOneLedOn( MASK_APPROACH_LEDS )	)
 			{
 				m_pSubTransition = new TransitionClass( m_usSignalType,
 														SIGNAL_SELECTED_APPROACH,
@@ -526,7 +604,7 @@ bool TransitionClass::HandleControlGroup( uint32_t ulMillis, uint8_t usControlCo
 			//
 			if(		g_clControl.IsApproachSignalPresent()
 				&& !g_clControl.IsApproachDark()
-				&&  g_clControl.IsOneLedOn( APPROACH_LEDS )	)
+				&&  g_clControl.IsOneLedOn( MASK_APPROACH_LEDS )	)
 			{
 				m_pSubTransition = new TransitionClass( m_usSignalType,
 														SIGNAL_SELECTED_APPROACH,
@@ -540,12 +618,12 @@ bool TransitionClass::HandleControlGroup( uint32_t ulMillis, uint8_t usControlCo
 			//
 			if(		g_clControl.IsApproachSignalPresent()
 				&& !g_clControl.IsApproachDark()
-				&&  g_clControl.IsOneLedOn( APPROACH_LEDS )	)
+				&&  g_clControl.IsOneLedOn( MASK_APPROACH_LEDS )	)
 			{
 				m_pSubTransition = new TransitionClass( (uint8_t *)&ApproachOff,
-														APPROACH_LEDS,
-														APPROACH_LEDS_IDX_START,
-														APPROACH_LEDS_IDX_STOP		);
+														MASK_APPROACH_LEDS,
+														IDX_APPROACH_SCREEN_FIRST_LED,
+														IDX_APPROACH_SCREEN_FIRST_LED + APPROACH_SCREEN_LED_COUNT );
 			}
 			break;
 
@@ -584,17 +662,20 @@ bool TransitionClass::HandleControlGroup( uint32_t ulMillis, uint8_t usControlCo
 void TransitionClass::HandleLedGroups( uint32_t ulMillis, uint8_t usControlGroup, uint8_t usAspect )
 {
 	uint8_t		usDiff;
-	uint8_t		usMask		= 0x01;
-	bool		bOn			= false;
+	uint8_t		usMask			= 0x01;
+	bool		bOn				= false;
 
 	//----------------------------------------------------------
 	//	check wich LEDs should go OFF and wich should go ON
 	//
-	usDiff  = (uint8_t)((g_clControl.GetLedsOn() & m_uiLedMask) >> m_usLedStartIdx);
-	usDiff ^= (usAspect & SEQUENCE_LEDS);
+	usDiff	 = (uint8_t)((g_clControl.GetLedsBlinking() & m_uiLedMask) >> m_usLedStartIdx);
+	usDiff	|= (uint8_t)((g_clControl.GetLedsOn() & m_uiLedMask) >> m_usLedStartIdx);
+	usDiff	^= (usAspect & SEQUENCE_LEDS);
 
 	for( uint8_t idx = m_usLedStartIdx ; (m_usLedStopIdx > idx) && (usDiff != 0) ; idx++ )
 	{
+		bOn = false;
+
 		if( usDiff & usMask )
 		{
 			if( usAspect & usMask )
@@ -602,7 +683,11 @@ void TransitionClass::HandleLedGroups( uint32_t ulMillis, uint8_t usControlGroup
 				bOn = true;
 			}
 
-			if( SG_SWITCH_LEDS == usControlGroup )
+			if( SG_BLINKING_LEDS == usControlGroup )
+			{
+				g_clControl.SetLedBlinking( idx, bOn );
+			}
+			else if( SG_SWITCH_LEDS == usControlGroup )
 			{
 				g_clControl.SwitchLed( idx, bOn );
 			}

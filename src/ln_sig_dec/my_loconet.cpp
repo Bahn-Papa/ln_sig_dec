@@ -7,7 +7,7 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	20		from: 29.01.2025
+//#	File Version:	20		from: 02.02.2025
 //#
 //#	Implementation:
 //#		-	add handling for new signal type SIGNAL_TYPE_US
@@ -405,55 +405,55 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 					//
 					switch( idx )
 					{
-						case IDX_US_SIGNAL_1_BIT_0:
+						case IDX_US_SIGNAL_1_ASPECT_BIT_0:
 							AddSignalAspect( SIGNAL_SELECTED_US_1, bIsGreen, 0x01 );
 							break;
 
-						case IDX_US_SIGNAL_1_BIT_1:
+						case IDX_US_SIGNAL_1_ASPECT_BIT_1:
 							AddSignalAspect( SIGNAL_SELECTED_US_1, bIsGreen, 0x02 );
 							break;
 
-						case IDX_US_SIGNAL_1_OFF:
+						case IDX_US_SIGNAL_1_ON_OFF:
 							g_clControl.SwitchSignal( SIGNAL_SELECTED_US_1, bIsGreen );
 							break;
 
-						case IDX_US_SIGNAL_2_BIT_0:
+						case IDX_US_SIGNAL_2_ASPECT_BIT_0:
 							AddSignalAspect( SIGNAL_SELECTED_US_2, bIsGreen, 0x01 );
 							break;
 
-						case IDX_US_SIGNAL_2_BIT_1:
+						case IDX_US_SIGNAL_2_ASPECT_BIT_1:
 							AddSignalAspect( SIGNAL_SELECTED_US_2, bIsGreen, 0x02 );
 							break;
 
-						case IDX_US_SIGNAL_2_OFF:
+						case IDX_US_SIGNAL_2_ON_OFF:
 							g_clControl.SwitchSignal( SIGNAL_SELECTED_US_2, bIsGreen );
 							break;
 
-						case IDX_US_SIGNAL_3_BIT_0:
+						case IDX_US_SIGNAL_3_ASPECT_BIT_0:
 							AddSignalAspect( SIGNAL_SELECTED_US_3, bIsGreen, 0x01 );
 							break;
 
-						case IDX_US_SIGNAL_3_BIT_1:
+						case IDX_US_SIGNAL_3_ASPECT_BIT_1:
 							AddSignalAspect( SIGNAL_SELECTED_US_3, bIsGreen, 0x02 );
 							break;
 
-						case IDX_US_SIGNAL_3_OFF:
+						case IDX_US_SIGNAL_3_ON_OFF:
 							g_clControl.SwitchSignal( SIGNAL_SELECTED_US_3, bIsGreen );
 							break;
 
-						case IDX_US_SIGNAL_4_BIT_0:
+						case IDX_US_SIGNAL_4_ASPECT_BIT_0:
 							AddSignalAspect( SIGNAL_SELECTED_US_4, bIsGreen, 0x01 );
 							break;
 
-						case IDX_US_SIGNAL_4_BIT_1:
+						case IDX_US_SIGNAL_4_ASPECT_BIT_1:
 							AddSignalAspect( SIGNAL_SELECTED_US_4, bIsGreen, 0x02 );
 							break;
 
-						case IDX_US_SIGNAL_4_OFF:
+						case IDX_US_SIGNAL_4_ON_OFF:
 							g_clControl.SwitchSignal( SIGNAL_SELECTED_US_4, bIsGreen );
 							break;
 
-						case IDX_US_SIGNAL_ALL_OFF:
+						case IDX_US_SIGNAL_ALL_ON_OFF:
 							g_clControl.SwitchSignal( SIGNAL_SELECTED_US_1, bIsGreen );
 							g_clControl.SwitchSignal( SIGNAL_SELECTED_US_2, bIsGreen );
 							g_clControl.SwitchSignal( SIGNAL_SELECTED_US_3, bIsGreen );
@@ -468,39 +468,39 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 					//
 					switch( idx )
 					{
-						case IDX_RANGIER_SIGNAL_1_BIT_0:
+						case IDX_RANGIER_SIGNAL_1_ASPECT_BIT_0:
 							AddSignalAspect( SIGNAL_SELECTED_RANGIER_1, bIsGreen, 0x01 );
 							break;
 
-						case IDX_RANGIER_SIGNAL_1_BIT_1:
+						case IDX_RANGIER_SIGNAL_1_ASPECT_BIT_1:
 							AddSignalAspect( SIGNAL_SELECTED_RANGIER_1, bIsGreen, 0x02 );
 							break;
 
-						case IDX_RANGIER_SIGNAL_2_BIT_0:
+						case IDX_RANGIER_SIGNAL_2_ASPECT_BIT_0:
 							AddSignalAspect( SIGNAL_SELECTED_RANGIER_2, bIsGreen, 0x01 );
 							break;
 
-						case IDX_RANGIER_SIGNAL_2_BIT_1:
+						case IDX_RANGIER_SIGNAL_2_ASPECT_BIT_1:
 							AddSignalAspect( SIGNAL_SELECTED_RANGIER_2, bIsGreen, 0x02 );
 							break;
 
-						case IDX_RANGIER_SIGNAL_3_BIT_0:
+						case IDX_RANGIER_SIGNAL_3_ASPECT_BIT_0:
 							AddSignalAspect( SIGNAL_SELECTED_RANGIER_3, bIsGreen, 0x01 );
 							break;
 
-						case IDX_RANGIER_SIGNAL_3_BIT_1:
+						case IDX_RANGIER_SIGNAL_3_ASPECT_BIT_1:
 							AddSignalAspect( SIGNAL_SELECTED_RANGIER_3, bIsGreen, 0x02 );
 							break;
 
-						case IDX_RANGIER_SIGNAL_4_BIT_0:
+						case IDX_RANGIER_SIGNAL_4_ASPECT_BIT_0:
 							AddSignalAspect( SIGNAL_SELECTED_RANGIER_4, bIsGreen, 0x01 );
 							break;
 
-						case IDX_RANGIER_SIGNAL_4_BIT_1:
+						case IDX_RANGIER_SIGNAL_4_ASPECT_BIT_1:
 							AddSignalAspect( SIGNAL_SELECTED_RANGIER_4, bIsGreen, 0x02 );
 							break;
 
-						case IDX_RANGIER_SIGNAL_5_BIT_0:
+						case IDX_RANGIER_SIGNAL_5_ASPECT_BIT_0:
 							AddSignalAspect( SIGNAL_SELECTED_RANGIER_5, bIsGreen, 0x01 );
 							break;
 					}
@@ -519,20 +519,20 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 					//
 					switch( idx )
 					{
-						case IDX_SIGNAL_MAIN_BIT_0:
-						case IDX_SIGNAL_MAIN_BIT_1:
-						case IDX_SIGNAL_MAIN_BIT_2:
-						case IDX_SIGNAL_MAIN_BIT_3:
+						case IDX_MAIN_SCREEN_ASPECT_BIT_0:
+						case IDX_MAIN_SCREEN_ASPECT_BIT_1:
+						case IDX_MAIN_SCREEN_ASPECT_BIT_2:
+						case IDX_MAIN_SCREEN_ASPECT_BIT_3:
 							AddSignalAspect( SIGNAL_SELECTED_MAIN, bIsGreen,
-											 (1 << (idx - IDX_SIGNAL_MAIN_BIT_0)) );
+											 (1 << (idx - IDX_MAIN_SCREEN_ASPECT_BIT_0)) );
 							break;
 
-						case IDX_SIGNAL_APPROACH_BIT_0:
-						case IDX_SIGNAL_APPROACH_BIT_1:
-						case IDX_SIGNAL_APPROACH_BIT_2:
-						case IDX_SIGNAL_APPROACH_BIT_3:
+						case IDX_APPROACH_SCREEN_ASPECT_BIT_0:
+						case IDX_APPROACH_SCREEN_ASPECT_BIT_1:
+						case IDX_APPROACH_SCREEN_ASPECT_BIT_2:
+						case IDX_APPROACH_SCREEN_ASPECT_BIT_3:
 							AddSignalAspect( SIGNAL_SELECTED_APPROACH, bIsGreen,
-											 (1 << (idx - IDX_SIGNAL_APPROACH_BIT_0)) );
+											 (1 << (idx - IDX_APPROACH_SCREEN_ASPECT_BIT_0)) );
 							break;
 
 						case LED_MAIN_ZUSATZANZEIGER:

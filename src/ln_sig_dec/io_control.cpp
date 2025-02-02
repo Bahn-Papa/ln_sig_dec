@@ -28,6 +28,27 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	32		from: 02.02.2025
+//#
+//#	Implementation:
+//#		-	add support for US signals
+//#			new variables
+//#				m_uiLedsBlinkOn
+//#				m_arulLedBlinkTimer
+//#				m_arusLedBlinkState
+//#			new functions
+//#				IsLedBlinking()
+//#				GetLedsBlinking()
+//#				SetLedBlinking()
+//#				SwitchSignal()
+//#			change in functions
+//#				Init()
+//#				Loop()
+//#				HandleSignalAspect()
+//#				SetSignalType()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	31		from: 30.09.2024
 //#
 //#	Bug Fix:
@@ -434,7 +455,6 @@
 #include "macros.h"
 #include "time_values.h"
 #include "sequencer_definitions.h"
-#include "sequencer_tables.h"
 
 
 //==========================================================================
@@ -473,6 +493,9 @@
 #define MASK_INTENSITY_DAY			0xFF00
 
 
+//----------------------------------------------------------------------
+//	LED PWM channel structure
+//
 typedef struct
 {
 	uint8_t	m_usBrightnessDay;
@@ -483,6 +506,16 @@ typedef struct
 	float	m_fTarget;
 
 } PWMChannel_t;
+
+
+//----------------------------------------------------------------------
+//	states for blinking state machine
+//
+#define LED_BLINK_STATE_OFF			0
+#define LED_BLINK_STATE_FADE_UP		1
+#define LED_BLINK_STATE_FADE_DOWN	2
+#define LED_BLINK_STATE_TIMER_ON	3
+#define LED_BLINK_STATE_TIMER_OFF	4
 
 
 //==========================================================================
@@ -578,6 +611,10 @@ uint32_t	g_ulTimerTick;
 //	Not used I/O's will be set to Input with PullUp.
 //	all connected devices (like LED's) will be set to 'off'.
 //
+//	DDRx  bits set ==>	this bit (pin) is an OUTPUT
+//	PORTx bits set ==>	when configured as INPUT then pullup is activated
+//						when configured as OUTPUT then the pin is HIGH
+//
 IO_ControlClass::IO_ControlClass()
 {
 	DDRB	= LEDS_PORTB;
@@ -611,6 +648,7 @@ void IO_ControlClass::Init( void )
 	m_ulErsatzSignalFlashTimer			= 0L;
 	m_uiErsatzSignalOffTimer			= 0;
 	m_uiLedsOn							= 0x0000;
+	m_uiLedsBlinkOn						= 0x0000;
 	m_uiFadeActive						= 0x0000;
 	m_uiFadeTimeUp						= 0;
 	m_uiFadeTimeDown					= 0;
@@ -633,6 +671,9 @@ void IO_ControlClass::Init( void )
 
 	for( uint8_t idx = 0 ; SIGNAL_LEDS > idx ; idx++ )
 	{
+		m_arulLedBlinkTimer[ idx ] = 0L;
+		m_arusLedBlinkState[ idx ] = LED_BLINK_STATE_OFF;
+
 		uiHelper = g_clLncvStorage.ReadLNCV( LNCV_ADR_LIGHT_INTENSITY_LED_A + idx );
 
 		g_arChannel[ idx ].m_usBrightnessDay	= (uint8_t)((uiHelper & MASK_INTENSITY_DAY) >> 8);
@@ -693,7 +734,7 @@ void IO_ControlClass::Init( void )
 		{
 			uint8_t	sigIdx	= SIGNAL_SELECTED_US_1 + idx;
 
-			g_clStatus.SetSignalAspect( sigIdx, US_SIGNAL_ASPECT_HP0 );
+			g_clStatus.SetSignalAspect( sigIdx, 0 );
 			g_clStatus.SetSignalOn( sigIdx, true );
 		}
 
@@ -742,6 +783,7 @@ void IO_ControlClass::Init( void )
 void IO_ControlClass::Loop( void )
 {
 	uint32_t	ulMillis = millis();
+	uint16_t	uiMask;
 
 
 	ProcessBrightnessAndFade();
@@ -815,6 +857,77 @@ void IO_ControlClass::Loop( void )
 		{
 			SetErsatzSignalFlash( false );
 		}
+	}
+
+	//----------------------------------------------------------
+	//	handle LEDs blinking
+	//
+	uiMask	= 0x0001;
+
+	for( uint8_t idx = 0 ; SIGNAL_LEDS > idx ; idx++ )
+	{
+		if( IsLedBlinking( uiMask ) )
+		{
+			switch( m_arusLedBlinkState[ idx ] )
+			{
+				case LED_BLINK_STATE_OFF:
+					if( (SIGNAL_TYPE_US == m_usSignalType) && !m_bContactOccupied )
+					{
+						SwitchLed( idx, true );
+					}
+					else
+					{
+						HandleLed( idx, true );
+					}
+					
+					m_arusLedBlinkState[ idx ] = LED_BLINK_STATE_FADE_UP;
+					break;
+
+				case LED_BLINK_STATE_FADE_UP:
+					if( IsFadeFinished( uiMask ) )
+					{
+						m_arulLedBlinkTimer[ idx ] = ulMillis + g_stTimeValues.uiFlashTime;
+						m_arusLedBlinkState[ idx ] = LED_BLINK_STATE_TIMER_ON;
+					}
+					break;
+
+				case LED_BLINK_STATE_TIMER_ON:
+					if( ulMillis > m_arulLedBlinkTimer[ idx ] )
+					{
+						if( (SIGNAL_TYPE_US == m_usSignalType) && !m_bContactOccupied )
+						{
+							SwitchLed( idx, false );
+						}
+						else
+						{
+							HandleLed( idx, false );
+						}
+					
+						m_arusLedBlinkState[ idx ] = LED_BLINK_STATE_FADE_DOWN;
+					}
+					break;
+
+				case LED_BLINK_STATE_FADE_DOWN:
+					if( IsFadeFinished( uiMask ) )
+					{
+						m_arulLedBlinkTimer[ idx ] = ulMillis + g_stTimeValues.uiDarkTime;
+						m_arusLedBlinkState[ idx ] = LED_BLINK_STATE_TIMER_OFF;
+					}
+					break;
+
+				case LED_BLINK_STATE_TIMER_OFF:
+					if( ulMillis > m_arulLedBlinkTimer[ idx ] )
+					{
+						m_arusLedBlinkState[ idx ] = LED_BLINK_STATE_OFF;
+					}
+					break;
+
+				default:
+					break;
+			}
+		}
+
+		uiMask <<= 1;
 	}
 
 	//----------------------------------------------------------
@@ -1019,7 +1132,7 @@ void IO_ControlClass::HandleSignalAspect(	uint8_t usSelectedSignal,
 		case SIGNAL_SELECTED_APPROACH:
 			if( m_bApproachSignalPresent && (SIGNAL_ASPECTS > usSignalAspect) )
 			{
-				if( IsLedsOff( APPROACH_LEDS ) )
+				if( IsLedsOff( MASK_APPROACH_LEDS ) )
 				{
 					//----------------------------------------------
 					//	the approach signal is switched OFF
@@ -1098,6 +1211,29 @@ void IO_ControlClass::HandleSignalAspect(	uint8_t usSelectedSignal,
 
 
 //******************************************************************
+//	SetLedBlinking
+//------------------------------------------------------------------
+//
+void IO_ControlClass::SetLedBlinking( uint8_t usLedNo, bool bOn )
+{
+	uint16_t usLedMask	= 0x0001 << usLedNo;
+
+
+	if( bOn )
+	{
+		m_uiLedsBlinkOn |= usLedMask;
+	}
+	else
+	{
+		m_uiLedsBlinkOn &= ~usLedMask;
+
+		m_arusLedBlinkState[ usLedNo ] = LED_BLINK_STATE_OFF;
+		m_arulLedBlinkTimer[ usLedNo ] = 0L;
+	}
+}
+
+
+//******************************************************************
 //	SwitchLed
 //------------------------------------------------------------------
 //
@@ -1156,13 +1292,8 @@ void IO_ControlClass::SwitchLed( uint8_t usLedNo, bool bOn )
 //
 void IO_ControlClass::SwitchSignal( uint8_t usSelectedSignal, bool bOn )
 {
-	uint8_t		usTargetAspect		= g_clStatus.GetSignalAspect( usSelectedSignal );
-	uint16_t	uiMask;
-	uint8_t		usStartIdx;
-	uint8_t		usStopIdx;
-	uint8_t *	pusStep				= (uint8_t *)sNOP;
-	uint8_t		usIdx;
-	bool		bStartTransition	= true;
+	uint8_t	usIdx;
+	uint8_t	usTargetAspect	= g_clStatus.GetSignalAspect( usSelectedSignal );
 
 
 	if( g_clStatus.GetSignalOn( usSelectedSignal ) != bOn )
@@ -1170,152 +1301,40 @@ void IO_ControlClass::SwitchSignal( uint8_t usSelectedSignal, bool bOn )
 		switch( usSelectedSignal )
 		{
 			case SIGNAL_SELECTED_US_1:
-				usStartIdx	= US_SIGNAL_1_LEDS_IDX_START;
-				usStopIdx	= US_SIGNAL_1_LEDS_IDX_STOP;
-				uiMask		= US_SIGNAL_1_LEDS;
-				usIdx		= 0;
-
-				if( m_bContactOccupied )
-				{
-					//-----------------------------------------
-					//	hier die alten Signale schalten
-					//
-					if( bOn )
-					{
-						pusStep = pgm_read_word( &US_FADE_On[ usTargetAspect ] );
-					}
-					else
-					{
-						pusStep	= (uint8_t *)&US_FADE_to_Off;
-					}
-				}
-				else
-				{
-					//-----------------------------------------
-					//	und hier entsprechend die Neuen
-					//
-					if( bOn )
-					{
-						pusStep = pgm_read_word( &US_SW_On[ usTargetAspect ] );
-					}
-					else
-					{
-						pusStep	= (uint8_t *)&US_SW_to_Off;
-					}
-				}
-				break;
-
 			case SIGNAL_SELECTED_US_2:
-				usStartIdx	= US_SIGNAL_2_LEDS_IDX_START;
-				usStopIdx	= US_SIGNAL_2_LEDS_IDX_STOP;
-				uiMask		= US_SIGNAL_2_LEDS;
-				usIdx		= 1;
-				
-				if( m_bContactOccupied )
-				{
-					if( bOn )
-					{
-						pusStep = pgm_read_word( &US_FADE_INV_On[ usTargetAspect ] );
-					}
-					else
-					{
-						pusStep	= (uint8_t *)&US_FADE_to_Off;
-					}
-				}
-				else
-				{
-					if( bOn )
-					{
-						pusStep = pgm_read_word( &US_SW_INV_On[ usTargetAspect ] );
-					}
-					else
-					{
-						pusStep	= (uint8_t *)&US_SW_to_Off;
-					}
-				}
-				break;
-
 			case SIGNAL_SELECTED_US_3:
-				usStartIdx	= US_SIGNAL_3_LEDS_IDX_START;
-				usStopIdx	= US_SIGNAL_3_LEDS_IDX_STOP;
-				uiMask		= US_SIGNAL_3_LEDS;
-				usIdx		= 2;
-				
-				if( m_bContactOccupied )
-				{
-					if( bOn )
-					{
-						pusStep = pgm_read_word( &US_FADE_On[ usTargetAspect ] );
-					}
-					else
-					{
-						pusStep	= (uint8_t *)&US_FADE_to_Off;
-					}
-				}
-				else
-				{
-					if( bOn )
-					{
-						pusStep = pgm_read_word( &US_SW_On[ usTargetAspect ] );
-					}
-					else
-					{
-						pusStep	= (uint8_t *)&US_SW_to_Off;
-					}
-				}
-				break;
-
 			case SIGNAL_SELECTED_US_4:
-				usStartIdx	= US_SIGNAL_4_LEDS_IDX_START;
-				usStopIdx	= US_SIGNAL_4_LEDS_IDX_STOP;
-				uiMask		= US_SIGNAL_4_LEDS;
-				usIdx		= 3;
-				
-				if( m_bContactOccupied )
-				{
-					if( bOn )
-					{
-						pusStep = pgm_read_word( &US_FADE_INV_On[ usTargetAspect ] );
-					}
-					else
-					{
-						pusStep	= (uint8_t *)&US_FADE_to_Off;
-					}
-				}
-				else
-				{
-					if( bOn )
-					{
-						pusStep = pgm_read_word( &US_SW_INV_On[ usTargetAspect ] );
-					}
-					else
-					{
-						pusStep	= (uint8_t *)&US_SW_to_Off;
-					}
-				}
-				break;
+				usIdx = usSelectedSignal - SIGNAL_SELECTED_US_1;
 
-			default:
-				bStartTransition = false;
-				break;
-		}
-		
-		if( bStartTransition )
-		{
-			if( NULL == m_arpclTransition[ usIdx ] )
-			{
-				m_arpclTransition[ usIdx ] =
-					new TransitionClass(	pusStep,
-											uiMask,
-											usStartIdx,
-											usStopIdx		);
-
+				m_arpclTransition[ usIdx ] = new TransitionClass(	m_usSignalType,
+																	usSelectedSignal, bOn );
 				g_clStatus.SetSignalOn( usSelectedSignal, bOn );
 
 				SwitchLed( LED_GREEN, true );
-			}
+				break;
+
+			default:
+				break;
 		}
 	}
+}
+
+
+//******************************************************************
+//	IsLedBlinking
+//------------------------------------------------------------------
+//
+bool IO_ControlClass::IsLedBlinking( uint8_t usLedNo )
+{
+	if( SIGNAL_LEDS > usLedNo )
+	{
+		if( 0 != (m_uiLedsBlinkOn & (1 << usLedNo)) )
+		{
+			return( true );
+		}
+	}
+
+	return( false );
 }
 
 

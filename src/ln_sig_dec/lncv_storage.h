@@ -10,7 +10,7 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File version:	13		from: 26.01.2025
+//#	File version:	13		from: 22.02.2025
 //#
 //#	Implementation:
 //#		-	add new signal type SIGNAL_TYPE_US

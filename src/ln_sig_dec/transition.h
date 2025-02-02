@@ -13,7 +13,8 @@
 //#
 //#	Implementation:
 //#		-	add support for US signals
-//#			new function
+//#			new functions
+//#				TransitionClass()			(Constructor)
 //#				InitUsSignalTransition()
 //#
 //#-------------------------------------------------------------------------
@@ -75,6 +76,10 @@ class TransitionClass
 							uint8_t usSelectedSignal,
 							uint8_t usTargetAspect,
 							uint8_t usExtraSignals	);
+
+		TransitionClass(	uint8_t usSignalType,
+							uint8_t usSelectedSignal,
+							bool	bSignalOn		);
 
 		TransitionClass(	uint8_t *	pusStep,
 							uint16_t	uiLedMask,

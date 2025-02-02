@@ -58,13 +58,13 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	2		from: 27.01.2025
+//#	File Version:	2		from: 02.02.2025
 //#
 //#	Implementation:
 //#		-	add definitions for new signal type SIGNAL_TYPE_US
 //#		-	change definitions for sequencer control groups
 //#				SG_SWITCH_LEDS		just switch LEDs, no fading
-//#				SG_BLINKING_LEDS	led LEDs blink
+//#				SG_BLINKING_LEDS	let LEDs blink
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -125,6 +125,10 @@
 #define US_SIGNAL_ASPECT_HP2			1
 #define US_SIGNAL_ASPECT_HP2_BLINK		2
 #define US_SIGNAL_ASPECT_HP1			3
+
+#define US_SIGNAL_ASPECT_ON				5
+#define US_SIGNAL_ASPECT_OFF			6
+
 
 //----------------------------------------------------------------------
 //	definitions for the parts in a sequence control word
