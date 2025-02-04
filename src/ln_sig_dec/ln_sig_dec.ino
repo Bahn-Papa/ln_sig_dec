@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		13
-#define VERSION_BUGFIX		0
+#define VERSION_BUGFIX		1
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,16 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.13.01		from: 04.02.2025
+//#
+//#	Implementation:
+//#		-	change handling of switching US signal types from track contact
+//#			to button pressing
+//#			change in function
+//#				loop()
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -468,10 +478,7 @@ void loop()
 			g_ulContactOffDelayTimer	= 0L;
 			g_bTrackContactOccupied		= g_clControl.IsContactOccupied();
 
-			if( SIGNAL_TYPE_US != g_clControl.GetSignalType() )
-			{
-				g_clMyLoconet.SendTrackContactMessage( g_bTrackContactOccupied );
-			}
+			g_clMyLoconet.SendTrackContactMessage( g_bTrackContactOccupied );
 		}
 		else if( g_clControl.IsContactOccupied() == g_bTrackContactOccupied )
 		{
@@ -493,10 +500,7 @@ void loop()
 		{
 			g_bTrackContactOccupied = g_clControl.IsContactOccupied();
 
-			if( SIGNAL_TYPE_US != g_clControl.GetSignalType() )
-			{
-				g_clMyLoconet.SendTrackContactMessage( g_bTrackContactOccupied );
-			}
+			g_clMyLoconet.SendTrackContactMessage( g_bTrackContactOccupied );
 		}
 		else if( g_uiDelayTime )
 		{
@@ -509,10 +513,7 @@ void loop()
 			//	direct
 			g_bTrackContactOccupied = g_clControl.IsContactOccupied();
 
-			if( SIGNAL_TYPE_US != g_clControl.GetSignalType() )
-			{
-				g_clMyLoconet.SendTrackContactMessage( g_bTrackContactOccupied );
-			}
+			g_clMyLoconet.SendTrackContactMessage( g_bTrackContactOccupied );
 		}
 	}
 

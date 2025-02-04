@@ -28,6 +28,25 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	32		from: 04.02.2025
+//#
+//#	Implementation:
+//#		-	add the use of the button to switch between 'Blue Mode' ON
+//#			and 'Blue Mode' OFF.
+//#			new variables
+//#				m_bBlueMode
+//#				m_bButtonPressed
+//#				m_uiAnalogValue
+//#			new functions
+//#				IsBlueMode()
+//#				IsButtonPressed()
+//#				LedBlinkThreeTimes()
+//#			change in functions
+//#				Init()
+//#				Loop()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	32		from: 02.02.2025
 //#
 //#	Implementation:
@@ -518,6 +537,17 @@ typedef struct
 #define LED_BLINK_STATE_TIMER_OFF	4
 
 
+//----------------------------------------------------------------------
+//	macros for button and analog channel handling
+//
+#define BUTTON_THRESHOLD			255
+#define BUTTON_BLINK_TIME			200
+
+#define	ADC_ENABLE					ADCSRA |= (1 << ADEN)
+#define ADC_START_CONVERSION		ADCSRA |= (1 << ADSC)
+#define ADC_IS_CONVERSION_FINISHED	(0 == (ADCSRA & (1 << ADSC)))
+
+
 //==========================================================================
 //
 //		G L O B A L   V A R I A B L E S
@@ -624,6 +654,24 @@ IO_ControlClass::IO_ControlClass()
 	PORTB	= ~(LEDS_PORTB);
 	PORTC	= ~(LEDS_PORTC);
 	PORTD	= ~(LEDS_PORTD);
+
+	//-----------------------------------------------------
+	//	setup analog digital converter
+	//
+	//	pre-scaler:				128
+	//	interrupt:				disabled
+	//	clear interrup flag:	true
+	//	auto trigger:			disabled
+	//
+	//	digital input buffer:	off
+	//
+	//	reference voltage:		ARef
+	//	ADC left adjustment:	off
+	//	selected analog input:	7
+	//
+	ADCSRA	= 0x17;
+	DIDR0	= 0x3F;
+	ADMUX	= 0x07;
 }
 
 
@@ -640,6 +688,9 @@ void IO_ControlClass::Init( void )
 	{
 		m_arpclTransition[ idx ]		= NULL;
 	}
+
+	ADC_ENABLE;
+	ADC_START_CONVERSION;
 
 	m_ulLastCycleStartTime				= 0L;
 	m_ulCycleTime						= 0L;
@@ -662,6 +713,8 @@ void IO_ControlClass::Init( void )
 	m_bApproachKennlichtSpecialHandling	= false;
 
 	m_bContactOccupied					= false;
+	m_bButtonPressed					= false;
+	m_bBlueMode							= false;
 
 	g_stTimeValues.uiDarkTime				= g_clLncvStorage.ReadLNCV( LNCV_ADR_DARK_TIME );
 	g_stTimeValues.uiFlashTime				= g_clLncvStorage.ReadLNCV( LNCV_ADR_FLASH_TIME );
@@ -773,6 +826,19 @@ void IO_ControlClass::Init( void )
 			SwitchLed( LED_APPROACH_KENNLICHT, true );
 		}
 	}
+
+	//----------------------------------------------------------
+	//	initialize the analog value
+	//
+	while( !ADC_IS_CONVERSION_FINISHED )
+	{
+		;	//	wait for conversion is complete
+	}
+	
+	m_uiAnalogValue		= ReadAnalogValue();
+	m_bButtonPressed	= IsButtonPressed();
+
+	ADC_START_CONVERSION;
 }
 
 
@@ -787,6 +853,40 @@ void IO_ControlClass::Loop( void )
 
 
 	ProcessBrightnessAndFade();
+
+	//----------------------------------------------------------
+	//	handle analog conversion
+	//
+	if( ADC_IS_CONVERSION_FINISHED )
+	{
+		m_uiAnalogValue = ReadAnalogValue();
+		
+		ADC_START_CONVERSION;
+	}
+
+
+	//----------------------------------------------------------
+	//	handle button pressed
+	//
+	if( IsButtonPressed() != m_bButtonPressed )
+	{
+		m_bButtonPressed = IsButtonPressed();
+		
+		if( m_bButtonPressed )
+		{
+			m_bBlueMode = !m_bBlueMode;
+
+			if( m_bBlueMode )
+			{
+				LedBlinkThreeTimes( LED_BLUE );
+			}
+			else
+			{
+				LedBlinkThreeTimes( LED_GREEN );
+			}
+		}
+	}
+
 
 	//----------------------------------------------------------
 	//	check track contact
@@ -821,6 +921,7 @@ void IO_ControlClass::Loop( void )
 		//
 		m_ulContactTime = ulMillis + TRACK_CONTACT_WAIT_TIME;
 	}
+
 
 	//----------------------------------------------------------
 	//	handle Ersatzsignal flashing
@@ -871,7 +972,7 @@ void IO_ControlClass::Loop( void )
 			switch( m_arusLedBlinkState[ idx ] )
 			{
 				case LED_BLINK_STATE_OFF:
-					if( (SIGNAL_TYPE_US == m_usSignalType) && !m_bContactOccupied )
+					if( (SIGNAL_TYPE_US == m_usSignalType) && m_bBlueMode )
 					{
 						SwitchLed( idx, true );
 					}
@@ -894,7 +995,7 @@ void IO_ControlClass::Loop( void )
 				case LED_BLINK_STATE_TIMER_ON:
 					if( ulMillis > m_arulLedBlinkTimer[ idx ] )
 					{
-						if( (SIGNAL_TYPE_US == m_usSignalType) && !m_bContactOccupied )
+						if( (SIGNAL_TYPE_US == m_usSignalType) && m_bBlueMode )
 						{
 							SwitchLed( idx, false );
 						}
@@ -1695,3 +1796,52 @@ void IO_ControlClass::ProcessBrightnessAndFade( void )
 		}
 	}
 }
+
+
+//******************************************************************
+//	ReadAnalogValue
+//------------------------------------------------------------------
+//
+uint16_t IO_ControlClass::ReadAnalogValue( void )
+{
+	uint8_t	usLow;
+	uint8_t	usHigh;
+	
+	usLow  = ADCL;
+	usHigh = ADCH;
+
+	return( (usHigh << 8) | usLow );
+}
+
+
+//******************************************************************
+//	IsButtonPressed
+//------------------------------------------------------------------
+//
+bool IO_ControlClass::IsButtonPressed( void )
+{
+	return( BUTTON_THRESHOLD > m_uiAnalogValue );
+}
+
+
+//******************************************************************
+//	LedBlinkThreeTimes
+//------------------------------------------------------------------
+//
+void IO_ControlClass::LedBlinkThreeTimes( uint8_t usLedNo )
+{
+	SwitchLed( usLedNo, true );
+	delay( BUTTON_BLINK_TIME );
+	SwitchLed( usLedNo, false );
+	delay( BUTTON_BLINK_TIME );
+
+	SwitchLed( usLedNo, true );
+	delay( BUTTON_BLINK_TIME );
+	SwitchLed( usLedNo, false );
+	delay( BUTTON_BLINK_TIME );
+
+	SwitchLed( usLedNo, true );
+	delay( BUTTON_BLINK_TIME );
+	SwitchLed( usLedNo, false );
+}
+

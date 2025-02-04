@@ -15,6 +15,22 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	22		from: 04.02.2025
+//#
+//#	Implementation:
+//#		-	add the use of the button to switch between 'Blue Mode' ON
+//#			and 'Blue Mode' OFF.
+//#			new variables
+//#				m_bBlueMode
+//#				m_bButtonPressed
+//#				m_uiAnalogValue
+//#			new functions
+//#				IsBlueMode()
+//#				IsButtonPressed()
+//#				LedBlinkThreeTimes()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	21		from: 02.02.2025
 //#
 //#	Implementation:
@@ -405,6 +421,11 @@ class IO_ControlClass
 			return( m_bContactOccupied );
 		};
 
+		inline bool IsBlueMode( void )
+		{
+			return( m_bBlueMode );
+		};
+
 		inline bool IsOneLedOn( uint16_t uiLedMask )
 		{
 			return( 0x0000 != (m_uiLedsOn & uiLedMask) );
@@ -432,6 +453,7 @@ class IO_ControlClass
 		uint16_t	m_uiFadeTimeUp;
 		uint16_t	m_uiFadeTimeDown;
 		uint16_t	m_uiFadeActive;
+		uint16_t	m_uiAnalogValue;
 		uint8_t		m_usSignalType;
 		uint8_t		m_usExtraSignalsMain;
 		uint8_t		m_usExtraSignalsApproach;
@@ -441,12 +463,17 @@ class IO_ControlClass
 		bool		m_bMainSignalPresent;
 		bool		m_bApproachSignalPresent;
 		bool		m_bContactOccupied;
+		bool		m_bButtonPressed;
+		bool		m_bBlueMode;
 		bool		m_bApproachKennlichtSpecialHandling;
 
 		bool		SetSignalType( void );
 		void		CalculateFadeRates( void );
 		bool		ProcessTransition( uint8_t idx, uint32_t ulMillis );
 		void		ProcessBrightnessAndFade( void );
+		uint16_t	ReadAnalogValue( void );
+		bool		IsButtonPressed( void );
+		void		LedBlinkThreeTimes( uint8_t usLedNo );
 };
 
 

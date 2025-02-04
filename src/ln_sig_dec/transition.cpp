@@ -6,6 +6,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	8		from: 04.02.2025
+//#
+//#	Implementation:
+//#		-	change handling of switching US signal types from track contact
+//#			to button pressing
+//#			change in function
+//#				InitUsSignalTransition()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	7		from: 02.02.2025
 //#
 //#	Implementation:
@@ -385,7 +395,7 @@ bool TransitionClass::InitTransition( void )
 bool TransitionClass::InitUsSignalTransition( uint8_t usActualAspect )
 {
 	bool	bDoNotStart	= false;	//	default: start transition
-	bool	bOldSignals	= g_clControl.IsContactOccupied();
+	bool	bNewSignals	= g_clControl.IsBlueMode();
 	uint8_t	usHelpIdx	= m_usSelectedSignal - SIGNAL_SELECTED_US_1;
 
 	//-----------------------------------------------------
@@ -423,13 +433,13 @@ bool TransitionClass::InitUsSignalTransition( uint8_t usActualAspect )
 		//
 		if( US_SIGNAL_ASPECT_OFF == m_usTargetAspect )
 		{
-			if( bOldSignals )
+			if( bNewSignals )
 			{
-				m_pusStep = (uint8_t *)&US_FADE_to_Off;
+				m_pusStep = (uint8_t *)&US_SW_to_Off;
 			}
 			else
 			{
-				m_pusStep = (uint8_t *)&US_SW_to_Off;
+				m_pusStep = (uint8_t *)&US_FADE_to_Off;
 			}
 		}
 		else
@@ -438,25 +448,25 @@ bool TransitionClass::InitUsSignalTransition( uint8_t usActualAspect )
 			{
 				case SIGNAL_SELECTED_US_1:
 				case SIGNAL_SELECTED_US_3:
-					if( bOldSignals )
+					if( bNewSignals )
 					{
-						m_pusStep = pgm_read_word( &US_FADE_On[ usActualAspect ] );
+						m_pusStep = pgm_read_word( &US_SW_On[ usActualAspect ] );
 					}
 					else
 					{
-						m_pusStep = pgm_read_word( &US_SW_On[ usActualAspect ] );
+						m_pusStep = pgm_read_word( &US_FADE_On[ usActualAspect ] );
 					}
 					break;
 
 				case SIGNAL_SELECTED_US_2:
 				case SIGNAL_SELECTED_US_4:
-					if( bOldSignals )
+					if( bNewSignals )
 					{
-						m_pusStep = pgm_read_word( &US_FADE_INV_On[ usActualAspect ] );
+						m_pusStep = pgm_read_word( &US_SW_INV_On[ usActualAspect ] );
 					}
 					else
 					{
-						m_pusStep = pgm_read_word( &US_SW_INV_On[ usActualAspect ] );
+						m_pusStep = pgm_read_word( &US_FADE_INV_On[ usActualAspect ] );
 					}
 					break;
 
@@ -477,25 +487,25 @@ bool TransitionClass::InitUsSignalTransition( uint8_t usActualAspect )
 		{
 			case SIGNAL_SELECTED_US_1:
 			case SIGNAL_SELECTED_US_3:
-				if( bOldSignals )
+				if( bNewSignals )
 				{
-					m_pusStep = pgm_read_word( &US_FADE_Matrix[ usActualAspect ][ m_usTargetAspect ] );
+					m_pusStep = pgm_read_word( &US_SW_Matrix[ usActualAspect ][ m_usTargetAspect ] );
 				}
 				else
 				{
-					m_pusStep = pgm_read_word( &US_SW_Matrix[ usActualAspect ][ m_usTargetAspect ] );
+					m_pusStep = pgm_read_word( &US_FADE_Matrix[ usActualAspect ][ m_usTargetAspect ] );
 				}
 				break;
 
 			case SIGNAL_SELECTED_US_2:
 			case SIGNAL_SELECTED_US_4:
-				if( bOldSignals )
+				if( bNewSignals )
 				{
-					m_pusStep = pgm_read_word( &US_FADE_INV_Matrix[ usActualAspect ][ m_usTargetAspect ] );
+					m_pusStep = pgm_read_word( &US_SW_INV_Matrix[ usActualAspect ][ m_usTargetAspect ] );
 				}
 				else
 				{
-					m_pusStep = pgm_read_word( &US_SW_INV_Matrix[ usActualAspect ][ m_usTargetAspect ] );
+					m_pusStep = pgm_read_word( &US_FADE_INV_Matrix[ usActualAspect ][ m_usTargetAspect ] );
 				}
 				break;
 
