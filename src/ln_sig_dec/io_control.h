@@ -15,6 +15,18 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	23		from: 06.02.2025
+//#
+//#	Implementation:
+//#		-	change name of variable to clarify the meaning of it
+//#				from			to
+//#				m_bBlueMode		m_bDarthVaderMode
+//#		-	change of function name to reflect the change of the variable
+//#				from			to
+//#				IsBlueMode()	IsDarthVaderMode()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	22		from: 04.02.2025
 //#
 //#	Implementation:
@@ -421,9 +433,9 @@ class IO_ControlClass
 			return( m_bContactOccupied );
 		};
 
-		inline bool IsBlueMode( void )
+		inline bool IsDarthVaderMode( void )
 		{
-			return( m_bBlueMode );
+			return( m_bDarthVaderMode );
 		};
 
 		inline bool IsOneLedOn( uint16_t uiLedMask )
@@ -464,7 +476,7 @@ class IO_ControlClass
 		bool		m_bApproachSignalPresent;
 		bool		m_bContactOccupied;
 		bool		m_bButtonPressed;
-		bool		m_bBlueMode;
+		bool		m_bDarthVaderMode;
 		bool		m_bApproachKennlichtSpecialHandling;
 
 		bool		SetSignalType( void );

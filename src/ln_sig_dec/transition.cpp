@@ -6,6 +6,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	9		from: 06.02.2025
+//#
+//#	Implementation:
+//#		-	change of function name
+//#				from			to
+//#				IsBlueMode()	IsDarthVaderMode()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	8		from: 04.02.2025
 //#
 //#	Implementation:
@@ -395,7 +404,7 @@ bool TransitionClass::InitTransition( void )
 bool TransitionClass::InitUsSignalTransition( uint8_t usActualAspect )
 {
 	bool	bDoNotStart	= false;	//	default: start transition
-	bool	bNewSignals	= g_clControl.IsBlueMode();
+	bool	bNewSignals	= g_clControl.IsDarthVaderMode();
 	uint8_t	usHelpIdx	= m_usSelectedSignal - SIGNAL_SELECTED_US_1;
 
 	//-----------------------------------------------------

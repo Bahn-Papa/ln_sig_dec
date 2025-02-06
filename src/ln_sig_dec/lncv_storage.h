@@ -10,7 +10,18 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File version:	13		from: 22.02.2025
+//#	File version:	14		from: 06.02.2025
+//#
+//#	Implementation:
+//#		-	add new configuration Bit 'US_SIGNAL_MODE_DARTH_VADER'
+//#			new functions
+//#				SetConfig()
+//#				ClearConfig()
+//#				IsConfigSet()
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File version:	13		from: 02.02.2025
 //#
 //#	Implementation:
 //#		-	add new signal type SIGNAL_TYPE_US
@@ -152,6 +163,7 @@
 //
 #define APPROACH_KENNLICHT_DEFAULT_ON			0x0001
 #define APPROACH_KENNLICHT_SPECIAL_HANDLING		0x0002
+#define US_SIGNAL_MODE_DARTH_VADER				0x0004
 
 
 //----------------------------------------------------------------------
@@ -312,12 +324,25 @@ class LncvStorageClass
 		void CheckEEPROM( uint16_t uiVersionNumber );
 		void Init( void );
 
+		void SetConfig(   uint16_t uiConfigMask );
+		void ClearConfig( uint16_t uiConfigMask );
+
 		uint16_t GetFadeTimeUp(   uint8_t idx );
 		uint16_t GetFadeTimeDown( uint8_t idx );
 
 		bool IsValidLNCVAddress( uint16_t uiAddress );
 		uint16_t ReadLNCV(  uint16_t uiAddress );
 		void	 WriteLNCV( uint16_t uiAddress, uint16_t uiValue );
+
+		//----------------------------------------------------------
+		//
+		inline bool IsConfigSet( uint16_t mask )
+		{
+			return( 0 != (m_uiConfiguration & mask) );
+		}
+
+	private:
+		uint16_t	m_uiConfiguration;
 };
 
 

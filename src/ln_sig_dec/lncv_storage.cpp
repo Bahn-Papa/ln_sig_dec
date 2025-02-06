@@ -11,6 +11,17 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	12		from: 06.02.2025
+//#
+//#	Implementation:
+//#		-	add new configuration Bit 'US_SIGNAL_MODE_DARTH_VADER'
+//#			new functions
+//#				SetConfig()
+//#				ClearConfig()
+//#				IsConfigSet()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	11		from: 02.02.2025
 //#
 //#	Implementation:
@@ -169,6 +180,7 @@ LncvStorageClass	g_clLncvStorage = LncvStorageClass();
 //
 LncvStorageClass::LncvStorageClass()
 {
+	m_uiConfiguration	= 0x0000;
 }
 
 
@@ -280,6 +292,33 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 //
 void LncvStorageClass::Init( void )
 {
+	m_uiConfiguration  = ReadLNCV( LNCV_ADR_CONFIG );
+}
+
+
+//**********************************************************************
+//	SetConfig
+//----------------------------------------------------------------------
+//
+void LncvStorageClass::SetConfig( uint16_t uiConfigMask )
+{
+	m_uiConfiguration  = ReadLNCV( LNCV_ADR_CONFIG );
+	m_uiConfiguration |= uiConfigMask;
+	
+	WriteLNCV( LNCV_ADR_CONFIG, m_uiConfiguration );
+}
+
+
+//**********************************************************************
+//	ClearConfig
+//----------------------------------------------------------------------
+//
+void LncvStorageClass::ClearConfig( uint16_t uiConfigMask )
+{
+	m_uiConfiguration  = ReadLNCV( LNCV_ADR_CONFIG );
+	m_uiConfiguration &= ~uiConfigMask;
+	
+	WriteLNCV( LNCV_ADR_CONFIG, m_uiConfiguration );
 }
 
 

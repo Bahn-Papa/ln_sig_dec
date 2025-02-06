@@ -28,6 +28,22 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	33		from: 06.02.2025
+//#
+//#	Implementation:
+//#		-	change name of variable to clarify the meaning of it
+//#				from			to
+//#				m_bBlueMode		m_bDarthVaderMode
+//#		-	change of function name to reflect the change of the variable
+//#				from			to
+//#				IsBlueMode()	IsDarthVaderMode()
+//#		-	add saving of the actual US signal mode
+//#			change in functions
+//#				Init()
+//#				Loop()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	32		from: 04.02.2025
 //#
 //#	Implementation:
@@ -714,7 +730,7 @@ void IO_ControlClass::Init( void )
 
 	m_bContactOccupied					= false;
 	m_bButtonPressed					= false;
-	m_bBlueMode							= false;
+	m_bDarthVaderMode					= g_clLncvStorage.IsConfigSet( US_SIGNAL_MODE_DARTH_VADER );
 
 	g_stTimeValues.uiDarkTime				= g_clLncvStorage.ReadLNCV( LNCV_ADR_DARK_TIME );
 	g_stTimeValues.uiFlashTime				= g_clLncvStorage.ReadLNCV( LNCV_ADR_FLASH_TIME );
@@ -762,8 +778,7 @@ void IO_ControlClass::Init( void )
 	SwitchLed( LED_BLUE,  true  );
 	delay( 300 );
 	SwitchLed( LED_BLUE,  false );
-
-	delay( 100 );
+	delay( 200 );
 
 	//----------------------------------------------------------
 	//	read contact
@@ -839,6 +854,23 @@ void IO_ControlClass::Init( void )
 	m_bButtonPressed	= IsButtonPressed();
 
 	ADC_START_CONVERSION;
+
+	//----------------------------------------------------------
+	//	show signal mode for US signals
+	//
+	if( SIGNAL_TYPE_US == m_usSignalType )
+	{
+		delay( 500 );
+
+		if( m_bDarthVaderMode )
+		{
+			LedBlinkThreeTimes( LED_BLUE );
+		}
+		else
+		{
+			LedBlinkThreeTimes( LED_GREEN );
+		}
+	}
 }
 
 
@@ -874,14 +906,16 @@ void IO_ControlClass::Loop( void )
 		
 		if( m_bButtonPressed )
 		{
-			m_bBlueMode = !m_bBlueMode;
+			m_bDarthVaderMode = !m_bDarthVaderMode;
 
-			if( m_bBlueMode )
+			if( m_bDarthVaderMode )
 			{
+				g_clLncvStorage.SetConfig( US_SIGNAL_MODE_DARTH_VADER );
 				LedBlinkThreeTimes( LED_BLUE );
 			}
 			else
 			{
+				g_clLncvStorage.ClearConfig( US_SIGNAL_MODE_DARTH_VADER );
 				LedBlinkThreeTimes( LED_GREEN );
 			}
 		}
@@ -972,7 +1006,7 @@ void IO_ControlClass::Loop( void )
 			switch( m_arusLedBlinkState[ idx ] )
 			{
 				case LED_BLINK_STATE_OFF:
-					if( (SIGNAL_TYPE_US == m_usSignalType) && m_bBlueMode )
+					if( (SIGNAL_TYPE_US == m_usSignalType) && m_bDarthVaderMode )
 					{
 						SwitchLed( idx, true );
 					}
@@ -995,7 +1029,7 @@ void IO_ControlClass::Loop( void )
 				case LED_BLINK_STATE_TIMER_ON:
 					if( ulMillis > m_arulLedBlinkTimer[ idx ] )
 					{
-						if( (SIGNAL_TYPE_US == m_usSignalType) && m_bBlueMode )
+						if( (SIGNAL_TYPE_US == m_usSignalType) && m_bDarthVaderMode )
 						{
 							SwitchLed( idx, false );
 						}
