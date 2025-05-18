@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		13
-#define VERSION_BUGFIX		5
+#define VERSION_BUGFIX		6
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,16 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.13.06		from: 18.05.2025
+//#
+//#	Implementation:
+//#		-	add a watchdog to force the fade of the LEDs to stop
+//#			change in files
+//#				io_control.h
+//#				io_control.cpp
 //#
 //#-------------------------------------------------------------------------
 //#

@@ -15,6 +15,17 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	25		from: 18.05.2025
+//#
+//#	Implementation:
+//#		-	add a watchdog to force the fade of the LEDs to stop
+//#			new variable
+//#				m_ulFadeWatchdogTimer
+//#			new function
+//#				ForceEndOfFade()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	24		from: 18.05.2025
 //#
 //#	Implementation:
@@ -388,6 +399,8 @@ class IO_ControlClass
 									uint8_t usSignalAspect,
 									uint8_t usExtraSignals		);
 
+		void ForceEndOfFade( void );
+
 		inline uint8_t GetSignalType( void )
 		{
 			return( m_usSignalType );
@@ -472,6 +485,7 @@ class IO_ControlClass
 		uint32_t	m_ulCycleTime;
 		uint32_t	m_ulCycleStepTime;
 		uint32_t	m_ulContactTime;
+		uint32_t	m_ulFadeWatchdogTimer;
 		uint32_t	m_ulErsatzSignalFlashTimer;
 		uint16_t	m_uiErsatzSignalOffTimer;
 		uint16_t	m_uiLedsOn;

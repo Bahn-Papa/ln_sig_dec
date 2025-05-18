@@ -28,6 +28,22 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	34		from: 18.05.2025
+//#
+//#	Implementation:
+//#		-	add a watchdog to force the fade of the LEDs to stop
+//#			new definition
+//#				FADE_WATCHDOG_TIME
+//#			new variable
+//#				m_ulFadeWatchdogTimer
+//#			new function
+//#				ForceEndOfFade()
+//#			change in functions
+//#				Init()
+//#				Loop()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	33		from: 06.02.2025
 //#
 //#	Implementation:
@@ -503,6 +519,12 @@
 #define LEDS_PORTD		0xFF
 
 //----------------------------------------------------------------------
+//	Fade watchdog time (in ms)
+//
+#define FADE_WATCHDOG_TIME		5000
+
+
+//----------------------------------------------------------------------
 //	Track contact definitions
 //
 #define	TRACK_BIT					PB3
@@ -712,6 +734,7 @@ void IO_ControlClass::Init( void )
 	m_ulCycleTime						= 0L;
 	m_ulCycleStepTime					= 0L;
 	m_ulContactTime						= 0L;
+	m_ulFadeWatchdogTimer				= 0L;
 	m_ulErsatzSignalFlashTimer			= 0L;
 	m_uiErsatzSignalOffTimer			= 0;
 	m_uiLedsOn							= 0x0000;
@@ -885,6 +908,51 @@ void IO_ControlClass::Loop( void )
 
 
 	ProcessBrightnessAndFade();
+
+
+	//----------------------------------------------------------
+	//	handle the fade watchdog
+	//
+	if( m_ulFadeWatchdogTimer )
+	{
+		//--------------------------------------------------
+		//	the fade watchdog is active,
+		//	so check if the timer has elapsed
+		//
+		if( ulMillis > m_ulFadeWatchdogTimer )
+		{
+			//----------------------------------------------
+			//	the watchdog timer has elapsed,
+			//	so stop fading.
+			//
+			ForceEndOfFade();
+		}
+		
+		if( 0 == m_uiFadeActive )
+		{
+			//----------------------------------------------
+			//	all fading has been stopped,
+			//	so disable the fade watchdog timer
+			//
+			m_ulFadeWatchdogTimer = 0L;
+		}
+	}
+	else
+	{
+		//--------------------------------------------------
+		//	the fade watchdog is disabled
+		//	so check if any fade has been started
+		//
+		if( m_uiFadeActive )
+		{
+			//----------------------------------------------
+			//	at least one fading is active,
+			//	so enable and start the fade watchdog timer
+			//
+			m_ulFadeWatchdogTimer = ulMillis + FADE_WATCHDOG_TIME;
+		}
+	}
+
 
 	//----------------------------------------------------------
 	//	handle analog conversion
@@ -1691,6 +1759,41 @@ bool IO_ControlClass::ProcessTransition( uint8_t idx, uint32_t ulMillis )
 	}
 
 	return( bFinished );
+}
+
+
+//******************************************************************
+//	ForceEndOfFade
+//------------------------------------------------------------------
+//	This function will force to stop all active fade processes
+//
+void IO_ControlClass::ForceEndOfFade( void )
+{
+	PWMChannel_t*	pChannel;
+	uint8_t			idx;
+	uint16_t		uiMask			= 0x0001;
+
+
+	//----------------------------------------------------------
+	//	for each LED ...
+	//
+	for( idx = 0 ; idx < SIGNAL_LEDS ; idx++ )
+	{
+		//--------------------------------------------------
+		//	... if the fade is active, stop fading
+		//
+		if( m_uiFadeActive & uiMask )
+		{
+			pChannel = &(g_arChannel[ idx ]);
+			
+			pChannel->m_fActual = pChannel->m_fTarget;
+			m_uiFadeActive &= ~uiMask;
+		}
+
+		uiMask <<= 1;
+	}
+
+	SwitchLed( LED_BLUE, false );
 }
 
 
