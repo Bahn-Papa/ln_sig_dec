@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		13
-#define VERSION_BUGFIX		4
+#define VERSION_BUGFIX		5
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,18 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.13.05		from: 18.05.2025
+//#
+//#	Implementation:
+//#		-	add function to check if a main signal is present
+//#		-	add switch off some extra signals if the target signal aspect
+//#			is Hp0
+//#			change in files
+//#				io_control.h
+//#				transition.cpp
 //#
 //#-------------------------------------------------------------------------
 //#

@@ -6,6 +6,19 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	11		from: 18.05.2025
+//#
+//#	Implementation:
+//#		-	add switch off the following extra signals if the target
+//#			signal aspect is Hp0
+//#				EXTRA_SIGNAL_ERSATZSIGNAL	(LED_ERSATZSIGNAL)
+//#				EXTRA_SIGNAL_KENNLICHT		(LED_APPROACH_KENNLICHT)
+//#				EXTRA_SIGNAL_ANZEIGE		(LED_APPROACH_ZUSATZANZEIGER)
+//#			change in function
+//#				HandleControlGroup()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	10		from: 18.05.2025
 //#
 //#	Bug Fix:
@@ -664,6 +677,8 @@ bool TransitionClass::HandleControlGroup( uint32_t ulMillis, uint8_t usControlCo
 			break;
 
 		case SEQUENCE_ADDITION_SIGNAL_MAIN_OFF:
+			m_usExtraSignals |= (1 << EXTRA_SIGNAL_ERSATZSIGNAL);
+
 			g_clControl.SwitchExtraSignalsOff(	SIGNAL_SELECTED_MAIN,
 												m_usExtraSignals		);
 			m_bWaitForExtraFinished = true;
@@ -676,6 +691,13 @@ bool TransitionClass::HandleControlGroup( uint32_t ulMillis, uint8_t usControlCo
 			break;
 
 		case SEQUENCE_ADDITION_SIGNAL_APPROACH_OFF:
+			m_usExtraSignals |= (1 << EXTRA_SIGNAL_ANZEIGE);
+
+			if( g_clControl.IsMainSignalPresent() )
+			{
+				m_usExtraSignals |= (1 << EXTRA_SIGNAL_KENNLICHT);
+			}
+
 			g_clControl.SwitchExtraSignalsOff(	SIGNAL_SELECTED_APPROACH,
 												m_usExtraSignals			);
 			m_bWaitForExtraFinished = true;

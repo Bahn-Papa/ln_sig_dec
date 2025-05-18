@@ -15,6 +15,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	24		from: 18.05.2025
+//#
+//#	Implementation:
+//#		-	add function to check if a main signal is present
+//#			new function
+//#				IsMainSignalPresent()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	23		from: 06.02.2025
 //#
 //#	Implementation:
@@ -392,6 +401,11 @@ class IO_ControlClass
 		inline uint16_t GetLedsBlinking( void )
 		{
 			return( m_uiLedsBlinkOn );
+		};
+
+		inline bool IsMainSignalPresent( void )
+		{
+			return( m_bMainSignalPresent );
 		};
 
 		inline bool IsApproachSignalPresent( void )
