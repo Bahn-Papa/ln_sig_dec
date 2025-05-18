@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		13
-#define VERSION_BUGFIX		3
+#define VERSION_BUGFIX		4
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,14 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.13.04		from: 18.05.2025
+//#
+//#	Bug Fix:
+//#		-	do not start transitions for US signal types if the target
+//#			signal aspect is the same as the actual signal aspect
 //#
 //#-------------------------------------------------------------------------
 //#

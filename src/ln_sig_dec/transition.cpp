@@ -6,6 +6,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	10		from: 18.05.2025
+//#
+//#	Bug Fix:
+//#		-	do not start transitions for US signal types if the target
+//#			signal aspect is the same as the actual signal aspect
+//#			change in function
+//#				InitUsSignalTransition()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	9		from: 06.02.2025
 //#
 //#	Implementation:
@@ -324,7 +334,7 @@ bool TransitionClass::Loop( uint32_t ulMillis )
 bool TransitionClass::InitTransition( void )
 {
 	uint8_t	usActualAspect	= g_clStatus.GetSignalAspect( m_usSelectedSignal );
-	bool	bDoNotStart		= true;
+	bool	bDoNotStart		= true;		//	default: do not start transition
 
 	m_bDoInit = false;
 
@@ -403,7 +413,7 @@ bool TransitionClass::InitTransition( void )
 //
 bool TransitionClass::InitUsSignalTransition( uint8_t usActualAspect )
 {
-	bool	bDoNotStart	= false;	//	default: start transition
+	bool	bDoNotStart	= true;		//	default: do not start transition
 	bool	bNewSignals	= g_clControl.IsDarthVaderMode();
 	uint8_t	usHelpIdx	= m_usSelectedSignal - SIGNAL_SELECTED_US_1;
 
@@ -428,7 +438,6 @@ bool TransitionClass::InitUsSignalTransition( uint8_t usActualAspect )
 			break;
 		
 		default:
-			bDoNotStart = true;
 			break;
 	}
 
@@ -438,8 +447,10 @@ bool TransitionClass::InitUsSignalTransition( uint8_t usActualAspect )
 	if( US_SIGNAL_ASPECT_HP1 < m_usTargetAspect )
 	{
 		//---------------------------------------
-		//	switch signal on or off
+		//	switch signal off or on
 		//
+		bDoNotStart = false;		//	transition should start
+
 		if( US_SIGNAL_ASPECT_OFF == m_usTargetAspect )
 		{
 			if( bNewSignals )
