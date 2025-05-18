@@ -7,6 +7,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	21		from: 07.02.2025
+//#
+//#	Implementation:
+//#		-	add the possibility to delete a bit of a signal aspect
+//#			change in function
+//#				AddSignalAspect()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	20		from: 02.02.2025
 //#
 //#	Implementation:
@@ -634,6 +643,10 @@ void MyLoconetClass::AddSignalAspect( uint8_t usSelected, bool bIsGreen, uint8_t
 	if( bIsGreen )
 	{
 		m_usSignalAspect	|= usAspectMask;
+	}
+	else
+	{
+		m_usSignalAspect	&= ~usAspectMask;
 	}
 
 	m_usSignalSelected	 = usSelected;

@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		13
-#define VERSION_BUGFIX		2
+#define VERSION_BUGFIX		3
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,13 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.13.03		from: 07.02.2025
+//#
+//#	Implementation:
+//#		-	add the possibility to delete a bit of a signal aspect
 //#
 //#-------------------------------------------------------------------------
 //#
