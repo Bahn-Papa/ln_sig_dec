@@ -7,6 +7,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	22		from: 28.05.2025
+//#
+//#	Bug Fix:
+//#		-	extra signals will now be handled correct during 'ON'
+//#			and 'OFF' sequences
+//#			change in function
+//#				SetExtraSignal()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	21		from: 07.02.2025
 //#
 //#	Implementation:
@@ -677,11 +687,11 @@ void MyLoconetClass::SetExtraSignal( uint8_t usLED, bool bIsGreen )
 			g_clControl.HandleLed( usLED, bIsGreen );
 		}
 	}
-	else if( bIsGreen )
+	else
 	{
 		//----------------------------------------------------------
 		//	there is a signal aspect pending,
-		//	so remember which extra signals should be switched on
+		//	so remember which extra signals should be switched
 		//	during the handling of the signal aspect
 		//
 		switch( usLED )

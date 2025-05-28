@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		13
-#define VERSION_BUGFIX		6
+#define VERSION_BUGFIX		7
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,16 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.13.07		from: 28.05.2025
+//#
+//#	Bug Fix:
+//#		-	extra signals will now be handled correct during 'ON'
+//#			and 'OFF' sequences
+//#			change in file
+//#				my_loconet.cpp
 //#
 //#-------------------------------------------------------------------------
 //#
