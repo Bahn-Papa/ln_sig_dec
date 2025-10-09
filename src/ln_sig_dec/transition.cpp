@@ -6,6 +6,20 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	12		from: 09.10.2025
+//#
+//#	Bug Fix:
+//#		-	a transition will start when actual and target aspect are
+//#			identical but the Ersatzsignal is ON.
+//#			change in function
+//#				InitTransition()
+//#		-	the switch OFF of the green LED is moved to the correct place
+//#			in function 'ProcessTransition()' in class 'io_control'.
+//#			change in function
+//#				HandleControlGroup()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	11		from: 18.05.2025
 //#
 //#	Implementation:
@@ -347,6 +361,7 @@ bool TransitionClass::Loop( uint32_t ulMillis )
 bool TransitionClass::InitTransition( void )
 {
 	uint8_t	usActualAspect	= g_clStatus.GetSignalAspect( m_usSelectedSignal );
+	bool	bErsatzsignalOn	= g_clControl.IsOneLedOn( MASK_ERSATZSIGNAL );
 	bool	bDoNotStart		= true;		//	default: do not start transition
 
 	m_bDoInit = false;
@@ -356,7 +371,8 @@ bool TransitionClass::InitTransition( void )
 		bDoNotStart = InitUsSignalTransition( usActualAspect );
 	}
 	else if(	(	(SIGNAL_ASPECT_HP0 == usActualAspect)
-				 &&	(SIGNAL_ASPECT_HP0 != m_usTargetAspect))
+				 &&	(	 bErsatzsignalOn
+					 ||	(SIGNAL_ASPECT_HP0 != m_usTargetAspect)) )
 			||	(	(SIGNAL_ASPECT_HP0 != usActualAspect)
 				 &&	(SIGNAL_ASPECT_HP0 == m_usTargetAspect))	)
 	{
@@ -574,8 +590,6 @@ bool TransitionClass::HandleControlGroup( uint32_t ulMillis, uint8_t usControlCo
 			{
 				g_clStatus.SetSignalAspect( m_usSelectedSignal, m_usTargetAspect );
 			}
-
-			g_clControl.SwitchLed( LED_GREEN, false );
 			break;
 
 		case SEQUENCE_WAIT_FOR_FADE_FINISHED:

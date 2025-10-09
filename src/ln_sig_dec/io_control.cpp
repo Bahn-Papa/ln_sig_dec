@@ -28,6 +28,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	35		from: 09.10.2025
+//#
+//#	Bug Fix:
+//#		-	the switch OFF of the green LED is moved to the correct place
+//#			(removed from class transition function HandleControlGroup())
+//#			change in function
+//#				ProcessTransition()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	34		from: 18.05.2025
 //#
 //#	Implementation:
@@ -1755,6 +1765,8 @@ bool IO_ControlClass::ProcessTransition( uint8_t idx, uint32_t ulMillis )
 
 			m_arpclTransition[ idx ]	= NULL;
 			bFinished					= true;
+
+			g_clControl.SwitchLed( LED_GREEN, false );
 		}
 	}
 

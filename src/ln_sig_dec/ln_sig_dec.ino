@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		13
-#define VERSION_BUGFIX		7
+#define VERSION_BUGFIX		8
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,20 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.13.08		from: 09.10.2025
+//#
+//#	Bug Fix:
+//#		-	Ersatzsignal will be switched off now.
+//#			change in file
+//#				transition.cpp
+//#		-	the green LED indicating a running sequence will be switched
+//#			off at correct moment/place now
+//#			change in files
+//#				transition.cpp
+//#				io_control.cpp
 //#
 //#-------------------------------------------------------------------------
 //#

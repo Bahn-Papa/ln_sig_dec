@@ -49,6 +49,21 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	3		from: 09.10.2025
+//#
+//#	Implementation:
+//#		-	add definitions for extra signal bit masks
+//#			new definition
+//#				MASK_MAIN_ZUSATZANZEIGER
+//#				MASK_MAIN_KENNLICHT
+//#				MASK_ERSATZSIGNAL
+//#				MASK_APPROACH_KENNLICHT
+//#				MASK_APPROACH_ZUSATZANZEIGER
+//#			change definition
+//#				EXTRA_SIGNAL_LEDS
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	2		from: 31.01.2025
 //#
 //#	Implementation:
@@ -110,7 +125,13 @@
 //----------------------------------------------------------------------
 //	extra signal numbers
 //
-#define EXTRA_SIGNAL_LEDS					0x2181
+#define MASK_MAIN_ZUSATZANZEIGER			(1 << LED_MAIN_ZUSATZANZEIGER)
+#define MASK_MAIN_KENNLICHT					(1 << LED_MAIN_KENNLICHT)
+#define MASK_ERSATZSIGNAL					(1 << LED_ERSATZSIGNAL)
+#define MASK_APPROACH_KENNLICHT				(1 << LED_APPROACH_KENNLICHT)
+#define MASK_APPROACH_ZUSATZANZEIGER		(1 << LED_APPROACH_ZUSATZANZEIGER)
+
+#define EXTRA_SIGNAL_LEDS					(MASK_MAIN_ZUSATZANZEIGER | MASK_ERSATZSIGNAL | MASK_APPROACH_KENNLICHT | MASK_APPROACH_ZUSATZANZEIGER)
 
 #define EXTRA_SIGNAL_ZUSATZANZEIGE			0
 #define EXTRA_SIGNAL_ERSATZSIGNAL			1
