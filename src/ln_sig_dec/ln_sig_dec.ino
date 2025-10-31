@@ -16,7 +16,7 @@
 
 #define VERSION_MAIN		PLATINE_VERSION
 #define	VERSION_MINOR		13
-#define VERSION_BUGFIX		8
+#define VERSION_BUGFIX		9
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,17 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.13.09		from: 31.10.2025
+//#
+//#	Bug Fix:
+//#		-	to witch off Ersatzsignal when signal is in Hp0 a sequence to
+//#			do that was missing. Add the sequence Main_Hp0_to_Hp0
+//#			changes in files
+//#				sequencer_tables.h
+//#				transition.cpp
 //#
 //#-------------------------------------------------------------------------
 //#

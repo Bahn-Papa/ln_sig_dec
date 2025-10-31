@@ -63,6 +63,14 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	17		from: 31.10.2025
+//#
+//#	Bug Fix:
+//#		-	there was no sequence to switch off extra signals
+//#			new sequence Main_Hp0_to_Hp0 added
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	16		from: 02.02.2025
 //#
 //#	Implementation:
@@ -296,6 +304,16 @@ const uint8_t Rangier_to_ShKe[] PROGMEM =
 //	if there are different sequences needed for a specific signal type
 //	the tables are behind this section
 //
+
+//------------------------------------------------------------------
+//	Main: from Hp0 to Hp0
+//
+const uint8_t Main_Hp0_to_Hp0[] PROGMEM =
+{
+	SEQUENCE_ADDITION_SIGNAL_MAIN_OFF,
+	SEQUENCE_END
+};
+
 
 //------------------------------------------------------------------
 //	Main: from Hp0 to Hp1
@@ -640,7 +658,7 @@ const uint8_t Appr_to_Hp0[] PROGMEM =
 //
 const uint8_t* const A_Sig_Main_From_Hp0[] PROGMEM =
 {
-	sNOP,
+	Main_Hp0_to_Hp0,
 	Main_A_to_Hp1,
 	Main_A_to_Hp2,
 	Main_A_to_Sh1,
@@ -664,7 +682,7 @@ const uint8_t* const A_Sig_Main_To_Hp0[] PROGMEM =
 //
 const uint8_t* const E_Sig_Main_From_Hp0[] PROGMEM =
 {
-	sNOP,
+	Main_Hp0_to_Hp0,
 	Main_E_to_Hp1,
 	Main_E_to_Hp2,
 	sNOP,

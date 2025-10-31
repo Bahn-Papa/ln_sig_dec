@@ -6,6 +6,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	13		from: 31.10.2025
+//#
+//#	Bug Fix:
+//#		-	removed unnecessary set of LED_ERSATZSIGNAL in action
+//#			SEQUENCE_ADDITION_SIGNAL_MAIN_OFF
+//#			change in function
+//#				HandleControlGroup()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	12		from: 09.10.2025
 //#
 //#	Bug Fix:
@@ -691,8 +701,6 @@ bool TransitionClass::HandleControlGroup( uint32_t ulMillis, uint8_t usControlCo
 			break;
 
 		case SEQUENCE_ADDITION_SIGNAL_MAIN_OFF:
-			m_usExtraSignals |= (1 << EXTRA_SIGNAL_ERSATZSIGNAL);
-
 			g_clControl.SwitchExtraSignalsOff(	SIGNAL_SELECTED_MAIN,
 												m_usExtraSignals		);
 			m_bWaitForExtraFinished = true;
