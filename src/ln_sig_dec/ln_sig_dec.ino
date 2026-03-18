@@ -15,8 +15,8 @@
 #include "compile_options.h"
 
 #define VERSION_MAIN		PLATINE_VERSION
-#define	VERSION_MINOR		13
-#define VERSION_BUGFIX		9
+#define	VERSION_MINOR		14
+#define VERSION_BUGFIX		0
 
 #define VERSION_NUMBER		((VERSION_MAIN * 10000) + (VERSION_MINOR * 100) + VERSION_BUGFIX)
 
@@ -24,6 +24,17 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.14.00		from: 18.03.2026
+//#
+//#	Implementation:
+//#		-	switch to firmware update over loconet
+//#			change in file
+//#				my_loconet.cpp
+//#			new files
+//#				FirmwareUpdateMessage.cpp, FirmwareUpdateMessage.h
 //#
 //#-------------------------------------------------------------------------
 //#

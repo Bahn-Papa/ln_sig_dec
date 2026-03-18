@@ -7,6 +7,17 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	23		from: 18.03.2026
+//#
+//#	Implementation:
+//#		-	switch to firmware update over loconet
+//#			change in function
+//#				CheckForMessageAndProcess()
+//#			new function
+//#				notifyFirmwareUpdate()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	22		from: 28.05.2025
 //#
 //#	Bug Fix:
@@ -232,6 +243,7 @@
 #include "io_control.h"
 #include "lncv_storage.h"
 #include "macros.h"
+#include "FirmwareUpdateMessage.h"
 
 
 //==========================================================================
@@ -264,6 +276,8 @@ lnMsg			*g_pLnPacket;
 
 uint16_t	g_uiArticleNumber;
 uint16_t	g_uiModuleAddress;
+
+FirmwareUpdateMessage g_clFirmwareUpdate = FirmwareUpdateMessage();
 
 
 //==========================================================================
@@ -362,7 +376,10 @@ void MyLoconetClass::CheckForMessageAndProcess( void )
 	{
 		if( !LocoNet.processSwitchSensorMessage( g_pLnPacket ) )
 		{
-			g_clLNCV.processLNCVMessage( g_pLnPacket );
+			if( !g_clLNCV.processLNCVMessage( g_pLnPacket ) )
+			{
+				g_clFirmwareUpdate.processMessage( g_pLnPacket );
+			}
 		}
 	}
 }
@@ -744,6 +761,19 @@ void MyLoconetClass::SetSelectedSignalAspect( void )
 //		L O C O N E T   C A L L B A C K   F U N C T I O N S
 //
 //==========================================================================
+
+//**********************************************************************
+//	notifyFirmwareUpdate
+//----------------------------------------------------------------------
+//
+void notifyFirmwareUpdate()
+{
+	g_clControl.SwitchLed( LED_BLUE, true );
+
+	delay( 10 );
+
+	FirmwareUpdateMessage::enterBootloader();
+}
 
 
 //**********************************************************************
