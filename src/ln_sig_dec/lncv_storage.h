@@ -10,6 +10,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	15		from: 01.04.2026
+//#
+//#	Implementation:
+//#		-	change of definition for article number
+//#			old:	LNCV_ADR_ARTIKEL_NUMMER
+//#			new:	LNCV_ADR_ARTICLE_NUMBER
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	14		from: 06.02.2025
 //#
 //#	Implementation:
@@ -150,11 +159,6 @@
 //
 //==========================================================================
 
-
-//----------------------------------------------------------------------
-//	my artikle number
-#define ARTIKEL_NUMMER			1515
-
 #define LNCV_ADR_LAST_VALID		60
 
 
@@ -189,7 +193,7 @@
 //	address definitions where to store config informations
 //
 #define LNCV_ADR_MODULE_ADDRESS				0
-#define LNCV_ADR_ARTIKEL_NUMMER				1
+#define LNCV_ADR_ARTICLE_NUMBER				1
 #define LNCV_ADR_VERSION					2
 #define LNCV_ADR_CONFIG						3
 #define LNCV_ADR_SIGNAL_TYPE				4

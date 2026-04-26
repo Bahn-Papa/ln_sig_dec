@@ -6,6 +6,14 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	2		from: 01.04.2026
+//#
+//#	Implementation:
+//#		-	add header file 'version_info.h' to get the the ARCTICLE_NUMBER
+//#			to set the PRODUCT_ID
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	1		from: 18.03.2026
 //#
 //#	Implementation:
@@ -26,6 +34,8 @@
 
 #include <Arduino.h>
 #include <LocoNet.h>
+
+#include "version_info.h"
 
 
 //==========================================================================
@@ -62,7 +72,7 @@ class FirmwareUpdateMessage
 
 		static const uint8_t MANUFACTURER_ID	= 13;
 		static const uint8_t DEVELOPER_ID		= 1;
-		static const uint16_t PRODUCT_ID		= 6000;
+		static const uint16_t PRODUCT_ID		= ARTICLE_NUMBER;
 		static const uint8_t HARDWARE_VERSION	= 4;
 
 		void computeBytesFromPxct( byte[] );

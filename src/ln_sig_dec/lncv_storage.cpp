@@ -11,6 +11,18 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	13		from: 02.04.2026
+//#
+//#	Implementation:
+//#		-	change of definition for article number
+//#			old:	LNCV_ADR_ARTIKEL_NUMMER
+//#			new:	LNCV_ADR_ARTICLE_NUMBER
+//#		-	change check of configuration values stored in EEPROM
+//#			change in function
+//#				CheckEEPROM()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	12		from: 06.02.2025
 //#
 //#	Implementation:
@@ -49,7 +61,7 @@
 //#
 //#	Implementation:
 //#		-	adapt test values
-//#		-	move flag WRITE_TEST_VALUES to compile_options.h
+//#		-	move flag WRITE_TEST_VALUES to version_info.h
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -151,7 +163,7 @@
 #include <Arduino.h>
 
 #include "lncv_storage.h"
-#include "compile_options.h"
+#include "version_info.h"
 
 
 //==========================================================================
@@ -170,13 +182,13 @@
 LncvStorageClass	g_clLncvStorage = LncvStorageClass();
 
 
-////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 //	CLASS: LncvStorageClass
 //
 
-//**********************************************************************
+//**************************************************************************
 //	Constructor
-//----------------------------------------------------------------------
+//--------------------------------------------------------------------------
 //
 LncvStorageClass::LncvStorageClass()
 {
@@ -184,9 +196,9 @@ LncvStorageClass::LncvStorageClass()
 }
 
 
-//**********************************************************************
+//**************************************************************************
 //	CheckEEPROM
-//----------------------------------------------------------------------
+//--------------------------------------------------------------------------
 //	This function checks if the EEPROM is empty (0xFF in the cells).
 //	If so, then the EEPROM will be filled with default config infos
 //	and all addresses will be set to zero.
@@ -199,16 +211,17 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 #ifdef WRITE_TEST_VALUES
 	if( true )
 #else
-	uint16_t	uiCheckValue = eeprom_read_word( (uint16_t *)0 );
+	uint16_t	uiCheckValue = ReadLNCV( LNCV_ADR_ARTICLE_NUMBER );
 
 
-	if( (0xFFFF == uiCheckValue) || (0x0000 == uiCheckValue) )
+	if( uiCheckValue != ARTICLE_NUMBER )
 #endif
 	{
-		//----------------------------------------------------------
-		//	the EEPROM is empty, so write default config info ...
+		//--------------------------------------------------------------
+		//	the config values in the EEPROM are NOT for this article,
+		//	so write default config info ...
 		//
-		WriteLNCV( LNCV_ADR_ARTIKEL_NUMMER,	ARTIKEL_NUMMER );
+		WriteLNCV( LNCV_ADR_ARTICLE_NUMBER,	ARTICLE_NUMBER );
 		WriteLNCV( LNCV_ADR_VERSION, uiVersionNumber );
 		WriteLNCV( LNCV_ADR_CONFIG, 0x0000 );
 

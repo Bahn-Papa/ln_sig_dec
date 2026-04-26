@@ -7,6 +7,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	24		from: 01.04.2026
+//#
+//#	Implementation:
+//#		-	change of definition for article number
+//#			old:	LNCV_ADR_ARTIKEL_NUMMER
+//#			new:	LNCV_ADR_ARTICLE_NUMBER
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	23		from: 18.03.2026
 //#
 //#	Implementation:
@@ -317,7 +326,7 @@ void MyLoconetClass::Init( void )
 	m_usSignalType				= (uint8_t)g_clLncvStorage.ReadLNCV( LNCV_ADR_SIGNAL_TYPE );
 	m_uiSignalValidWaitTime		= g_clLncvStorage.ReadLNCV( LNCV_ADR_SIGNAL_VALID_WAIT_TIME );
 
-	g_uiArticleNumber			= g_clLncvStorage.ReadLNCV( LNCV_ADR_ARTIKEL_NUMMER );
+	g_uiArticleNumber			= g_clLncvStorage.ReadLNCV( LNCV_ADR_ARTICLE_NUMBER );
 	g_uiModuleAddress			= g_clLncvStorage.ReadLNCV( LNCV_ADR_MODULE_ADDRESS );
 
 	//--------------------------------------------------------------
@@ -900,7 +909,7 @@ int8_t notifyLNCVwrite( uint16_t ArtNr, uint16_t Address, uint16_t Value )
 		if( g_clLncvStorage.IsValidLNCVAddress( Address ) )
 		{
 			if(		(LNCV_ADR_VERSION		 != Address)
-				&&	(LNCV_ADR_ARTIKEL_NUMMER != Address) )
+				&&	(LNCV_ADR_ARTICLE_NUMBER != Address) )
 			{
 				if( LNCV_ADR_MODULE_ADDRESS == Address )
 				{
