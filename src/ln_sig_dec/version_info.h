@@ -52,8 +52,8 @@
 	#define ARTICLE_NUMBER		1515
 #endif
 
-#define VERSION_MAIN			14
-#define	VERSION_MINOR			1
+#define VERSION_MAIN			15
+#define	VERSION_MINOR			0
 
 #define VERSION_NUMBER			((VERSION_MAIN * 100) + VERSION_MINOR)
 
@@ -61,6 +61,18 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	15.00		from: 11.11.2026
+//#
+//#	Implementation:
+//#		-	add handling of secure element messages (OPC_SE)
+//#			changes in files
+//#				lncv_storage.cpp, lncv_storage.h
+//#				my_loconet.cpp, my_loconet.h
+//#			new file
+//#				signal_aspect_codes.h
 //#
 //#-------------------------------------------------------------------------
 //#

@@ -10,6 +10,20 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	6		from: 11.11.2026
+//#
+//#	Implementation:
+//#		-	add handling of Secure Element messages (OPC_SE)
+//#			new functions
+//#				GetZs3SpeedCodeMain()
+//#				GetZs3SpeedCodeDistant()
+//#				processSignalAspectMsg()
+//#			new variables
+//#					m_usZs3SpeedCodeMain
+//#					m_usZs3SpeedCodeDistant
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	5		from: 01.02.2023
 //#
 //#	Bug Fix:
@@ -61,6 +75,7 @@
 //==========================================================================
 
 #include <stdint.h>
+#include <LocoNet.h>
 
 #include "lncv_storage.h"
 
@@ -102,6 +117,16 @@ class MyLoconetClass
 		void LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, uint8_t output );
 		void SendTrackContactMessage( bool bOccupied );
 
+		inline void GetZs3SpeedCodeMain( void )
+		{
+			return( m_usZs3SpeedCodeMain );
+		};
+
+		inline void GetZs3SpeedCodeDistant( void )
+		{
+			return( m_usZs3SpeedCodeDistant );
+		};
+
 		inline void SetProgMode( bool bProgMode )
 		{
 			m_bIsProgMode = bProgMode;
@@ -121,8 +146,8 @@ class MyLoconetClass
 		uint8_t		m_usSignalSelected;
 		uint8_t		m_usSignalAspect;
 		uint8_t		m_usExtraSignals;
-		uint8_t		m_usMainZs3SpeedCode;
-		uint8_t		m_usDistantZs3SpeedCode;
+		uint8_t		m_usZs3SpeedCodeMain;
+		uint8_t		m_usZs3SpeedCodeDistant;
 		bool		m_bIsProgMode;
 
 		void SetDeviceInfo( uint8_t idx, uint16_t uiInfo );
@@ -130,7 +155,6 @@ class MyLoconetClass
 		void SetExtraSignal( uint8_t usLED, bool bIsGreen );
 		void SetSelectedSignalAspect( void );
 		void processSignalAspectMsg( lnMsg* pLnPacket );
-		uint8_t GetZs3SpeedCode( uint8_t usSpeed );
 };
 
 

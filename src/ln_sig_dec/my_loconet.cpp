@@ -7,6 +7,23 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	25		from: 11.11.2026
+//#
+//#	Implementation:
+//#		-	add handling of Secure Element messages (OPC_SE)
+//#			new functions
+//#				GetZs3SpeedCodeMain()
+//#				GetZs3SpeedCodeDistant()
+//#				processSignalAspectMsg()
+//#			new variables
+//#				m_usZs3SpeedCodeMain
+//#				m_usZs3SpeedCodeDistant
+//#			change in functions
+//#				Init()
+//#				CheckForMessageAndProcess()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	24		from: 01.04.2026
 //#
 //#	Implementation:
@@ -246,7 +263,6 @@
 //==========================================================================
 
 #include <Arduino.h>
-#include <LocoNet.h>
 
 #include "my_loconet.h"
 #include "io_control.h"
@@ -271,6 +287,12 @@
 
 #define DEVICE_IS_INVERT			0x01
 #define DEVICE_IS_SENSOR			0x02
+
+#define OPC_SE_HP0					0
+#define OPC_SE_HP1					1
+#define OPC_SE_HP2					2
+#define OPC_SE_SH1					4
+#define OPC_SE_KENNLICHT			8
 
 
 //==========================================================================
@@ -326,8 +348,8 @@ void MyLoconetClass::Init( void )
 	m_bIsProgMode				= false;
 	m_usSignalType				= (uint8_t)g_clLncvStorage.ReadLNCV( LNCV_ADR_SIGNAL_TYPE );
 	m_uiSignalValidWaitTime		= g_clLncvStorage.ReadLNCV( LNCV_ADR_SIGNAL_VALID_WAIT_TIME );
-	m_usMainZs3SpeedCode		= GetZs3SpeedCode( (uint8_t)g_clLncvStorage.ReadLNCV( LNCV_ZS3_MAIN_SPEED ) );
-	m_usDistantZs3SpeedCode		= GetZs3SpeedCode( (uint8_t)g_clLncvStorage.ReadLNCV( LNCV_ZS3_DISTANT_SPEED ) );
+	m_usZs3SpeedCodeMain		= ((uint8_t)g_clLncvStorage.ReadLNCV( LNCV_ZS3_SPEED_MAIN )) * 2;
+	m_usZs3SpeedCodeDistant		= ((uint8_t)g_clLncvStorage.ReadLNCV( LNCV_ZS3_SPEED_DISTANT )) * 2;
 
 	g_uiArticleNumber			= g_clLncvStorage.ReadLNCV( LNCV_ADR_ARTICLE_NUMBER );
 	g_uiModuleAddress			= g_clLncvStorage.ReadLNCV( LNCV_ADR_MODULE_ADDRESS );
@@ -390,8 +412,8 @@ void MyLoconetClass::CheckForMessageAndProcess( void )
 		{
 			if( !g_clLNCV.processLNCVMessage( g_pLnPacket ) )
 			{
-				if( 	(SIGNAL_ASPECT_MSG_CODE   == g_pLnPacket->px.command)
-					&&	(SIGNAL_ASPECT_MSG_LENGTH == g_pLnPacket->px.mesg_size)		)
+				if( 	(SIGNAL_ASPECT_MSG_CODE   == g_pLnPacket->sz.command)
+					&&	(SIGNAL_ASPECT_MSG_LENGTH == g_pLnPacket->sz.mesg_size)		)
 				{
 					//----------------------------------------------
 					//	this is a FREMO signal aspect message
@@ -460,7 +482,7 @@ void MyLoconetClass::LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, 
 				if( SIGNAL_TYPE_US == m_usSignalType )
 				{
 					//----------------------------------------------
-					//	... a signal aspect for a rangier signal
+					//	... a signal aspect for an US signal
 					//
 					switch( idx )
 					{
@@ -785,23 +807,67 @@ void MyLoconetClass::SetSelectedSignalAspect( void )
 //
 void MyLoconetClass::processSignalAspectMsg( lnMsg* pLnPacket )
 {
-	device_t*	pDevice;
-	uint16_t	uiAddress;
+	signal_aspect_t*	pAspect				= (signal_aspect_t *)pLnPacket;
+	device_t*			pDevice;
+	uint16_t			uiAddress;
+	uint8_t				usSignalSelected	= 0;
+	uint8_t				usExtraSignals		= 0;
+	uint8_t				usSignalAspect		= SIGNAL_ASPECT_CODE__UNDEFINED;
 
-	if(		(SIGNAL_ASPECT_MSG_LENGTH == pLnPacket->se.mesg_size)
-		&&	(SIGNAL_ASPECT_MSG_CODE   == pLnPacket->se.command)		)
+
+	uiAddress = (pAspect->addr_l | ((pAspect->addr_h & 0x0F) << 7));
+	uiAddress++;
+
+	//----------------------------------------------------------
+	//	check if msg is for main signal
+	//
+	pDevice = &(m_arDevices[ IDX_MAIN_SCREEN_FIRST_LED ]);
+
+	if( uiAddress == pDevice->m_uiAddress )
 	{
-		uiAddress = (pLnPacket->se.addr_l | ((pLnPacket->se.addr_h & 0x0F) << 7));
-		uiAddress++;
+		usSignalSelected = SIGNAL_SELECTED_MAIN;
 
+		if( m_usZs3SpeedCodeMain == pAspect->spd_ax )
+		{
+			usExtraSignals |= (1 << EXTRA_SIGNAL_ZUSATZANZEIGE);
+		}
+	}
+
+	//----------------------------------------------------------
+	//	check if msg is for distant signal
+	//
+	pDevice = &(m_arDevices[ IDX_APPROACH_SCREEN_FIRST_LED ]);
+
+	if( uiAddress == pDevice->m_uiAddress )
+	{
+		usSignalSelected = SIGNAL_SELECTED_APPROACH;
+
+		if( m_usZs3SpeedCodeDistant == pAspect->spd_ax )
+		{
+			usExtraSignals |= (1 << EXTRA_SIGNAL_ANZEIGE);
+		}
+	}
+
+	if( 0 != usSignalSelected )
+	{
 		//------------------------------------------------------
 		//	get the signal aspect to set
 		//
-		switch( pLnPacket->se.cmd )
+		switch( pAspect->spd_ax )
 		{
+			//----	special signal aspects  ----------------
+			case SIGNAL_ASPECT_CODE__SHUNT_GO:
+				usSignalAspect = OPC_SE_SH1;
+				break;
+
+			case SIGNAL_ASPECT_CODE__KENNLICHT:
+				usSignalAspect = OPC_SE_KENNLICHT;
+				break;
+
 			//----	Hp0  -----------------------------------
 			case SIGNAL_ASPECT_CODE__STOP:
 			case SIGNAL_ASPECT_CODE__STOP_EMRED:
+				usSignalAspect = OPC_SE_HP0;
 				break;
 
 			//----	Hp2  -----------------------------------
@@ -811,6 +877,7 @@ void MyLoconetClass::processSignalAspectMsg( lnMsg* pLnPacket )
 			case SIGNAL_ASPECT_CODE__GO_40:
 			case SIGNAL_ASPECT_CODE__GO_50:
 			case SIGNAL_ASPECT_CODE__GO_60:
+				usSignalAspect = OPC_SE_HP2;
 				break;
 
 			//----	Hp1  -----------------------------------
@@ -822,62 +889,22 @@ void MyLoconetClass::processSignalAspectMsg( lnMsg* pLnPacket )
 			case SIGNAL_ASPECT_CODE__GO_120:
 			case SIGNAL_ASPECT_CODE__GO_130:
 			case SIGNAL_ASPECT_CODE__GO:
+				usSignalAspect = OPC_SE_HP1;
+				break;
+
+			default:
 				break;
 		}
 
-		//------------------------------------------------------
-		//	check if msg is for main signal
-		//
-		pDevice = &(m_arDevices[ IDX_MAIN_SCREEN_FIRST_LED ]);
-
-		if( uiAddress == pDevice->m_uiAddress )
+		if( SIGNAL_ASPECT_CODE__UNDEFINED != usSignalAspect )
 		{
-		}
+			m_usSignalSelected	= usSignalSelected;
+			m_usSignalAspect	= usSignalAspect;
+			m_usExtraSignals	= usExtraSignals;
 
-		//------------------------------------------------------
-		//	check if msg is for distant signal
-		//
-		pDevice = &(m_arDevices[ IDX_APPROACH_SCREEN_FIRST_LED ]);
-
-		if( uiAddress == pDevice->m_uiAddress )
-		{
+			SetSelectedSignalAspect();
 		}
 	}
-}
-
-
-//**********************************************************************
-//	GetZs3SpeedCode
-//----------------------------------------------------------------------
-//
-uint8_t MyLoconetClass::GetZs3SpeedCode( uint8_t usSpeed )
-{
-	uint8_t	usSpeedCode = 0;
-
-	if( 13 >= usSpeed )
-	{
-		uint8_t arSpeedCodes[] = 
-			{
-				0x00,
-				SIGNAL_ASPECT_CODE__GO_10,
-				SIGNAL_ASPECT_CODE__GO_20,
-				SIGNAL_ASPECT_CODE__GO_30,
-				SIGNAL_ASPECT_CODE__GO_40,
-				SIGNAL_ASPECT_CODE__GO_50,
-				SIGNAL_ASPECT_CODE__GO_60,
-				SIGNAL_ASPECT_CODE__GO_70,
-				SIGNAL_ASPECT_CODE__GO_80,
-				SIGNAL_ASPECT_CODE__GO_90,
-				SIGNAL_ASPECT_CODE__GO_100,
-				SIGNAL_ASPECT_CODE__GO_110,
-				SIGNAL_ASPECT_CODE__GO_120,
-				SIGNAL_ASPECT_CODE__GO_130
-			};
-
-		usSpeedCode = arSpeedCodes[ usSpeed ];
-	}
-
-	return( usSpeedCode );
 }
 
 

@@ -11,13 +11,13 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	14		from: 06.11.2026
+//#	File Version:	14		from: 11.11.2026
 //#
 //#	Implementation:
 //#		-	add configuration values for Zs3 speed signal
 //#			new definitions
-//#				LNCV_ZS3_MAIN_SPEED
-//#				LNCV_ZS3_DISTANT_SPEED
+//#				LNCV_ZS3_SPEED_MAIN
+//#				LNCV_ZS3_SPEED_DISTANT
 //#			change in function
 //#				CheckEEPROM()
 //#
@@ -284,8 +284,8 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		WriteLNCV( LNCV_ADR_TRACK_CONTACT,		 0 );
 #endif
 
-		WriteLNCV( LNCV_ZS3_MAIN_SPEED,			 0 );
-		WriteLNCV( LNCV_ZS3_DISTANT_SPEED,		 0 );
+		WriteLNCV( LNCV_ZS3_SPEED_MAIN,			 0 );
+		WriteLNCV( LNCV_ZS3_SPEED_DISTANT,		 0 );
 
 		for( idx = 0 ; idx < NUMBER_LIGHTS ; idx++ )
 		{
@@ -301,7 +301,7 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		//----------------------------------------------------------
 		//	Clear all spare LNCVs
 		//
-		for( idx = LNCV_ZS3_DISTANT_SPEED + 1 ; idx <= LNCV_ADR_LAST_VALID ; idx++ )
+		for( idx = LNCV_ZS3_SPEED_DISTANT + 1 ; idx <= LNCV_ADR_LAST_VALID ; idx++ )
 		{
 			WriteLNCV( idx, 0 );
 		}

@@ -10,12 +10,12 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	16		from: 06.11.2026
+//#	File Version:	16		from: 11.11.2026
 //#
 //#	Implementation:
 //#		-	add definitions for Zs3 speed signal
-//#				LNCV_ZS3_MAIN_SPEED
-//#				LNCV_ZS3_DISTANT_SPEED
+//#				LNCV_ZS3_SPEED_MAIN
+//#				LNCV_ZS3_SPEED_DISTANT
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -288,8 +288,8 @@
 //----------------------------------------------------------------------
 //	definitions for Zs3 speed signal
 //
-#define LNCV_ZS3_MAIN_SPEED					49
-#define LNCV_ZS3_DISTANT_SPEED				50
+#define LNCV_ZS3_SPEED_MAIN					49
+#define LNCV_ZS3_SPEED_DISTANT				50
 
 
 //----------------------------------------------------------------------

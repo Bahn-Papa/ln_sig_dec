@@ -71,8 +71,8 @@
 //----	Hp2  ---------------------------------------------------
 #define SIGNAL_ASPECT_CODE__GO_10				0x02
 #define SIGNAL_ASPECT_CODE__GO_20				0x04
-#define SIGNAL_ASPECT_CODE__GO_30				0x05
-#define SIGNAL_ASPECT_CODE__GO_40				0x06
+#define SIGNAL_ASPECT_CODE__GO_30				0x06
+#define SIGNAL_ASPECT_CODE__GO_40				0x08
 #define SIGNAL_ASPECT_CODE__GO_50				0x0A
 #define SIGNAL_ASPECT_CODE__GO_60				0x0C
 
@@ -86,3 +86,24 @@
 #define SIGNAL_ASPECT_CODE__GO_130				0x1A
 
 #define SIGNAL_ASPECT_CODE__GO					0x3F
+
+
+//==========================================================================
+//
+//		T Y P E   D E F I N I T I O N S
+//
+//==========================================================================
+
+typedef struct
+{
+	uint8_t	command;
+	uint8_t	mesg_size;
+	uint8_t	addr_h;
+	uint8_t addr_l;
+	uint8_t	se_cmd;
+	uint8_t	se_stat;
+	uint8_t spd_ax;
+	uint8_t spd_xa;
+	uint8_t chksum;
+
+} signal_aspect_t;
