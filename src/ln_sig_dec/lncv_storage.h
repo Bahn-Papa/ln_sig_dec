@@ -10,6 +10,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	16		from: 06.11.2026
+//#
+//#	Implementation:
+//#		-	add definitions for Zs3 speed signal
+//#				LNCV_ZS3_MAIN_SPEED
+//#				LNCV_ZS3_DISTANT_SPEED
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	15		from: 01.04.2026
 //#
 //#	Implementation:
@@ -274,6 +283,13 @@
 #define LNCV_ADR_APPROACH_DARK				46
 #define LNCV_ADR_NIGHTLIGHT					47
 #define LNCV_ADR_TRACK_CONTACT				48
+
+
+//----------------------------------------------------------------------
+//	definitions for Zs3 speed signal
+//
+#define LNCV_ZS3_MAIN_SPEED					49
+#define LNCV_ZS3_DISTANT_SPEED				50
 
 
 //----------------------------------------------------------------------

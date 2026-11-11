@@ -121,12 +121,16 @@ class MyLoconetClass
 		uint8_t		m_usSignalSelected;
 		uint8_t		m_usSignalAspect;
 		uint8_t		m_usExtraSignals;
+		uint8_t		m_usMainZs3SpeedCode;
+		uint8_t		m_usDistantZs3SpeedCode;
 		bool		m_bIsProgMode;
 
 		void SetDeviceInfo( uint8_t idx, uint16_t uiInfo );
 		void AddSignalAspect( uint8_t usSelected, bool bIsGreen, uint8_t usAspectMask );
 		void SetExtraSignal( uint8_t usLED, bool bIsGreen );
 		void SetSelectedSignalAspect( void );
+		void processSignalAspectMsg( lnMsg* pLnPacket );
+		uint8_t GetZs3SpeedCode( uint8_t usSpeed );
 };
 
 

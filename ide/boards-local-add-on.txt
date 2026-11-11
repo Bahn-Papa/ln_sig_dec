@@ -1,0 +1,23 @@
+##------------------------------------------------------------------
+##
+## Signal Decoder
+##
+##	1515:	ATmega328P  16 MHz
+##------------------------------------------------------------------
+fremo.menu.cpu.1515=Signal Decoder (1515, ATmega328P  16 MHz)
+
+fremo.menu.cpu.1515.upload.maximum_size=30720
+fremo.menu.cpu.1515.upload.maximum_data_size=2048
+fremo.menu.cpu.1515.upload.speed=57600
+
+fremo.menu.cpu.1515.bootloader.low_fuses=0xFF
+fremo.menu.cpu.1515.bootloader.high_fuses=0xDF
+fremo.menu.cpu.1515.bootloader.extended_fuses=0xFD
+fremo.menu.cpu.1515.bootloader.file=fremo/BootLoader_1515.hex
+
+fremo.menu.cpu.1515.build.board=AVR_CHIP
+fremo.menu.cpu.1515.build.variant=standard
+fremo.menu.cpu.1515.build.mcu=atmega328p
+fremo.menu.cpu.1515.build.f_cpu=16000000L
+fremo.menu.cpu.1515.build.extra_flags=-DARTICLE_NUMBER=1515
+

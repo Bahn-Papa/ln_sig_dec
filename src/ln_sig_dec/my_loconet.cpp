@@ -252,6 +252,7 @@
 #include "io_control.h"
 #include "lncv_storage.h"
 #include "macros.h"
+#include "signal_aspect_codes.h"
 #include "FirmwareUpdateMessage.h"
 
 
@@ -325,6 +326,8 @@ void MyLoconetClass::Init( void )
 	m_bIsProgMode				= false;
 	m_usSignalType				= (uint8_t)g_clLncvStorage.ReadLNCV( LNCV_ADR_SIGNAL_TYPE );
 	m_uiSignalValidWaitTime		= g_clLncvStorage.ReadLNCV( LNCV_ADR_SIGNAL_VALID_WAIT_TIME );
+	m_usMainZs3SpeedCode		= GetZs3SpeedCode( (uint8_t)g_clLncvStorage.ReadLNCV( LNCV_ZS3_MAIN_SPEED ) );
+	m_usDistantZs3SpeedCode		= GetZs3SpeedCode( (uint8_t)g_clLncvStorage.ReadLNCV( LNCV_ZS3_DISTANT_SPEED ) );
 
 	g_uiArticleNumber			= g_clLncvStorage.ReadLNCV( LNCV_ADR_ARTICLE_NUMBER );
 	g_uiModuleAddress			= g_clLncvStorage.ReadLNCV( LNCV_ADR_MODULE_ADDRESS );
@@ -387,7 +390,18 @@ void MyLoconetClass::CheckForMessageAndProcess( void )
 		{
 			if( !g_clLNCV.processLNCVMessage( g_pLnPacket ) )
 			{
-				g_clFirmwareUpdate.processMessage( g_pLnPacket );
+				if( 	(SIGNAL_ASPECT_MSG_CODE   == g_pLnPacket->px.command)
+					&&	(SIGNAL_ASPECT_MSG_LENGTH == g_pLnPacket->px.mesg_size)		)
+				{
+					//----------------------------------------------
+					//	this is a FREMO signal aspect message
+					//
+					processSignalAspectMsg( g_pLnPacket );
+				}
+				else
+				{
+					g_clFirmwareUpdate.processMessage( g_pLnPacket );
+				}
 			}
 		}
 	}
@@ -762,6 +776,108 @@ void MyLoconetClass::SetSelectedSignalAspect( void )
 	m_usSignalAspect	= 0;
 	m_usExtraSignals	= 0;
 	m_ulTimer			= 0L;
+}
+
+
+//**********************************************************************
+//	processSignalAspectMsg
+//----------------------------------------------------------------------
+//
+void MyLoconetClass::processSignalAspectMsg( lnMsg* pLnPacket )
+{
+	device_t*	pDevice;
+	uint16_t	uiAddress;
+
+	if(		(SIGNAL_ASPECT_MSG_LENGTH == pLnPacket->se.mesg_size)
+		&&	(SIGNAL_ASPECT_MSG_CODE   == pLnPacket->se.command)		)
+	{
+		uiAddress = (pLnPacket->se.addr_l | ((pLnPacket->se.addr_h & 0x0F) << 7));
+		uiAddress++;
+
+		//------------------------------------------------------
+		//	get the signal aspect to set
+		//
+		switch( pLnPacket->se.cmd )
+		{
+			//----	Hp0  -----------------------------------
+			case SIGNAL_ASPECT_CODE__STOP:
+			case SIGNAL_ASPECT_CODE__STOP_EMRED:
+				break;
+
+			//----	Hp2  -----------------------------------
+			case SIGNAL_ASPECT_CODE__GO_10:
+			case SIGNAL_ASPECT_CODE__GO_20:
+			case SIGNAL_ASPECT_CODE__GO_30:
+			case SIGNAL_ASPECT_CODE__GO_40:
+			case SIGNAL_ASPECT_CODE__GO_50:
+			case SIGNAL_ASPECT_CODE__GO_60:
+				break;
+
+			//----	Hp1  -----------------------------------
+			case SIGNAL_ASPECT_CODE__GO_70:
+			case SIGNAL_ASPECT_CODE__GO_80:
+			case SIGNAL_ASPECT_CODE__GO_90:
+			case SIGNAL_ASPECT_CODE__GO_100:
+			case SIGNAL_ASPECT_CODE__GO_110:
+			case SIGNAL_ASPECT_CODE__GO_120:
+			case SIGNAL_ASPECT_CODE__GO_130:
+			case SIGNAL_ASPECT_CODE__GO:
+				break;
+		}
+
+		//------------------------------------------------------
+		//	check if msg is for main signal
+		//
+		pDevice = &(m_arDevices[ IDX_MAIN_SCREEN_FIRST_LED ]);
+
+		if( uiAddress == pDevice->m_uiAddress )
+		{
+		}
+
+		//------------------------------------------------------
+		//	check if msg is for distant signal
+		//
+		pDevice = &(m_arDevices[ IDX_APPROACH_SCREEN_FIRST_LED ]);
+
+		if( uiAddress == pDevice->m_uiAddress )
+		{
+		}
+	}
+}
+
+
+//**********************************************************************
+//	GetZs3SpeedCode
+//----------------------------------------------------------------------
+//
+uint8_t MyLoconetClass::GetZs3SpeedCode( uint8_t usSpeed )
+{
+	uint8_t	usSpeedCode = 0;
+
+	if( 13 >= usSpeed )
+	{
+		uint8_t arSpeedCodes[] = 
+			{
+				0x00,
+				SIGNAL_ASPECT_CODE__GO_10,
+				SIGNAL_ASPECT_CODE__GO_20,
+				SIGNAL_ASPECT_CODE__GO_30,
+				SIGNAL_ASPECT_CODE__GO_40,
+				SIGNAL_ASPECT_CODE__GO_50,
+				SIGNAL_ASPECT_CODE__GO_60,
+				SIGNAL_ASPECT_CODE__GO_70,
+				SIGNAL_ASPECT_CODE__GO_80,
+				SIGNAL_ASPECT_CODE__GO_90,
+				SIGNAL_ASPECT_CODE__GO_100,
+				SIGNAL_ASPECT_CODE__GO_110,
+				SIGNAL_ASPECT_CODE__GO_120,
+				SIGNAL_ASPECT_CODE__GO_130
+			};
+
+		usSpeedCode = arSpeedCodes[ usSpeed ];
+	}
+
+	return( usSpeedCode );
 }
 
 
