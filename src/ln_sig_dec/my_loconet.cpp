@@ -7,6 +7,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	26		from: 17.11.2026
+//#
+//#	Implementation:
+//#		-	add handling of OPC_SE msg SIGNAL_ASPECT_CODE__SUBSTITUTION
+//#			change in function
+//#				processSignalAspectMsg()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	25		from: 11.11.2026
 //#
 //#	Implementation:
@@ -862,6 +871,10 @@ void MyLoconetClass::processSignalAspectMsg( lnMsg* pLnPacket )
 
 			case SIGNAL_ASPECT_CODE__KENNLICHT:
 				usSignalAspect = OPC_SE_KENNLICHT;
+				break;
+
+			case SIGNAL_ASPECT_CODE__SUBSTITUTION:
+				g_clControl.HandleLed( LED_ERSATZSIGNAL, true );
 				break;
 
 			//----	Hp0  -----------------------------------

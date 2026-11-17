@@ -53,7 +53,7 @@
 #endif
 
 #define VERSION_MAIN			15
-#define	VERSION_MINOR			0
+#define	VERSION_MINOR			1
 
 #define VERSION_NUMBER			((VERSION_MAIN * 100) + VERSION_MINOR)
 
@@ -61,6 +61,13 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	15.01		from: 17.11.2026
+//#
+//#	Implementation:
+//#		-	add handling of OPC_SE msg SIGNAL_ASPECT_CODE__SUBSTITUTION
 //#
 //#-------------------------------------------------------------------------
 //#
